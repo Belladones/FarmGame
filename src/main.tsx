@@ -14,6 +14,8 @@ import {
   sell,
   type Farm,
 } from "./engine";
+import { FarmScene } from "./FarmScene";
+import { Icon, ResourceIcon } from "./Icons";
 import "./style.css";
 (self as any).MonacoEnvironment = {
   getWorker: (_: unknown, label: string) =>
@@ -77,10 +79,50 @@ function App() {
   const [code, setCode] = useState(
     () => localStorage.getItem("farmscript-code") || starter,
   );
-  const [tab, setTab] = useState("Missions");
+  const [panel, setPanel] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(() => window.innerWidth >= 900);
+  const [expanded, setExpanded] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [resetView, setResetView] = useState(0);
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const dialogRef = useRef<HTMLElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!panel) return;
+    const previous = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPanel(null);
+      if (event.key !== "Tab") return;
+      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), select, a[href], [tabindex="0"]',
+      );
+      if (!nodes?.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = nodes[0],
+        last = nodes[nodes.length - 1];
+      if (
+        event.shiftKey &&
+        (document.activeElement === first ||
+          document.activeElement === dialogRef.current)
+      ) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", keydown);
+    return () => {
+      document.removeEventListener("keydown", keydown);
+      previous?.focus();
+    };
+  }, [panel]);
   const runId = useRef(0);
   const pausedRef = useRef(false),
     speedRef = useRef(1),
@@ -89,6 +131,9 @@ function App() {
   const [logs, setLogs] = useState<string[]>([
     "Bienvenue ! Lancez votre premier programme.",
   ]);
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [logs]);
   const log = (text: string) => setLogs((a) => [...a.slice(-49), text]);
   const refresh = () => {
     setS(structuredClone(farm.current));
@@ -107,9 +152,14 @@ function App() {
     pausedRef.current = false;
   };
   useEffect(() => {
+    let previousTick = performance.now();
     const timer = window.setInterval(() => {
+      const now = performance.now();
+      // Keep growth tied to elapsed time when rendering is slow, without offline catch-up.
+      const elapsed = Math.min(1, (now - previousTick) / 1000);
+      previousTick = now;
       if (pausedRef.current) return;
-      farm.current.time += 0.1 * speedRef.current;
+      farm.current.time += elapsed * speedRef.current;
       const request = queue.current.shift();
       if (request && worker.current) {
         try {
@@ -194,393 +244,562 @@ function App() {
     log("Programme lancé.");
   }
   const active = missions.find((m) => !s.claimed.includes(m.id));
+  const togglePanel = (name: string) =>
+    setPanel((p) => (p === name ? null : name));
+  const pause = () => {
+    pausedRef.current = !paused;
+    setPaused(!paused);
+  };
+  const tile = s.tiles[s.x];
+  const growth =
+    tile.planted === null ? 0 : Math.min(1, (s.time - tile.planted) / 5);
   return (
-    <div className="app">
-      <header>
-        <a className="brand" href="#">
-          <span className="brand-icon">⌘</span> Farm<span>Script</span>
-          <small>APPRENDRE. CULTIVER. AUTOMATISER.</small>
-        </a>
-        <div className="header-right">
-          <span className="saved">● Sauvegarde locale</span>
-          <span className="version">ALPHA 0.1</span>
+    <div className={"game " + (!editorOpen ? "editor-collapsed" : "")}>
+      <FarmScene
+        farm={s}
+        paused={paused}
+        running={running}
+        zoom={zoom}
+        resetView={resetView}
+        editorOpen={editorOpen}
+      />
+      <header className="game-header">
+        <div className="resources" aria-label="Ressources de la ferme">
+          <div className="resource" title={`Blé au dépôt : ${s.stock} / 200`}>
+            <ResourceIcon kind="wheat" />
+            <strong>{s.stock}</strong>
+            <span>BLÉ</span>
+          </div>
+          <div
+            className="resource unavailable"
+            title="Le bois sera disponible dans une prochaine version"
+          >
+            <ResourceIcon kind="wood" />
+            <strong>—</strong>
+            <span>BOIS · VERROUILLÉ</span>
+          </div>
+          <div
+            className="resource unavailable"
+            title="Les carottes seront disponibles dans une prochaine version"
+          >
+            <ResourceIcon kind="carrot" />
+            <strong>—</strong>
+            <span>CAROTTES · VERROUILLÉ</span>
+          </div>
+          <div
+            className="resource unavailable"
+            title="L’eau sera disponible dans une prochaine version"
+          >
+            <ResourceIcon kind="water" />
+            <strong>—</strong>
+            <span>EAU · VERROUILLÉE</span>
+          </div>
+        </div>
+        <div className="game-brand">
+          <b>
+            farm<span>script</span>
+            <sup>α</sup>
+          </b>
+          <span>VOTRE CODE. VOTRE RÉCOLTE.</span>
+          <div className="economy">
+            <span title="Pièces d’or">◈ {s.gold} or</span>
+            <span title="Cargaison du robot">▣ {s.cargo} / 20</span>
+          </div>
         </div>
       </header>
-      <main>
-        <section className="farm-panel">
-          <div className="section-label">VOTRE PETIT COIN DE CODE</div>
-          <h1>
-            Les bonnes idées
-            <br />
-            prennent racine<span>.</span>
-          </h1>
-          <p className="intro">
-            Un robot, quelques graines et vos premières lignes de TypeScript.
-          </p>
-          <div className="resources">
-            <div>
-              <span>🌾</span>
-              <strong>
-                {s.stock}
-                <small>/ 200</small>
-              </strong>
-              <label>Blé au dépôt</label>
-            </div>
-            <div>
-              <span>◈</span>
-              <strong>{s.gold}</strong>
-              <label>Pièces d’or</label>
-            </div>
-            <div>
-              <span>▣</span>
-              <strong>
-                {s.cargo}
-                <small>/ 20</small>
-              </strong>
-              <label>Soute du robot</label>
-            </div>
+      <div className="island-caption">
+        <span className="overline">VOTRE EXPLOITATION</span>
+        <h1>Un petit monde à programmer.</h1>
+        <p>
+          <span
+            className={"status-light " + (running && !paused ? "on" : "")}
+          />
+          {running
+            ? paused
+              ? "Programme en pause"
+              : "Robot au travail"
+            : "La ferme attend vos instructions"}
+          <span className="caption-divider">/</span>
+          {s.width} × 1 parcelle{s.width > 1 ? "s" : ""}
+        </p>
+      </div>
+      <div className="plot-info">
+        <span className="plot-coordinate">{s.x}, 0</span>
+        <div>
+          <strong>
+            {tile.planted === null
+              ? "Prêt à planter"
+              : growth >= 1
+                ? "Le blé est mûr !"
+                : "Le blé pousse…"}
+          </strong>
+          <span>
+            {tile.planted === null
+              ? "plant(Entities.Wheat)"
+              : `${Math.round(growth * 100)} % · ${growth >= 1 ? "harvest()" : "5 secondes à ×1"}`}
+          </span>
+        </div>
+        {tile.planted !== null && (
+          <div className="growth-meter">
+            <i style={{ width: growth * 100 + "%" }} />
           </div>
-          <div className="world">
-            <div className="world-top">
-              <span>
-                <i /> PARCELLE {s.width} × 1
-              </span>
-              <span>
-                {running
-                  ? paused
-                    ? "En pause"
-                    : "Robot au travail"
-                  : "Prêt à cultiver"}
-              </span>
-            </div>
-            <div className="landscape">
-              <div className="cloud cloud-one" />
-              <div className="cloud cloud-two" />
-              <div className="hill hill-one" />
-              <div className="hill hill-two" />
-              <div className="farm-ground">
-                <div className="depot" title="Dépôt adjacent à (0, 0)">
-                  🏠<span>DÉPÔT</span>
-                </div>
-                <div className="tiles">
-                  {s.tiles.map((t, i) => {
-                    const progress =
-                      t.planted === null
-                        ? 0
-                        : Math.min(1, (s.time - t.planted) / 5);
-                    return (
-                      <div
-                        key={i}
-                        className={"tile " + (progress >= 1 ? "ripe" : "")}
-                      >
-                        <span className="crop">
-                          {t.planted === null
-                            ? "·"
-                            : progress < 0.35
-                              ? "🌱"
-                              : progress < 1
-                                ? "🌿"
-                                : "🌾"}
-                        </span>
-                        {s.x === i && <span className="robot">🤖</span>}
-                        <span className="coordinate">{i}, 0</span>
-                        {t.planted !== null && (
-                          <div className="growth">
-                            <i style={{ width: progress * 100 + "%" }} />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="ground-shadow" />
-            </div>
-            <div className="world-footer">
-              <span>☀ Temps de pousse : 5 s</span>
-              <span>↗ Nord = +y · Est = +x</span>
-            </div>
-          </div>
-          <div className="notebook">
-            <span>✦</span>
-            <div>
-              <strong>Votre code fait pousser les choses.</strong>
-              <p>
-                Commencez avec la boucle proposée. Observez le robot, récoltez
-                du blé, puis débloquez de nouvelles possibilités.
-              </p>
-            </div>
-          </div>
-          <div className="manual">
-            <span>Essayer une commande</span>
-            {["plant", "harvest", "deposit"].map((name) => (
-              <button
-                key={name}
-                disabled={running}
-                onClick={() => {
-                  try {
-                    const result = command(
-                      farm.current,
-                      name,
-                      name === "plant" ? ["Wheat"] : [],
-                    );
-                    log(`${name}() → ${result}`);
-                    refresh();
-                  } catch (e) {
-                    log(String(e));
-                  }
-                }}
-              >
-                {name}()
-              </button>
-            ))}
-          </div>
-        </section>
-        <section className="workspace">
-          <div className="editor-top">
-            <div>
-              <span className="file-icon">TS</span> mon-premier-robot.ts{" "}
-              <span className="dot">●</span>
-            </div>
-            <span className="language">TypeScript</span>
-          </div>
-          <div className="toolbar">
-            <select
-              aria-label="Charger un exemple"
-              defaultValue=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  setCode(examples[e.target.value]);
-                  localStorage.setItem(
-                    "farmscript-code",
-                    examples[e.target.value],
-                  );
-                }
-              }}
-            >
-              <option value="" disabled>
-                Exemples de programmes
-              </option>
-              {Object.keys(examples).map((k) => (
-                <option key={k}>{k}</option>
-              ))}
-            </select>
-            <div className="run-controls">
-              <select
-                aria-label="Vitesse de simulation"
-                value={speed}
-                onChange={(e) => {
-                  setSpeed(+e.target.value);
-                  speedRef.current = +e.target.value;
-                }}
-              >
-                {[1, 2, 5].map((n) => (
-                  <option key={n} value={n}>
-                    ×{n}
-                  </option>
-                ))}
-              </select>
-              {running ? (
-                <>
-                  <button
-                    onClick={() => {
-                      pausedRef.current = !paused;
-                      setPaused(!paused);
-                    }}
-                  >
-                    {paused ? "▶ Reprendre" : "Ⅱ Pause"}
-                  </button>
-                  <button aria-label="Arrêter le programme" onClick={stop}>
-                    ■
-                  </button>
-                </>
-              ) : (
-                <button className="primary" onClick={run}>
-                  ▶ Exécuter
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="editor">
-            <Editor
-              path="file:///robot.ts"
-              height="100%"
-              language="typescript"
-              theme="vs-dark"
-              value={code}
-              onChange={(v) => {
-                setCode(v || "");
-                localStorage.setItem("farmscript-code", v || "");
-              }}
-              options={{
-                fontSize: 14,
-                minimap: { enabled: false },
-                padding: { top: 22 },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                tabSize: 2,
-                fontFamily: "monospace",
-                readOnly: running,
-              }}
-            />
-          </div>
-          <div className="console">
-            <div className="console-heading">
-              <span>›_ JOURNAL DU ROBOT</span>
-              <button onClick={() => setLogs([])}>Effacer</button>
-            </div>
-            <div className="log-lines" role="log">
-              {logs.map((line, i) => (
-                <div key={i}>
-                  <span>›</span> {line}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </main>
-      <section className="bottom">
-        <nav>
-          {["Missions", "Recherches", "API & aide"].map((t) => (
+        )}
+      </div>
+      <section
+        className={
+          "workspace floating-window " +
+          (!editorOpen ? "window-hidden " : "") +
+          (expanded ? "expanded" : "")
+        }
+        aria-label="Éditeur TypeScript"
+        aria-hidden={!editorOpen}
+      >
+        <div className="window-titlebar">
+          <span className="file-icon">TS</span>
+          <strong>f1</strong>
+          <span className="filename">mon-premier-robot.ts</span>
+          <div className="window-actions">
             <button
-              className={tab === t ? "active" : ""}
-              key={t}
-              onClick={() => setTab(t)}
+              title="Réduire l’éditeur"
+              aria-label="Réduire l’éditeur"
+              onClick={() => setEditorOpen(false)}
             >
-              {t === "Missions" ? "⚑" : t === "Recherches" ? "⌘" : "⌁"} {t}
-              {t === "Missions" && (
-                <span>
-                  {s.claimed.length}/{missions.length}
-                </span>
-              )}
+              <Icon name="minimize" size={16} />
             </button>
-          ))}
-          <button
-            className="sell"
-            disabled={s.stock < 10}
-            onClick={() => {
-              sell(farm.current);
-              refresh();
+            <button
+              title={expanded ? "Restaurer" : "Agrandir"}
+              aria-label="Agrandir l’éditeur"
+              onClick={() => setExpanded(!expanded)}
+            >
+              <Icon name="expand" size={14} />
+            </button>
+          </div>
+        </div>
+        <div className="toolbar">
+          <select
+            aria-label="Charger un exemple"
+            defaultValue=""
+            disabled={running}
+            onChange={(e) => {
+              if (e.target.value) {
+                setCode(examples[e.target.value]);
+                localStorage.setItem(
+                  "farmscript-code",
+                  examples[e.target.value],
+                );
+              }
             }}
           >
-            Vendre 10 blés · +10 or ↗
+            <option value="" disabled>
+              Exemples de programmes
+            </option>
+            {Object.keys(examples).map((k) => (
+              <option key={k}>{k}</option>
+            ))}
+          </select>
+          <span>TypeScript</span>
+        </div>
+        <div className="editor">
+          <Editor
+            path="file:///robot.ts"
+            height="100%"
+            language="typescript"
+            theme="vs-dark"
+            value={code}
+            onChange={(v) => {
+              setCode(v || "");
+              localStorage.setItem("farmscript-code", v || "");
+            }}
+            options={{
+              fontSize: 13,
+              minimap: { enabled: false },
+              padding: { top: 18 },
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+              tabSize: 2,
+              fontFamily: '"SFMono-Regular", Consolas, monospace',
+              readOnly: running,
+              lineNumbersMinChars: 3,
+              overviewRulerLanes: 0,
+              renderLineHighlight: "none",
+              wordWrap: "on",
+            }}
+          />
+        </div>
+        <div className="console">
+          <div className="console-heading">
+            <span>
+              <span className="status-light on" /> JOURNAL DU ROBOT
+            </span>
+            <button onClick={() => setLogs([])}>Effacer</button>
+          </div>
+          <div className="log-lines" role="log" ref={logRef}>
+            {logs.map((line, i) => (
+              <div key={i}>
+                <span>›</span> {line}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="editor-status">
+          <span>● Sauvegardé sur cet appareil</span>
+          <span>
+            UTF-8 <b>TS</b>
+          </span>
+        </div>
+      </section>
+      <div className="control-hub">
+        <div className="program-strip">
+          <div className="run-controls">
+            {running ? (
+              <>
+                <button
+                  className="action-button orange"
+                  aria-label="Arrêter le programme"
+                  title="Arrêter le programme"
+                  onClick={stop}
+                >
+                  <Icon name="stop" size={22} />
+                </button>
+                <button
+                  className="action-button orange"
+                  aria-label={paused ? "▶ Reprendre" : "Ⅱ Pause"}
+                  title={paused ? "Reprendre" : "Pause"}
+                  onClick={pause}
+                >
+                  <Icon name={paused ? "play" : "pause"} size={24} />
+                </button>
+              </>
+            ) : (
+              <button
+                className="action-button"
+                aria-label="▶ Exécuter"
+                title="Exécuter le programme"
+                onClick={run}
+              >
+                <Icon name="play" size={26} />
+              </button>
+            )}
+          </div>
+          <button
+            className="program-name"
+            onClick={() => setEditorOpen(!editorOpen)}
+            title="Afficher ou masquer le code"
+          >
+            <strong>f1</strong>
+            <span>
+              {running ? (paused ? "EN PAUSE" : "EN COURS") : "PRÊT À EXÉCUTER"}
+            </span>
+          </button>
+          <select
+            className="speed"
+            aria-label="Vitesse de simulation"
+            value={speed}
+            onChange={(e) => {
+              setSpeed(+e.target.value);
+              speedRef.current = +e.target.value;
+            }}
+          >
+            {[1, 2, 5].map((n) => (
+              <option key={n} value={n}>
+                ×{n}
+              </option>
+            ))}
+          </select>
+        </div>
+        <nav className="dock" aria-label="Outils de la ferme">
+          <button
+            className={"dock-button " + (editorOpen ? "selected" : "")}
+            aria-label="Afficher le code"
+            title="Afficher le code"
+            onClick={() => setEditorOpen(!editorOpen)}
+          >
+            <Icon name="code" size={29} />
+            <span>Code</span>
+          </button>
+          <button
+            className={
+              "dock-button " + (panel === "API & aide" ? "selected" : "")
+            }
+            aria-label="API et aide"
+            title="API et aide"
+            onClick={() => togglePanel("API & aide")}
+          >
+            <Icon name="info" size={29} />
+            <span>Guide</span>
+          </button>
+          <button
+            className={
+              "dock-button " + (panel === "Recherches" ? "selected" : "")
+            }
+            aria-label="Recherches"
+            title="Recherches"
+            onClick={() => togglePanel("Recherches")}
+          >
+            <Icon name="research" size={29} />
+            <span>Recherches</span>
+          </button>
+          <button
+            className="dock-button"
+            aria-label="Zoomer sur la ferme"
+            title="Zoomer sur la ferme"
+            onClick={() => setZoom((z) => (z >= 1.5 ? 1 : z + 0.25))}
+          >
+            <Icon name="zoom" size={29} />
+            <span>Zoom</span>
+          </button>
+          <button
+            className="dock-button"
+            aria-label="Recentrer la vue"
+            title="Recentrer la vue"
+            onClick={() => {
+              setZoom(1);
+              setResetView((r) => r + 1);
+            }}
+          >
+            <Icon name="home" size={29} />
+            <span>Ferme</span>
           </button>
         </nav>
-        {tab === "Missions" && (
-          <div className="mission-grid">
-            {missions.map((m, i) => {
-              const done = s.claimed.includes(m.id),
-                available = active?.id === m.id;
-              return (
-                <article
-                  className={"mission " + (done ? "complete" : "")}
-                  key={m.id}
-                >
-                  <div className="mission-number">
-                    {done ? "✓" : String(i + 1).padStart(2, "0")}
+      </div>
+      <button className="mission-peek" onClick={() => togglePanel("Missions")}>
+        <span className="mission-emblem">
+          <Icon name="flag" size={20} />
+        </span>
+        <div>
+          <span>
+            MISSION{" "}
+            {Math.min(s.claimed.length + 1, missions.length)
+              .toString()
+              .padStart(2, "0")}{" "}
+            / {missions.length.toString().padStart(2, "0")}
+          </span>
+          <strong>{active?.title || "Toutes les missions terminées"}</strong>
+          {active && (
+            <div className="mission-progress">
+              <i
+                style={{
+                  width:
+                    Math.min(1, active.progress(s) / active.target) * 100 + "%",
+                }}
+              />
+            </div>
+          )}
+        </div>
+        <Icon name="arrow" size={18} />
+      </button>
+      <div className="scene-hint">
+        Glisser pour tourner <span>·</span> Molette pour zoomer
+      </div>
+      {panel && (
+        <div className="panel-backdrop" onClick={() => setPanel(null)}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label={panel}
+            className="detail-panel floating-window"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setPanel(null);
+            }}
+            tabIndex={-1}
+            ref={dialogRef}
+          >
+            <div className="window-titlebar">
+              <Icon
+                name={
+                  panel === "Missions"
+                    ? "flag"
+                    : panel === "Recherches"
+                      ? "research"
+                      : "info"
+                }
+                size={19}
+              />
+              <strong>{panel}</strong>
+              <button
+                className="close-button"
+                aria-label="Fermer le panneau"
+                onClick={() => setPanel(null)}
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+            <div className="panel-content">
+              {panel === "Missions" && (
+                <>
+                  <p className="panel-intro">
+                    Chaque récolte vous apprend quelque chose.
+                    <br />
+                    Faites grandir votre ferme, une ligne de code à la fois.
+                  </p>
+                  <div className="mission-grid">
+                    {missions.map((m, i) => {
+                      const done = s.claimed.includes(m.id),
+                        available = active?.id === m.id;
+                      return (
+                        <article
+                          className={"mission " + (done ? "complete" : "")}
+                          key={m.id}
+                        >
+                          <div className="mission-number">
+                            {done ? "✓" : String(i + 1).padStart(2, "0")}
+                          </div>
+                          <div>
+                            <h3>{m.title}</h3>
+                            <p>{m.text}</p>
+                            <div className="mission-progress">
+                              <i
+                                style={{
+                                  width:
+                                    Math.min(1, m.progress(s) / m.target) *
+                                      100 +
+                                    "%",
+                                }}
+                              />
+                            </div>
+                            <small>
+                              {Math.min(m.target, m.progress(s))} / {m.target}
+                              <span>+{m.reward} blés</span>
+                            </small>
+                            <button
+                              disabled={
+                                !available ||
+                                m.progress(s) < m.target ||
+                                s.stock + m.reward > 200
+                              }
+                              onClick={() => {
+                                claim(farm.current, m.id);
+                                refresh();
+                              }}
+                            >
+                              {done
+                                ? "Terminée"
+                                : available
+                                  ? "Récupérer la récompense"
+                                  : "À venir"}
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <h3>{m.title}</h3>
-                    <p>{m.text}</p>
-                    <div className="mission-progress">
-                      <i
-                        style={{
-                          width:
-                            Math.min(1, m.progress(s) / m.target) * 100 + "%",
-                        }}
-                      />
+                </>
+              )}
+              {panel === "Recherches" && (
+                <>
+                  <div className="research-summary">
+                    <ResourceIcon kind="wheat" />
+                    <div>
+                      <strong>{s.stock} blés</strong>
+                      <span>disponibles dans le dépôt</span>
                     </div>
-                    <small>
-                      {Math.min(m.target, m.progress(s))} / {m.target}{" "}
-                      <span>+{m.reward} blés</span>
-                    </small>
+                  </div>
+                  <div className="research-grid">
+                    {research.map((r) => (
+                      <article key={r.id}>
+                        <h3>{r.name}</h3>
+                        <p>{r.detail}</p>
+                        <button
+                          disabled={
+                            s.unlocks.includes(r.id) ||
+                            s.stock < r.cost ||
+                            (r.id === "position" && s.width < 3)
+                          }
+                          onClick={() => {
+                            buy(farm.current, r.id);
+                            refresh();
+                          }}
+                        >
+                          {s.unlocks.includes(r.id)
+                            ? "✓ Acquis"
+                            : `Rechercher · ${r.cost} blés`}
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                  <div className="trade">
+                    <span>◈ {s.gold} pièces d’or</span>
                     <button
-                      disabled={
-                        !available ||
-                        m.progress(s) < m.target ||
-                        s.stock + m.reward > 200
-                      }
+                      disabled={s.stock < 10}
                       onClick={() => {
-                        claim(farm.current, m.id);
+                        sell(farm.current);
                         refresh();
                       }}
                     >
-                      {done
-                        ? "Terminée"
-                        : available
-                          ? "Récupérer la récompense"
-                          : "À venir"}
+                      Vendre 10 blés · +10 or
                     </button>
                   </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-        {tab === "Recherches" && (
-          <div className="research-grid">
-            {research.map((r) => (
-              <article key={r.id}>
-                <h3>{r.name}</h3>
-                <p>{r.detail}</p>
-                <button
-                  disabled={
-                    s.unlocks.includes(r.id) ||
-                    s.stock < r.cost ||
-                    (r.id === "position" && s.width < 3)
-                  }
-                  onClick={() => {
-                    buy(farm.current, r.id);
-                    refresh();
-                  }}
-                >
-                  {s.unlocks.includes(r.id)
-                    ? "✓ Acquis"
-                    : `Rechercher · ${r.cost} blés`}
-                </button>
-              </article>
-            ))}
-          </div>
-        )}
-        {tab === "API & aide" && (
-          <div className="docs">
-            <p>
-              Du vrai TypeScript : variables, boucles et fonctions nommées sont
-              disponibles. Les appels du robot sont séquencés automatiquement.
-              Ce prototype ne prend pas encore en charge les callbacks,
-              générateurs ou imports. Les recherches de langage avancées et les
-              autres cultures arriveront ensuite.
-            </p>
-            {docs.map(([name, text]) => (
-              <div key={name}>
-                <code>{name}</code>
-                <span>{text}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-      <footer>
-        <span>
-          FARMSCRIPT <b>·</b> Petit à petit, le code devient une récolte.
-        </span>
-        <button
-          onClick={() => {
-            if (
-              confirm(
-                "Effacer la ferme et recommencer ? Le code sera conservé.",
-              )
-            ) {
-              stop();
-              farm.current = fresh();
-              refresh();
-              log("Nouvelle ferme créée.");
-            }
-          }}
-        >
-          Recommencer la ferme
-        </button>
-      </footer>
+                </>
+              )}
+              {panel === "API & aide" && (
+                <div className="docs">
+                  <h2>Un robot. Vos instructions.</h2>
+                  <p>
+                    Lancez le programme f1 pour planter, récolter et déposer
+                    automatiquement. Le robot travaille sur les cases bordées
+                    d’or ; le reste de l’îlot est un décor sauvage. Vos
+                    premières recherches permettent d’exploiter trois cases.
+                  </p>
+                  <div className="manual">
+                    <span>Essayer une commande</span>
+                    {["plant", "harvest", "deposit"].map((name) => (
+                      <button
+                        key={name}
+                        disabled={running}
+                        onClick={() => {
+                          try {
+                            const result = command(
+                              farm.current,
+                              name,
+                              name === "plant" ? ["Wheat"] : [],
+                            );
+                            log(`${name}() → ${result}`);
+                            refresh();
+                          } catch (e) {
+                            log(String(e));
+                          }
+                        }}
+                      >
+                        {name}()
+                      </button>
+                    ))}
+                  </div>
+                  {docs.map(([name, text]) => (
+                    <div className="api-entry" key={name}>
+                      <code>{name}</code>
+                      <span>{text}</span>
+                    </div>
+                  ))}
+                  <p>
+                    TypeScript : variables, boucles et fonctions nommées sont
+                    disponibles. Les callbacks, générateurs, imports et cultures
+                    autres que le blé ne sont pas encore pris en charge. La
+                    progression est sauvegardée sur cet appareil.
+                  </p>
+                  <button
+                    className="reset-farm"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Effacer la ferme et recommencer ? Le code sera conservé.",
+                        )
+                      ) {
+                        stop();
+                        farm.current = fresh();
+                        refresh();
+                        log("Nouvelle ferme créée.");
+                      }
+                    }}
+                  >
+                    <Icon name="reset" size={15} /> Recommencer la ferme
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

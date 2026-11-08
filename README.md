@@ -24,6 +24,19 @@ Test navigateur (serveur lancé dans un autre terminal) : `npm run test:e2e`. Il
 
 Le serveur Vite utilise le port 5173. Aucun secret ni service externe n’est requis. Monaco et TypeScript sont installés localement, sans CDN.
 
+## Vue 3D et commandes
+
+Le jeu s’affiche en plein écran sur un fond bleu-gris, avec un îlot low poly rendu par Three.js. Les modèles et icônes sont créés dans le projet, sans assets externes. WebGL est nécessaire à la vue 3D ; un message explicite apparaît si sa création échoue, tandis que l’éditeur et la simulation restent utilisables.
+
+- Glisser sur le terrain pour tourner la caméra ; utiliser la molette ou le bouton loupe pour zoomer.
+- Le bouton maison recentre la caméra.
+- Le bouton + affiche ou masque l’éditeur TypeScript ; il est masqué par défaut sur mobile.
+- La barre f1 permet de lancer, mettre en pause et arrêter le programme ; ×1 / ×2 / ×5 règle le temps de simulation.
+- Le bouton i ouvre le guide et l’API ; les doubles chevrons ouvrent les recherches et les ventes.
+- La carte de mission ouvre les objectifs et leurs récompenses.
+
+Les cases bordées d’or sont les seules exploitables. Les arbres et herbes alentour sont du décor ; ils ne produisent pas de ressources. La taille de l’îlot visuel ne change pas la progression agricole : une case au départ, puis trois après recherche. Le bois, les carottes et l’eau restent indiqués comme verrouillés dans ce prototype.
+
 ## Jouer
 
 Lancer la boucle proposée : le robot plante, récolte après cinq secondes de simulation et dépose au dépôt. Réclamer les récompenses dans Missions, puis acheter des recherches. Le dépôt contient 200 unités, la soute 20 ; les plantations sont gratuites. La ferme commence en 1 × 1, puis s’étend en 3 × 1. Le dépôt est adjacent uniquement à (0, 0). Les bords ne rebouclent pas. Vendre les stocks rapporte de l’or.
@@ -35,6 +48,8 @@ Pause suspend la simulation et les commandes. Arrêt termine le programme ; la c
 - `src/engine.ts` : moteur déterministe, progression, missions, économie ; tests indépendants de React.
 - `src/runner.worker.ts` : transpilation TypeScript et instrumentation AST des boucles/appels pour rendre la main à l’interface. Un arrêt termine le Worker.
 - `src/main.tsx` : interface, Monaco, synchronisation des commandes et sauvegarde.
+- `src/FarmScene.tsx` : scène Three.js, caméra orbitale, modèles procéduraux et croissance synchronisée avec le moteur.
+- `src/Icons.tsx` : icônes SVG originales des ressources et commandes.
 
 Prototype initial inspiré du document de conception « Ferme programmable — Arbres de compétences et API ». Il implémente le blé, six recherches et quatre missions simplifiées. Les missions comptent la production totale, y compris manuelle ; elles ne certifient pas encore l’emploi des notions pédagogiques. Seule la syntaxe if/else est verrouillée parmi les constructions du langage ; variables, boucles comptées et fonctions nommées sont disponibles pour expérimenter. L’industrie, les autres cultures, les trois arbres complets et la flotte ne sont pas encore implémentés.
 

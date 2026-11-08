@@ -14,12 +14,14 @@
     "monaco-editor": "^0.52.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "three": "^0.187.0",
     "typescript": "~5.7.3"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.187.0",
     "playwright": "^1.65.0",
     "prettier": "^3.9.10",
     "tsx": "^4.19.0",
