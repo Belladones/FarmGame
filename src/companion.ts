@@ -6,9 +6,9 @@ export const cosmetics = [
     kind: "skin",
     name: "Perle",
     missions: 0,
-    color: "#eee7dc",
+    color: "#d7e7e8",
     accent: "#bc86ed",
-    description: "Coque ivoire et lumière lilas.",
+    description: "Coque nacrée et lumière lilas.",
   },
   {
     id: "rose",

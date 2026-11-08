@@ -16,6 +16,10 @@ const { fresh } = require("../src/engine.ts");
     await p.waitForFunction(
       () => document.querySelector(".farm-scene")?.dataset.companionX,
     );
+    assert.equal(
+      await p.locator(".farm-scene").getAttribute("data-companion-ground"),
+      "none",
+    );
     const initial = await p
       .locator(".farm-scene")
       .getAttribute("data-companion-x");
@@ -27,6 +31,34 @@ const { fresh } = require("../src/engine.ts");
       await p.locator(".farm-scene").getAttribute("data-deployed-robots"),
       "f1",
     );
+    for (let i = 0; i < 3; i++) {
+      const azimuth = await p
+        .locator(".farm-scene")
+        .getAttribute("data-camera-azimuth");
+      await p.mouse.move(470, 490);
+      await p.mouse.down();
+      await p.mouse.move(650, 520, { steps: 10 });
+      await p.mouse.up();
+      await p.waitForFunction(
+        (a) =>
+          Math.abs(
+            Number(
+              document.querySelector(".farm-scene").dataset.cameraAzimuth,
+            ) - Number(a),
+          ) > 0.1,
+        azimuth,
+      );
+      const aligned = await p.locator(".farm-scene").evaluate((el) => {
+        const d = el.dataset,
+          dx = Number(d.companionCameraX) - Number(d.companionX),
+          dz = Number(d.companionCameraZ) - Number(d.companionZ),
+          angle = Number(d.companionFacing);
+        return (
+          (Math.sin(angle) * dx + Math.cos(angle) * dz) / Math.hypot(dx, dz)
+        );
+      });
+      assert.ok(aligned > 0.9999, "Luma keeps facing the player during orbit");
+    }
     await p.screenshot({ path: "/tmp/farm-luma.png" });
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
@@ -93,7 +125,14 @@ const { fresh } = require("../src/engine.ts");
     const still = await p
       .locator(".farm-scene")
       .getAttribute("data-companion-x");
+    const stillY = await p
+      .locator(".farm-scene")
+      .getAttribute("data-companion-y");
     await p.waitForTimeout(1000);
+    assert.equal(
+      await p.locator(".farm-scene").getAttribute("data-companion-y"),
+      stillY,
+    );
     assert.equal(
       await p.locator(".farm-scene").getAttribute("data-companion-x"),
       still,
@@ -115,7 +154,7 @@ const { fresh } = require("../src/engine.ts");
     );
     assert.deepEqual(errors, []);
     console.log(
-      "Companion: patrol, separate fleet, cosmetic unlocks, equipment, persistence, reduced motion and mobile passed",
+      "Companion: floating without ground, camera facing, separate fleet, cosmetic unlocks, equipment, persistence, reduced motion and mobile passed",
     );
   } finally {
     await b.close();

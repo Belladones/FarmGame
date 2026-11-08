@@ -18,38 +18,49 @@ export function CompanionAvatar({
       role="img"
       aria-label="Luma, votre petite robot compagne"
     >
-      <ellipse cx="70" cy="151" rx="34" ry="5" fill="#0004" />
       <path
-        d="M49 123v19h14v-19m14 0v19h14v-19"
+        d="M57 115l-6 24 9 4 9-24m8-4 9 18 9-3-8-20"
         fill={color}
         stroke="#8195a5"
         strokeWidth="2"
       />
-      <path d="M48 91L39 121Q70 139 101 121L92 91Z" fill={color} />
+      <path d="M59 87L54 109Q70 121 86 109L81 87Z" fill={color} />
       <path
-        d="M47 94L36 119m57-25 11 25"
+        d="M56 94L43 116m41-22 12 22"
         stroke={color}
-        strokeWidth="12"
+        strokeWidth="8"
         strokeLinecap="round"
       />
+      <path d="M38 29L34 7l10 18m52-1 9-21-2 30" fill="#304651" />
       <rect
-        x="27"
-        y="16"
-        width="86"
-        height="85"
-        rx="26"
+        x="29"
+        y="21"
+        width="82"
+        height="70"
+        rx="30"
         fill={color}
         stroke="#8da1ad"
         strokeWidth="2"
       />
-      <rect x="34" y="24" width="72" height="68" rx="19" fill={accent} />
-      <rect x="40" y="30" width="60" height="56" rx="14" fill="#101d2c" />
-      <path d="M48 48l4 3m36-3-4 3" stroke="#dbefff" strokeWidth="2" />
-      <ellipse cx="57" cy="58" rx="5" ry="7" fill="#efffff" />
-      <ellipse cx="83" cy="58" rx="5" ry="7" fill="#efffff" />
-      <path d="M65 74q5 4 10 0" fill="none" stroke={accent} strokeWidth="2" />
-      <circle cx="66" cy="108" r="3" fill={accent} />
-      <circle cx="75" cy="108" r="3" fill="#7df0e6" />
+      <rect x="35" y="27" width="70" height="57" rx="24" fill={accent} />
+      <rect x="39" y="31" width="62" height="49" rx="21" fill="#101d2c" />
+      <path
+        d="M49 59q-3-20 8-20t9 20q-8 6-17 0m25 0q-3-20 8-20t9 20q-8 6-17 0"
+        fill="#48e9ed"
+      />
+      <path d="M66 71q4 4 8 0" fill="none" stroke="#48e9ed" strokeWidth="2" />
+      <path
+        d="M36 66q-14-17-15-4 0 9 15 4m0 2q-9 16-13 5 0-8 13-5"
+        fill="#679e70"
+      />
+      <g fill="#f294a9">
+        <circle cx="34" cy="61" r="5" />
+        <circle cx="39" cy="66" r="5" />
+        <circle cx="34" cy="71" r="5" />
+        <circle cx="29" cy="66" r="5" />
+        <circle cx="34" cy="66" r="3" fill="#ffda79" />
+      </g>
+      <path d="M70 92v15" stroke={accent} strokeWidth="2" />
       {accessory === "ribbon" && (
         <path
           d="M92 21Q70 2 78 30L91 25Q115 35 110 13Z"
@@ -97,7 +108,10 @@ export function CompanionPanel({
         <div>
           <span className="overline">VOTRE COMPAGNE</span>
           <h3>Luma</h3>
-          <p>Elle veille sur votre ferme et se promène à son rythme.</p>
+          <p>
+            Elle flotte autour de votre ferme, vous regarde et vous fait des
+            petits coucous.
+          </p>
           <small>
             Cosmétiques sans bonus de production · {count} mission
             {count > 1 ? "s" : ""} récompensée{count > 1 ? "s" : ""}

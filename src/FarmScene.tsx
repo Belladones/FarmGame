@@ -60,7 +60,7 @@ export function FarmScene({
     renderer.domElement.setAttribute("role", "img");
     renderer.domElement.setAttribute(
       "aria-label",
-      `Ferme 3D : ${farm.width * farm.height} parcelles, ${farm.robots.filter((r) => !r.destroyed && r.deployed).length} robots. Le premier robot est un fermier terrestre. Luma, votre compagne, se promène autour de la ferme.`,
+      `Ferme 3D : ${farm.width * farm.height} parcelles, ${farm.robots.filter((r) => !r.destroyed && r.deployed).length} robots. Le premier robot est un fermier terrestre. Luma, votre compagne, flotte autour de la ferme et regarde vers vous.`,
     );
     const scene = new THREE.Scene(),
       camera = new THREE.OrthographicCamera(-8, 8, 8, -8, 0.1, 100),
@@ -645,7 +645,8 @@ export function FarmScene({
       cz(minY) + STEP * 0.85,
     );
     island.add(companion.group);
-    companion.update(0, farm.companion);
+    companion.update(0, farm.companion, camera.position);
+    container.dataset.companionGround = "none";
     container.dataset.companion = "Luma";
     const robotObjects = new Map<string, ReturnType<typeof createRobot>>();
     for (const r of farm.robots) {
@@ -804,12 +805,18 @@ export function FarmScene({
                   (s.unlocks.includes("reservoir2") ? 3 : 1),
               );
       }
-      const companionPose = companion.update(dt, s.companion);
+      controls.update();
+      const companionPose = companion.update(dt, s.companion, camera.position);
       container.dataset.companionX = String(companionPose.x);
       container.dataset.companionZ = String(companionPose.z);
+      container.dataset.companionY = String(companionPose.y);
+      container.dataset.companionFacing = String(companionPose.facing);
+      container.dataset.companionCameraX = String(camera.position.x);
+      container.dataset.companionCameraZ = String(camera.position.z);
+      container.dataset.companionBlink = String(companionPose.blink);
+      container.dataset.companionWave = String(companionPose.wave);
       container.dataset.companionSkin = s.companion.skin;
       container.dataset.companionAccessory = s.companion.accessory;
-      controls.update();
       if (now - lastShadow > 300) {
         renderer.shadowMap.needsUpdate = true;
         lastShadow = now;
