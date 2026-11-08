@@ -31,6 +31,8 @@ import {
   cropProgress,
 } from "./engine";
 import { FarmScene } from "./FarmScene";
+import { CloudSave, downloadFarm, type SyncStatus } from "./persistence";
+import { SessionPanel, type SessionAction } from "./SessionPanel";
 import { Shop, type ShopAction } from "./Shop";
 import { declarations } from "./api";
 import { models, itemNames, sum } from "./catalog";
@@ -170,6 +172,16 @@ function App() {
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const cloud = useRef<CloudSave | null>(null);
+  const syncReady = useRef(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({
+    mode: "loading",
+    player: null,
+    dirty: false,
+    lastSavedAt: null,
+    message: "Recherche de votre session…",
+  });
   const dialogRef = useRef<HTMLElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -223,6 +235,7 @@ function App() {
       "farmscript-v1",
       JSON.stringify({ version: 1, farm: farm.current }),
     );
+    cloud.current?.markDirty();
   };
   const stop = (id = farm.current.activeRobotId, unpause = true) => {
     generations.current.set(id, (generations.current.get(id) ?? 0) + 1);
@@ -239,6 +252,49 @@ function App() {
     for (const id of runtimes.current.keys()) stop(id);
   };
   useEffect(() => {
+    const client = new CloudSave({
+      getFarm: () => farm.current,
+      applyFarm: (saved) => {
+        stopAll();
+        farm.current = hydrateFarm(saved);
+        const r = activeRobot(farm.current);
+        setCode(r.code || starter);
+        setS(structuredClone(farm.current));
+        localStorage.setItem(
+          "farmscript-v1",
+          JSON.stringify({ version: 1, farm: farm.current }),
+        );
+        localStorage.setItem("farmscript-code", r.code || starter);
+      },
+      onChange: setSyncStatus,
+    });
+    cloud.current = client;
+    let alive = true;
+    void client.bootstrap().finally(() => {
+      if (alive) {
+        syncReady.current = true;
+        setSessionReady(true);
+      }
+    });
+    const timer = setInterval(() => void client.flush(), 5000);
+    const leave = () => {
+      void client.flush(true);
+    };
+    const hidden = () => {
+      if (document.visibilityState === "hidden") leave();
+    };
+    window.addEventListener("pagehide", leave);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      alive = false;
+      syncReady.current = false;
+      clearInterval(timer);
+      window.removeEventListener("pagehide", leave);
+      document.removeEventListener("visibilitychange", hidden);
+      client.dispose();
+    };
+  }, []);
+  useEffect(() => {
     const r = activeRobot(farm.current);
     if (r) {
       setCode(r.code || starter);
@@ -251,7 +307,7 @@ function App() {
       const now = performance.now(),
         elapsed = Math.min(1, (now - previousTick) / 1000);
       previousTick = now;
-      if (pausedRef.current) return;
+      if (pausedRef.current || !syncReady.current) return;
       advance(farm.current, elapsed * speedRef.current);
       for (const [id, rt] of runtimes.current) {
         const r = farm.current.robots.find((r) => r.id === id && !r.destroyed);
@@ -293,6 +349,7 @@ function App() {
     };
   }, []);
   async function run() {
+    if (!syncReady.current) return;
     const id = farm.current.activeRobotId;
     stop(id);
     const generation = generations.current.get(id),
@@ -415,6 +472,37 @@ function App() {
       return false;
     }
   };
+  const sessionAction = async (action: SessionAction) => {
+    const client = cloud.current;
+    if (!client) return;
+    if (action.type === "export") {
+      downloadFarm(farm.current);
+      return;
+    }
+    const freeze = ["auth", "cloud", "local", "logout", "retry"].includes(
+      action.type,
+    );
+    if (freeze) {
+      stopAll();
+      syncReady.current = false;
+    }
+    try {
+      if (action.type === "auth")
+        await client.authenticate(
+          action.kind,
+          action.username,
+          action.password,
+        );
+      else if (action.type === "save") {
+        await client.flush();
+      } else if (action.type === "retry") await client.retry();
+      else if (action.type === "cloud") await client.useCloud();
+      else if (action.type === "local") await client.useLocal();
+      else if (action.type === "logout") await client.logout();
+    } finally {
+      if (freeze) syncReady.current = true;
+    }
+  };
   const active = missions.find((m) => !s.claimed.includes(m.id));
   const togglePanel = (name: string) =>
     setPanel((p) => (p === name ? null : name));
@@ -427,6 +515,11 @@ function App() {
   const growth = cropProgress(s, tile);
   return (
     <div className={"game " + (!editorOpen ? "editor-collapsed" : "")}>
+      {!sessionReady && (
+        <div className="session-loading" role="status">
+          Chargement de la session…
+        </div>
+      )}
       <FarmScene
         farm={s}
         paused={paused}
@@ -476,6 +569,29 @@ function App() {
               ▣ {sum(selectedRobot.inventory)} / {capacity(s)}
             </span>
           </div>
+          <button
+            className={"sync-badge " + syncStatus.mode}
+            aria-label="Session et sauvegarde"
+            onClick={() => setPanel("Session et sauvegarde")}
+          >
+            <span>●</span>{" "}
+            {syncStatus.player ? syncStatus.player.username : "Se connecter"}{" "}
+            <small>
+              {syncStatus.mode === "saving"
+                ? "Enregistrement…"
+                : syncStatus.mode === "conflict"
+                  ? "Conflit à résoudre"
+                  : syncStatus.mode === "expired"
+                    ? "Session expirée"
+                    : syncStatus.mode === "offline"
+                      ? "Hors connexion"
+                      : syncStatus.player
+                        ? syncStatus.dirty
+                          ? "À enregistrer"
+                          : "Enregistré"
+                        : "Mode local"}
+            </small>
+          </button>
         </div>
       </header>
       <div className="island-caption">
@@ -579,6 +695,7 @@ function App() {
                   "farmscript-code",
                   examples[e.target.value],
                 );
+                refresh();
               }
             }}
           >
@@ -602,6 +719,7 @@ function App() {
               setCode(v || "");
               activeRobot(farm.current).code = v || "";
               localStorage.setItem("farmscript-code", v || "");
+              refresh();
             }}
             options={{
               fontSize: 13,
@@ -841,6 +959,9 @@ function App() {
               </button>
             </div>
             <div className="panel-content">
+              {panel === "Session et sauvegarde" && (
+                <SessionPanel status={syncStatus} onAction={sessionAction} />
+              )}
               {panel === "Missions" && (
                 <>
                   <p className="panel-intro">

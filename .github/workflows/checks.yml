@@ -5,6 +5,20 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: farmscript_test
+          POSTGRES_PASSWORD: farmscript_test
+          POSTGRES_DB: farmscript_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U farmscript_test -d farmscript_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -13,4 +27,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: npm run test:server
+        env:
+          TEST_DATABASE_URL: postgresql://farmscript_test:farmscript_test@127.0.0.1:5432/farmscript_test
       - run: npm run build

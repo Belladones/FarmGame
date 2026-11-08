@@ -676,6 +676,14 @@ export function FarmScene({
       const dt = Math.min(0.1, (now - lastFrame) / 1000);
       lastFrame = now;
       const { farm: s, paused: pause, zoom: z, resetView: v } = state.current;
+      // React can publish a loaded farm before the old scene's effect is disposed.
+      // Leave this frame unchanged until the scene for the new dimensions exists.
+      if (
+        s.width !== width ||
+        s.height !== height ||
+        s.tiles.length !== grounds.length
+      )
+        return;
       if (state.current.editorOpen !== lastEditor) {
         resize();
         lastEditor = state.current.editorOpen;

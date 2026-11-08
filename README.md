@@ -4,21 +4,58 @@ Un jeu de farming pour apprendre TypeScript : ferme low poly, robots programmabl
 
 ## Développement
 
-Node.js 22 ou 24 et npm, sans secret ni service externe.
+Node.js 22 ou 24, npm et PostgreSQL 16 (ou Docker Desktop pour le démarrer). L’API et le jeu sont écrits en TypeScript.
+
+Depuis le dossier du projet :
 
 ```sh
 npm ci
+cp .env.example .env
+docker compose up -d --wait db
 npm run dev
 ```
 
-Ouvrir http://localhost:5173 et garder le terminal ouvert. `Ctrl+C` arrête le serveur. Si un ancien essai utilisait le chemin cloud `/workspace/.npm-cache`, relancer `npm ci --cache "$HOME/.npm"` depuis le projet.
+Ne pas écraser un `.env` existant : renseigner les variables qui manquent. Le mot de passe de l’exemple est réservé au développement local. `DATABASE_URL` est lu uniquement par le serveur ; ne pas créer de variable `VITE_DATABASE_URL`.
+
+Ouvrir http://localhost:5173. Vite transmet `/api` à l’API sur le port 3001. `npm run dev` démarre les deux processus ; `Ctrl+C` les arrête. PostgreSQL utilise un volume Docker persistant et n’est exposé que sur `127.0.0.1:5432`. `docker compose stop db` conserve les données ; ne pas supprimer le volume pour arrêter la base.
+
+Avec une base PostgreSQL déjà installée, renseigner sa `DATABASE_URL` dans `.env` et ignorer la commande Docker. Les migrations SQL sont appliquées automatiquement au démarrage de l’API ; `npm run db:migrate` permet de les appliquer séparément. Si seul le frontend est nécessaire, `npm run dev:web` conserve le mode local, avec un état serveur indisponible si l’API ne tourne pas.
+
+Si un ancien essai utilisait `/workspace/.npm-cache`, relancer `npm ci --cache "$HOME/.npm"` depuis le projet.
 
 ```sh
 npm test
+npm run test:server
 npm run build
 ```
 
-Tests navigateur, serveur lancé dans un autre terminal : `npm run test:e2e`. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, on peut par exemple définir `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les trois parcours vérifient le programme initial, les erreurs TypeScript, les sauvegardes, les parcelles et la caméra, les arbres de compétences, le shop et deux programmes de robots simultanés. Les captures sont écrites dans `/tmp`.
+`test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
+
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les trois parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+
+En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
+
+## Comptes, sessions et sauvegardes PostgreSQL
+
+Le bouton **Session et sauvegarde**, en haut à droite, permet de créer un compte avec pseudo et mot de passe, se connecter et se déconnecter. Le pseudo accepte 3 à 24 lettres, chiffres, `_` ou `-`, sans distinction de casse. Les mots de passe font 10 à 128 caractères et sont hachés avec scrypt et un sel aléatoire. La récupération de mot de passe et la vérification par email ne sont pas encore proposées.
+
+La session dure 30 jours d’inactivité et se renouvelle lors de l’utilisation. Elle repose sur un cookie `HttpOnly`, `SameSite=Lax`, `Secure` en production. Le navigateur ne conserve aucun jeton de session dans localStorage ; la base ne conserve que l’empreinte du jeton. La déconnexion révoque cette session, sans déconnecter les autres appareils, et remet le navigateur en mode local avec une ferme vierge après enregistrement de la ferme du compte.
+
+La sauvegarde automatique enregistre toutes les cinq secondes une photographie complète de la ferme : terrain, cultures, stocks par dépôt, or, robots et leurs programmes, machines et tampons, eau, recherches, missions et commandes. Les programmes ne sont pas relancés automatiquement à la reconnexion ; les processus ne sont pas des données de sauvegarde. Le même compte retrouve la même ferme sur un autre appareil.
+
+- Sans compte, le jeu garde son mode local. La création d’un compte importe la ferme locale dans ce nouveau compte.
+- Si un compte existant possède déjà une ferme différente, l’interface demande laquelle conserver. Il n’y a pas de fusion automatique des inventaires.
+- Les écritures portent une révision PostgreSQL. Un onglet ou appareil périmé reçoit un conflit, conservé même après rechargement, plutôt que d’écraser silencieusement les autres changements. Un identifiant d’écriture permet de reconnaître une sauvegarde déjà reçue quand sa réponse réseau a été perdue.
+- En cas de panne réseau, les changements restent dans la copie locale et reprennent leur synchronisation au retour du serveur. Si une autre session a progressé entre-temps, le conflit est signalé.
+- L’interface permet aussi l’enregistrement manuel, le chargement de la version du compte et l’export JSON. Une copie temporaire de secours est créée dans le navigateur avant de remplacer une ferme.
+
+Tables : `players` pour les comptes, `player_sessions` pour les sessions et `farm_saves` pour l’état complet en JSONB, sa révision et sa date de mise à jour. Les sauvegardes sont rattachées au compte, jamais à un identifiant de joueur fourni librement par le client. Les migrations sont versionnées dans `server/migrations/`. Les sauvegardes sont limitées à 2 Mo et la validation conserve les champs du jeu sans exécuter les programmes sauvegardés côté serveur.
+
+Le volume PostgreSQL doit être sauvegardé comme toute base applicative. Exemple de sauvegarde locale, sans inclure le mot de passe dans une commande :
+
+```sh
+docker compose exec -T db pg_dump -U farmscript -d farmscript > farmscript-backup.sql
+```
 
 ## Jouer
 
@@ -41,7 +78,7 @@ Le blé pousse en 5 secondes de simulation. Les appels agricoles et transferts p
 - La barre du programme lance, suspend ou arrête son exécution. ×1 / ×2 / ×5 règle le temps de simulation. La pause s’applique à toute la ferme ; le shop permet aussi de suspendre la simulation sans lancer un robot.
 - Le bouton i ouvre le guide et l’API ; les chevrons ouvrent les trois pages de recherches ; le panier ouvre le shop ; la carte de mission ouvre les objectifs.
 
-Les anciennes sauvegardes sont migrées automatiquement. Le blé, la cargaison, les cultures, le code, les recherches et l’or sont conservés. Une ancienne cargaison supérieure aux nouvelles 10 unités n’est pas détruite : déposez-la avant de récolter davantage. Les processus ne sont pas relancés automatiquement après rechargement.
+Les anciennes sauvegardes locales sont migrées automatiquement, puis importables dans un compte. Le blé, la cargaison, les cultures, le code, les recherches et l’or sont conservés. Une ancienne cargaison supérieure aux nouvelles 10 unités n’est pas détruite : déposez-la avant de récolter davantage. Les processus ne sont pas relancés automatiquement après rechargement.
 
 ## Shop et économie
 
@@ -90,6 +127,8 @@ Après perte du dernier fermier, un unique fermier de secours non vendable et de
 
 ## Architecture et limites actuelles
 
+- `server/` : API Express, comptes, sessions, validation, migrations et écritures PostgreSQL avec révisions.
+- `src/persistence.ts` et `src/SessionPanel.tsx` : synchronisation, conflits et interface des sessions.
 - `src/catalog.ts` : catalogue et prix issus du document, recherches implémentées, recettes, modèles, cultures et commandes commerciales.
 - `src/engine.ts` : état de la ferme, migration, actions, achats, stocks locaux, cycles, eau, déplacements, collisions et réparation. Tests dans `src/engine.test.ts` et `src/shop.test.ts`.
 - `src/FarmScene.tsx` : caméra orbitale et modèles 3D procéduraux originaux des robots, cultures et bâtiments, sans assets téléchargés.
