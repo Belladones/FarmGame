@@ -10,11 +10,11 @@ import {
   buy,
   claim,
   missions,
-  research,
   sell,
   type Farm,
 } from "./engine";
 import { FarmScene } from "./FarmScene";
+import { SkillTree } from "./SkillTree";
 import { Icon, ResourceIcon } from "./Icons";
 import "./style.css";
 (self as any).MonacoEnvironment = {
@@ -589,15 +589,24 @@ function App() {
         <Icon name="arrow" size={18} />
       </button>
       <div className="scene-hint">
-        Glisser pour tourner <span>·</span> Molette pour zoomer
+        Cases carrées · Vue de dessus <span>·</span> Molette pour zoomer
       </div>
       {panel && (
-        <div className="panel-backdrop" onClick={() => setPanel(null)}>
+        <div
+          className={
+            "panel-backdrop " +
+            (panel === "Recherches" ? "skills-backdrop" : "")
+          }
+          onClick={() => setPanel(null)}
+        >
           <section
             role="dialog"
             aria-modal="true"
             aria-label={panel}
-            className="detail-panel floating-window"
+            className={
+              "detail-panel floating-window " +
+              (panel === "Recherches" ? "skill-screen" : "")
+            }
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === "Escape") setPanel(null);
@@ -687,59 +696,26 @@ function App() {
                 </>
               )}
               {panel === "Recherches" && (
-                <>
-                  <div className="research-summary">
-                    <ResourceIcon kind="wheat" />
-                    <div>
-                      <strong>{s.stock} blés</strong>
-                      <span>disponibles dans le dépôt</span>
-                    </div>
-                  </div>
-                  <div className="research-grid">
-                    {research.map((r) => (
-                      <article key={r.id}>
-                        <h3>{r.name}</h3>
-                        <p>{r.detail}</p>
-                        <button
-                          disabled={
-                            s.unlocks.includes(r.id) ||
-                            s.stock < r.cost ||
-                            (r.id === "position" && s.width < 3)
-                          }
-                          onClick={() => {
-                            buy(farm.current, r.id);
-                            refresh();
-                          }}
-                        >
-                          {s.unlocks.includes(r.id)
-                            ? "✓ Acquis"
-                            : `Rechercher · ${r.cost} blés`}
-                        </button>
-                      </article>
-                    ))}
-                  </div>
-                  <div className="trade">
-                    <span>◈ {s.gold} pièces d’or</span>
-                    <button
-                      disabled={s.stock < 10}
-                      onClick={() => {
-                        sell(farm.current);
-                        refresh();
-                      }}
-                    >
-                      Vendre 10 blés · +10 or
-                    </button>
-                  </div>
-                </>
+                <SkillTree
+                  farm={s}
+                  onBuy={(id) => {
+                    buy(farm.current, id);
+                    refresh();
+                  }}
+                  onSell={() => {
+                    sell(farm.current);
+                    refresh();
+                  }}
+                />
               )}
               {panel === "API & aide" && (
                 <div className="docs">
                   <h2>Un robot. Vos instructions.</h2>
                   <p>
                     Lancez le programme f1 pour planter, récolter et déposer
-                    automatiquement. Le robot travaille sur les cases bordées
-                    d’or ; le reste de l’îlot est un décor sauvage. Vos
-                    premières recherches permettent d’exploiter trois cases.
+                    automatiquement. Le plateau affiche uniquement vos cases
+                    débloquées, vues de dessus pour conserver leur forme carrée.
+                    La première extension ajoute deux cases à droite de (0, 0).
                   </p>
                   <div className="manual">
                     <span>Essayer une commande</span>

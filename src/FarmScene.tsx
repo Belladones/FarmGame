@@ -11,9 +11,7 @@ interface Props {
   editorOpen: boolean;
 }
 // Original procedural models: no downloaded assets or textures.
-const SIDE = 6,
-  STEP = 1.28;
-const center = (n: number) => (n - (SIDE - 1) / 2) * STEP;
+const STEP = 1.28;
 function material(color: number) {
   return new THREE.MeshStandardMaterial({
     color,
@@ -64,15 +62,14 @@ export function FarmScene({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minPolarAngle = 0.25;
-    controls.maxPolarAngle = 1.18;
+    controls.enableRotate = false;
     controls.minZoom = 0.7;
     controls.maxZoom = 2;
-    controls.rotateSpeed = 0.5;
     controls.zoomSpeed = 0.7;
     function home() {
-      camera.position.set(1.2, 12, 13.8);
-      controls.target.set(0, 0, 0);
+      camera.up.set(0, 0, -1);
+      camera.position.set(-STEP * 0.65, 12, 0);
+      controls.target.set(-STEP * 0.65, 0, 0);
       camera.zoom = state.current.zoom;
       camera.updateProjectionMatrix();
       controls.update();
@@ -90,14 +87,13 @@ export function FarmScene({
     sun.shadow.normalBias = 0.035;
     sun.shadow.bias = -0.0002;
     scene.add(sun);
+    const width = state.current.farm.width;
+    const center = (x: number) => (x - (width - 1) / 2) * STEP;
     const dirt = material(0x9d642b),
       edge = material(0xbe883c),
       green = material(0x7c8629),
-      soil = material(0x94612b),
       trunk = material(0x614015),
-      leaf = material(0x939f30),
       leafLight = material(0xa9ae3c),
-      rock = material(0xbbbaa0),
       gold = material(0xd6b448),
       dark = material(0x45482e),
       purple = material(0x975575);
@@ -105,18 +101,13 @@ export function FarmScene({
     scene.add(island);
     const boxGeo = new THREE.BoxGeometry(1, 1, 1),
       stemGeo = new THREE.CylinderGeometry(0.012, 0.017, 1, 4),
-      grainGeo = new THREE.ConeGeometry(0.045, 0.15, 4),
-      crownGeo = new THREE.IcosahedronGeometry(0.35, 0),
-      cylinderGeo = new THREE.CylinderGeometry(0.1, 0.13, 1, 5);
+      grainGeo = new THREE.ConeGeometry(0.045, 0.15, 4);
     const allMaterials = new Set<THREE.Material>([
       dirt,
       edge,
       green,
-      soil,
       trunk,
-      leaf,
       leafLight,
-      rock,
       gold,
       dark,
       purple,
@@ -139,20 +130,11 @@ export function FarmScene({
       parent.add(m);
       return m;
     }
-    box(
-      island,
-      dirt,
-      SIDE * STEP + 0.08,
-      0.65,
-      SIDE * STEP + 0.08,
-      0,
-      -0.38,
-      0,
-    );
-    box(island, edge, SIDE * STEP + 0.1, 0.1, SIDE * STEP + 0.1, 0, -0.04, 0);
+    box(island, dirt, width * STEP + 0.04, 0.65, STEP + 0.04, 0, -0.38, 0);
+    box(island, edge, width * STEP + 0.04, 0.1, STEP + 0.04, 0, -0.04, 0);
     const bottom = material(0x855a32);
     allMaterials.add(bottom);
-    box(island, bottom, SIDE * STEP, 0.16, SIDE * STEP, 0, -0.77, 0);
+    box(island, bottom, width * STEP, 0.16, STEP, 0, -0.77, 0);
     // A softly fading shadow anchors the floating island in the blue-gray void.
     const shadowCanvas = document.createElement("canvas");
     shadowCanvas.width = 128;
@@ -170,12 +152,14 @@ export function FarmScene({
       depthWrite: false,
     });
     allMaterials.add(shadowMat);
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(13, 11), shadowMat);
+    const shadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(width * STEP + 3, 4),
+      shadowMat,
+    );
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = -1.7;
     scene.add(shadow);
     const grounds: THREE.Mesh[] = [],
-      growth: THREE.Group[] = [],
       crops: THREE.Group[] = [];
     const dummy = new THREE.Object3D();
     function wheat(parent: THREE.Object3D, seed: number, count = 40) {
@@ -206,67 +190,23 @@ export function FarmScene({
       }
       return g;
     }
-    function tree(parent: THREE.Object3D, seed: number) {
+    for (let x = 0; x < width; x++) {
       const g = new THREE.Group();
-      parent.add(g);
-      const t = new THREE.Mesh(cylinderGeo, trunk);
-      t.scale.set(0.8, 0.8, 0.8);
-      t.position.y = 0.4;
-      t.castShadow = true;
-      g.add(t);
-      for (let k = 0; k < 4; k++) {
-        const c = new THREE.Mesh(crownGeo, k % 2 ? leaf : leafLight);
-        c.position.set(
-          k === 1 ? -0.22 : k === 2 ? 0.23 : 0,
-          0.85 + (k === 3 ? 0.4 : k * 0.06),
-          k === 0 ? -0.1 : 0.08,
-        );
-        c.scale.setScalar(k === 3 ? 1.1 : 1.25);
-        c.rotation.set(seed * 0.7, k, 0.3);
-        c.castShadow = true;
-        g.add(c);
-      }
-      g.rotation.y = seed;
-      return g;
+      g.position.set(center(x), 0.02, 0);
+      island.add(g);
+      grounds.push(box(g, green, STEP - 0.035, 0.035, STEP - 0.035, 0, 0, 0));
+      crops.push(wheat(g, x, 54));
     }
-    for (let z = 0; z < SIDE; z++)
-      for (let x = 0; x < SIDE; x++) {
-        const index = z * SIDE + x,
-          g = new THREE.Group();
-        g.position.set(center(x), 0.02, center(z));
-        island.add(g);
-        const tile = box(g, green, STEP - 0.035, 0.035, STEP - 0.035, 0, 0, 0);
-        grounds.push(tile);
-        const plants = new THREE.Group();
-        g.add(plants);
-        growth.push(plants);
-        if (z === 3 && x >= 2 && x <= 4) {
-          const crop = wheat(g, index, 54);
-          crops.push(crop);
-          continue;
-        }
-        // Untamed surroundings are scenery; only outlined central plots produce stock.
-        if ((x + z * 3) % 5 === 0 || (x * 2 + z) % 7 === 0) {
-          const t = tree(plants, index);
-          t.scale.setScalar(0.83 + (index % 3) * 0.09);
-        } else if ((x + z) % 3 !== 0) {
-          wheat(plants, index, 32);
-        } else {
-          for (let j = 0; j < 3; j++) {
-            const r = new THREE.Mesh(crownGeo, j === 1 ? leaf : rock);
-            r.scale.setScalar(0.19 + j * 0.08);
-            r.position.set(j * 0.27 - 0.3, 0.08, (j % 2) * 0.32 - 0.15);
-            r.rotation.y = j;
-            r.castShadow = true;
-            plants.add(r);
-          }
-        }
-      }
+    // Expose the actual rendered plot count for accessibility and browser validation.
+    container.dataset.plotCount = String(grounds.length);
+    renderer.domElement.setAttribute(
+      "aria-label",
+      `Ferme : ${grounds.length} parcelle${grounds.length > 1 ? "s" : ""} carrée${grounds.length > 1 ? "s" : ""}, dépôt adjacent et robot`,
+    );
     // The warehouse sits one tile west of the origin, exactly as deposit() expects.
     const warehouse = new THREE.Group();
-    warehouse.position.set(center(1), 0.08, center(3));
+    warehouse.position.set(center(0) - STEP * 1.1, 0.08, 0);
     island.add(warehouse);
-    growth[3 * SIDE + 1].visible = false;
     const wall = material(0xb59960),
       roof = material(0x76503a);
     allMaterials.add(wall);
@@ -284,6 +224,25 @@ export function FarmScene({
     warehouse.add(roofMesh);
     box(warehouse, gold, 0.15, 0.18, 0.2, 0.39, 0.1, 0.2);
     box(warehouse, gold, 0.15, 0.15, 0.2, 0.42, 0.09, -0.08);
+    const labelCanvas = document.createElement("canvas");
+    labelCanvas.width = 256;
+    labelCanvas.height = 64;
+    const labelContext = labelCanvas.getContext("2d")!;
+    labelContext.font = "24px monospace";
+    labelContext.textAlign = "center";
+    labelContext.fillStyle = "#e8e4c9";
+    labelContext.fillText("DÉPÔT", 128, 40);
+    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+    const labelMaterial = new THREE.SpriteMaterial({
+      map: labelTexture,
+      transparent: true,
+      depthTest: false,
+    });
+    allMaterials.add(labelMaterial);
+    const label = new THREE.Sprite(labelMaterial);
+    label.scale.set(1.1, 0.275, 1);
+    label.position.set(warehouse.position.x, 0.8, 0.65);
+    island.add(label);
     // Original four-rotor farming bot, with a purple shell and visible cargo.
     const robot = new THREE.Group();
     island.add(robot);
@@ -339,15 +298,12 @@ export function FarmScene({
     const outlineGeo = new THREE.EdgesGeometry(
       new THREE.BoxGeometry(STEP - 0.05, 0.045, STEP - 0.05),
     );
-    const outlines: THREE.LineSegments[] = [];
-    for (let x = 0; x < 3; x++) {
+    for (let x = 0; x < width; x++) {
       const line = new THREE.LineSegments(outlineGeo, outlineMat);
-      line.position.set(center(x + 2), 0.065, center(3));
+      line.position.set(center(x), 0.065, 0);
       island.add(line);
-      outlines.push(line);
     }
-    let lastWidth = 0,
-      lastEditor = state.current.editorOpen,
+    let lastEditor = state.current.editorOpen,
       lastView = state.current.resetView,
       lastZoom = state.current.zoom,
       disposed = false,
@@ -360,7 +316,11 @@ export function FarmScene({
         h = container.clientHeight;
       if (!w || !h) return;
       renderer.setSize(w, h);
-      const extent = w < 700 ? Math.max(8.4, (4.9 * h) / w) : 7.6;
+      const available = w >= 900 && state.current.editorOpen ? 0.57 : 0.88;
+      const extent = Math.max(
+        3.1,
+        ((width + 1.8) * STEP * h) / (2 * w * available),
+      );
       camera.left = (-extent * w) / h;
       camera.right = (extent * w) / h;
       camera.top = extent;
@@ -375,6 +335,16 @@ export function FarmScene({
         h,
       );
       camera.updateProjectionMatrix();
+      camera.updateMatrixWorld();
+      const a = new THREE.Vector3(0, 0.04, 0).project(camera);
+      const b = new THREE.Vector3(STEP, 0.04, 0).project(camera);
+      const c = new THREE.Vector3(0, 0.04, STEP).project(camera);
+      container.dataset.cellWidth = String(
+        Math.hypot(((b.x - a.x) * w) / 2, ((b.y - a.y) * h) / 2),
+      );
+      container.dataset.cellHeight = String(
+        Math.hypot(((c.x - a.x) * w) / 2, ((c.y - a.y) * h) / 2),
+      );
     };
     const observer = new ResizeObserver(resize);
     observer.observe(container);
@@ -404,14 +374,7 @@ export function FarmScene({
         camera.updateProjectionMatrix();
         lastZoom = z;
       }
-      if (s.width !== lastWidth) {
-        for (let x = 0; x < 3; x++) {
-          outlines[x].visible = x < s.width;
-          grounds[3 * SIDE + x + 2].material = x < s.width ? soil : green;
-        }
-        lastWidth = s.width;
-      }
-      for (let x = 0; x < 3; x++) {
+      for (let x = 0; x < width; x++) {
         const crop = crops[x],
           tile = s.tiles[x];
         crop.visible = !!tile && tile.planted !== null;
@@ -421,9 +384,9 @@ export function FarmScene({
           crop.scale.x = crop.scale.z = 0.6 + 0.4 * p;
         }
       }
-      const targetX = center(2 + s.x);
+      const targetX = center(s.x);
       robot.position.x += (targetX - robot.position.x) * 0.15;
-      robot.position.z = center(3);
+      robot.position.z = 0;
       robot.position.y = 0.12 + (!pause ? Math.sin(now * 0.003) * 0.025 : 0);
       for (const rotor of rotors) if (run && !pause) rotor.rotation.y += 0.9;
       controls.update();
@@ -441,7 +404,7 @@ export function FarmScene({
       }
       renderer.render(scene, camera);
     };
-    robot.position.set(center(2 + state.current.farm.x), 0.12, center(3));
+    robot.position.set(center(state.current.farm.x), 0.12, 0);
     frame = requestAnimationFrame(draw);
     return () => {
       disposed = true;
@@ -454,10 +417,11 @@ export function FarmScene({
       });
       allMaterials.forEach((m) => m.dispose());
       shadowTexture.dispose();
+      labelTexture.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, []);
+  }, [farm.width]);
   return (
     <div ref={host} className="farm-scene" data-testid="farm-scene">
       {failed && (
