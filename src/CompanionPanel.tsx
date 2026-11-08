@@ -1,3 +1,4 @@
+import { lumaHeadPath } from "./lumaHead";
 import { useState } from "react";
 import type { Farm } from "./engine";
 import { cosmetics, companionMissionCount } from "./companion";
@@ -32,18 +33,31 @@ export function CompanionAvatar({
         strokeLinecap="round"
       />
       <path d="M38 29L34 7l10 18m52-1 9-21-2 30" fill="#304651" />
-      <rect
-        x="29"
-        y="21"
-        width="82"
-        height="70"
-        rx="30"
+      <path
+        d={lumaHeadPath}
+        transform="translate(70 55) scale(82)"
         fill={color}
         stroke="#8da1ad"
-        strokeWidth="2"
+        strokeWidth=".022"
       />
-      <rect x="35" y="27" width="70" height="57" rx="24" fill={accent} />
-      <rect x="39" y="31" width="62" height="49" rx="21" fill="#101d2c" />
+      <path
+        d={lumaHeadPath}
+        transform="translate(70 55) scale(73.8)"
+        fill={accent}
+      />
+      <path
+        d={lumaHeadPath}
+        transform="translate(70 55) scale(67.2)"
+        fill="#101d2c"
+      />
+      <path
+        d="M49 42Q53 32 63 31"
+        fill="none"
+        stroke="#d4f6ff"
+        strokeWidth="1.5"
+        opacity=".3"
+        strokeLinecap="round"
+      />
       <path
         d="M49 59q-3-20 8-20t9 20q-8 6-17 0m25 0q-3-20 8-20t9 20q-8 6-17 0"
         fill="#48e9ed"
@@ -60,6 +74,7 @@ export function CompanionAvatar({
         <circle cx="29" cy="66" r="5" />
         <circle cx="34" cy="66" r="3" fill="#ffda79" />
       </g>
+      <circle cx="70" cy="100" r="2.5" fill="#48e9ed" />
       <path d="M70 92v15" stroke={accent} strokeWidth="2" />
       {accessory === "ribbon" && (
         <path

@@ -1,3 +1,4 @@
+import { createLumaHeadShape } from "./lumaHead";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { cosmetics, type Companion } from "./companion";
@@ -108,20 +109,71 @@ export function createCompanion() {
     }
     return f;
   };
-  // A rounded visor, expressive cyan eyes and slender botanical antennae.
+  // The shell and OLED use the same outline; their depth never limits corner curvature.
   const head = new THREE.Group();
   head.position.y = 1.13;
   body.add(head);
-  rounded(head, joint, 0.48, 0.45, 0.33, 0, 0, 0, 0.1);
-  rounded(head, shell, 0.5, 0.45, 0.3, 0, 0, 0.035, 0.1);
-  rounded(head, accent, 0.435, 0.37, 0.035, 0, -0.005, 0.197, 0.08);
-  rounded(head, screen, 0.405, 0.34, 0.045, 0, 0, 0.217, 0.09);
+  const outline = createLumaHeadShape();
+  const headLayer = (
+    name: string,
+    m: THREE.Material,
+    width: number,
+    depth: number,
+    z: number,
+    bevel = 0.007,
+  ) => {
+    const geometry = new THREE.ExtrudeGeometry(outline, {
+      depth,
+      bevelEnabled: true,
+      bevelSize: 0.018,
+      bevelThickness: bevel,
+      bevelSegments: 5,
+      curveSegments: 32,
+      steps: 1,
+    });
+    const mesh = new THREE.Mesh(geometry, m);
+    mesh.name = name;
+    mesh.scale.set(width, width, 1);
+    mesh.position.z = z;
+    mesh.castShadow = mesh.receiveShadow = true;
+    head.add(mesh);
+    return mesh;
+  };
+  headLayer("Luma.head.back", joint, 0.53, 0.18, -0.12);
+  headLayer("Luma.head.shell", shell, 0.52, 0.25, -0.08);
+  headLayer("Luma.head.bezel", accent, 0.468, 0.022, 0.173, 0.004);
+  headLayer("Luma.head.screen", screen, 0.426, 0.023, 0.193, 0.004);
+  screen.roughness = 0.16;
+  screen.metalness = 0.32;
+  const reflection = material(0xd4f6ff);
+  reflection.transparent = true;
+  reflection.opacity = 0.16;
+  reflection.depthWrite = false;
+  const glint = new THREE.Mesh(
+    new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.145, 0.085, 0.224),
+        new THREE.Vector3(-0.11, 0.14, 0.225),
+        new THREE.Vector3(-0.045, 0.16, 0.224),
+      ]),
+      16,
+      0.003,
+      6,
+      false,
+    ),
+    reflection,
+  );
+  head.add(glint);
+  for (const side of [-1, 1]) {
+    orb(head, joint, 0.04, side * 0.257, 0.025, 0.01).scale.set(0.45, 1, 1);
+    orb(head, accent, 0.025, side * 0.266, 0.025, 0.022).scale.set(0.45, 1, 1);
+  }
   const eyes: THREE.Mesh[] = [];
   for (const side of [-1, 1]) {
-    const e = orb(head, eye, 0.063, side * 0.097, 0.008, 0.247);
+    const e = orb(head, eye, 0.063, side * 0.097, 0.008, 0.228);
     e.scale.set(0.78, 1.12, 0.22);
     eyes.push(e);
-    orb(head, petal, 0.024, side * 0.14, -0.07, 0.242).scale.set(1, 0.3, 0.2);
+    orb(head, petal, 0.024, side * 0.14, -0.07, 0.222).scale.set(1, 0.3, 0.2);
     const antenna = new THREE.Mesh(
       new THREE.ConeGeometry(0.028, 0.22, 5),
       joint,
@@ -129,12 +181,13 @@ export function createCompanion() {
     antenna.position.set(side * 0.2, 0.29, -0.01);
     antenna.rotation.z = side * -0.2;
     head.add(antenna);
+    orb(head, accent, 0.014, side * 0.222, 0.395, -0.01);
   }
   const smile = new THREE.Mesh(
     new THREE.TorusGeometry(0.031, 0.005, 5, 16, Math.PI * 0.7),
     eye,
   );
-  smile.position.set(0, -0.079, 0.247);
+  smile.position.set(0, -0.079, 0.231);
   smile.rotation.z = Math.PI * 1.15;
   head.add(smile);
   bloom(head, -0.23, -0.045, 0.18, 0.7);
@@ -145,6 +198,7 @@ export function createCompanion() {
   rounded(body, joint, 0.075, 0.1, 0.08, 0, 0.87, 0);
   const chest = rounded(body, shell, 0.25, 0.29, 0.19, 0, 0.69, 0, 0.055);
   chest.rotation.z = -0.035;
+  orb(body, eye, 0.018, 0, 0.745, 0.104).scale.z = 0.5;
   rounded(body, accent, 0.012, 0.23, 0.015, 0, 0.7, 0.1, 0.004);
   orb(body, joint, 0.093, 0, 0.475, 0).scale.set(1, 0.75, 0.9);
   for (const side of [-1, 1]) {
