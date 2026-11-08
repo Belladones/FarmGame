@@ -1865,3 +1865,6 @@
 .gui-companion[aria-hidden="true"] {
   visibility: hidden !important;
 }
+img.companion-avatar {
+  object-fit: contain;
+}

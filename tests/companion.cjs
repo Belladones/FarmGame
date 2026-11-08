@@ -9,12 +9,23 @@ const { fresh } = require("../src/engine.ts");
   });
   try {
     const p = await b.newPage({ viewport: { width: 1440, height: 1000 } }),
-      errors = [];
+      errors = [],
+      assetErrors = [];
     p.setDefaultTimeout(30000);
+    p.on("response", (r) => {
+      if (r.url().includes("/models/luma/") && r.status() >= 400)
+        assetErrors.push(r.url());
+    });
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     const mascot = p.locator(".gui-companion");
     await mascot.locator("canvas").waitFor();
+    await p.waitForFunction(
+      () => document.querySelector(".gui-companion").dataset.model === "cyber",
+    );
+    assert.ok(
+      ["pending", "ready"].includes(await mascot.getAttribute("data-textures")),
+    );
     await p.waitForFunction(
       () => document.querySelector(".gui-companion").dataset.x,
     );
@@ -165,6 +176,7 @@ const { fresh } = require("../src/engine.ts");
       true,
     );
     assert.deepEqual(errors, []);
+    assert.deepEqual(assetErrors, []);
     console.log(
       "Companion: GUI roaming, click-through, independent farm camera, separate fleet, cosmetic unlocks, equipment, persistence, reduced motion and mobile passed",
     );

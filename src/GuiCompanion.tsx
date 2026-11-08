@@ -1,3 +1,4 @@
+import { loadCyberCompanion } from "./CyberCompanion";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createCompanion } from "./Companion3D";
@@ -41,7 +42,33 @@ export function GuiCompanion({
     const light = new THREE.DirectionalLight(0xffffff, 2.4);
     light.position.set(-3, 4, 5);
     scene.add(light);
-    const companion = createCompanion();
+    let companion: ReturnType<typeof createCompanion> = createCompanion();
+    let disposed = false;
+    const disposeCompanion = (model: ReturnType<typeof createCompanion>) => {
+      model.group.traverse((o) => {
+        if (o instanceof THREE.Mesh) o.geometry.dispose();
+      });
+      model.dispose();
+    };
+    element.dataset.model = "loading";
+    void loadCyberCompanion()
+      .then((model) => {
+        if (disposed) {
+          disposeCompanion(model);
+          return;
+        }
+        scene.remove(companion.group);
+        disposeCompanion(companion);
+        companion = model;
+        scene.add(model.group);
+        element.dataset.model = "cyber";
+        element.dataset.textures = model.missingTextures.length
+          ? "pending"
+          : "ready";
+      })
+      .catch(() => {
+        if (!disposed) element.dataset.model = "fallback";
+      });
     scene.add(companion.group);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     let rect: GuiRect = { x: 0, y: 0, width: 96, height: 144 },
@@ -171,6 +198,7 @@ export function GuiCompanion({
     reduced.addEventListener("change", relayout);
     frame = requestAnimationFrame(draw);
     return () => {
+      disposed = true;
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", relayout);
       reduced.removeEventListener("change", relayout);
@@ -187,7 +215,7 @@ export function GuiCompanion({
       ref={host}
       className="gui-companion"
       role="img"
-      aria-label="Luma, votre androïde flottante aux cheveux blancs"
+      aria-label="Luma, votre modèle cyber flottant"
       aria-hidden={hidden}
       data-testid="gui-companion"
     />

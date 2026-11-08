@@ -22,7 +22,9 @@
     "test:progression": "node tests/progression.cjs",
     "test:inventory": "node tests/inventory.cjs",
     "test:programs": "node tests/programs.cjs",
-    "test:companion": "node tests/companion.cjs"
+    "test:companion": "node tests/companion.cjs",
+    "assets:luma": "node scripts/prepare-luma.mjs",
+    "assets:luma:previews": "node scripts/render-luma-previews.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
