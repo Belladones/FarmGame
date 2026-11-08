@@ -18,6 +18,7 @@ import {
   stockCapacity,
   missionBlocker,
   getStock,
+  totalStock,
   selectRobot,
   purchase,
   sellStock,
@@ -31,6 +32,8 @@ import {
   deployRobot,
   recallRobot,
 } from "./engine";
+import { WorkspaceNav } from "./WorkspaceNav";
+import { HelpPanel } from "./HelpPanel";
 import { MissionPanel } from "./MissionPanel";
 import {
   currentMission,
@@ -44,7 +47,7 @@ import { CloudSave, downloadFarm, type SyncStatus } from "./persistence";
 import { SessionPanel, type SessionAction } from "./SessionPanel";
 import { Shop, type ShopAction } from "./Shop";
 import { declarations } from "./api";
-import { models, itemNames, sum } from "./catalog";
+import { models, itemNames, sum, research } from "./catalog";
 import { SkillTree } from "./SkillTree";
 import { Icon, ResourceIcon } from "./Icons";
 import "./style.css";
@@ -79,7 +82,10 @@ const docs = [
     "harvest()",
     "Récolte une plante mûre. Fermier uniquement, soute de base : 10 unités.",
   ],
-  ["deposit()", "Transfère la soute au dépôt depuis la case (0, 0)."],
+  [
+    "deposit()",
+    "Transfère la cargaison vers un dépôt adjacent, dans la limite de sa place disponible. Le dépôt initial est voisin de (0, 0).",
+  ],
   ["move(Direction.East)", "Avance sur une case accessible, sans rebouclage."],
   ["can_harvest()", "Retourne un boolean. Recherche : Capteur de maturité."],
   [
@@ -175,6 +181,18 @@ function App() {
   );
   const [panel, setPanel] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(() => window.innerWidth >= 900);
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
+    null,
+  );
+  const [showStart, setShowStart] = useState(
+    () => localStorage.getItem("farmscript-tips-dismissed") !== "1",
+  );
+  const notify = (text: string, error = false) => setNotice({ text, error });
+  useEffect(() => {
+    if (!notice || notice.error) return;
+    const timer = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const [expanded, setExpanded] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [resetView, setResetView] = useState(0);
@@ -200,9 +218,11 @@ function App() {
     const keydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setPanel(null);
       if (event.key !== "Tab") return;
-      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), select, a[href], [tabindex="0"]',
-      );
+      const nodes = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, a[href], [tabindex="0"]',
+        ) ?? [],
+      ).filter((node) => node.getClientRects().length > 0);
       if (!nodes?.length) {
         event.preventDefault();
         return;
@@ -395,6 +415,7 @@ function App() {
                 : d.messageText.messageText;
           r.lastError = `Erreur TypeScript, ligne ${pos.lineNumber} : ${message}`;
           log(r.lastError);
+          notify(r.lastError, true);
           stop(id);
           return;
         }
@@ -417,7 +438,10 @@ function App() {
       if (runtimes.current.get(id) !== rt) return;
       if (data.type === "call") rt.queue.push(data);
       else {
-        if (data.type === "error") r.lastError = String(data.message);
+        if (data.type === "error") {
+          r.lastError = String(data.message);
+          notify(`[${id}] ${r.lastError}`, true);
+        }
         log(
           `[${id}] ` +
             (data.type === "error"
@@ -429,6 +453,7 @@ function App() {
     };
     w.onerror = (e) => {
       r.lastError = e.message;
+      notify(`[${id}] ${e.message}`, true);
       log(`[${id}] Erreur du programme : ${e.message}`);
       stop(id);
     };
@@ -438,6 +463,7 @@ function App() {
       conditions: farm.current.unlocks.includes("conditions"),
     });
     log(`[${id}] Programme lancé.`);
+    notify(`Programme de ${id} lancé. Suivez sa progression sur le terrain.`);
   }
   const chooseRobot = (id: string) => {
     if (selectRobot(farm.current, id)) {
@@ -479,9 +505,17 @@ function App() {
         result = true;
       }
       refresh();
+      if (action.type !== "select")
+        notify(
+          result
+            ? "Action effectuée. Les stocks et les équipements sont à jour."
+            : "Action impossible. Vérifiez les ressources et les emplacements disponibles.",
+          !result,
+        );
       return result;
     } catch (e) {
       log(e instanceof Error ? e.message : String(e));
+      notify(e instanceof Error ? e.message : String(e), true);
       return false;
     }
   };
@@ -510,6 +544,22 @@ function App() {
     } else if (action.type === "repair")
       result = repair(farm.current, action.id);
     refresh();
+    const success =
+      action.type === "buy"
+        ? `${research.find((r) => r.id === action.id)?.name ?? "Amélioration"} débloquée.`
+        : action.type === "deploy"
+          ? `${action.id} déployé. Lancez son programme quand vous êtes prêt.`
+          : action.type === "recall"
+            ? `${action.id} rappelé au garage. Code et cargaison conservés.`
+            : action.type === "stop"
+              ? `Programme de ${action.id} arrêté.`
+              : `${action.id} reconstruit.`;
+    notify(
+      result
+        ? success
+        : "Action impossible : vérifiez l’état du robot, les prérequis et la place disponible.",
+      !result,
+    );
     return result;
   };
   const sessionAction = async (action: SessionAction) => {
@@ -559,6 +609,52 @@ function App() {
   const pause = () => {
     pausedRef.current = !paused;
     setPaused(!paused);
+  };
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      const element = event.target as HTMLElement;
+      const editing = !!element.closest(
+        'input,textarea,select,[contenteditable="true"],.monaco-editor',
+      );
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !panel) {
+        event.preventDefault();
+        if (
+          !runtimes.current.has(farm.current.activeRobotId) &&
+          activeRobot(farm.current).deployed
+        )
+          void run();
+        return;
+      }
+      if (editing || event.ctrlKey || event.metaKey) return;
+      const destinations = [
+        "Missions",
+        "Recherches",
+        "Flotte",
+        "Shop",
+        "API & aide",
+      ];
+      if (event.altKey && /^Digit[1-5]$/.test(event.code)) {
+        event.preventDefault();
+        setPanel(destinations[Number(event.code.slice(-1)) - 1]);
+      } else if (event.key === "?" && !event.altKey) {
+        event.preventDefault();
+        setPanel("API & aide");
+      }
+    };
+    document.addEventListener("keydown", keydown);
+    return () => document.removeEventListener("keydown", keydown);
+  }, [panel, code, running, paused]);
+  const claimMission = (id: string) => {
+    const mission = currentMission(farm.current);
+    const ok = claim(farm.current, id);
+    refresh();
+    notify(
+      ok
+        ? `Mission « ${mission?.title ?? ""} » validée ! Votre progression a été enregistrée sur cet appareil.`
+        : (missionBlocker(farm.current, id) ?? "Récompense indisponible."),
+      !ok,
+    );
+    return ok;
   };
   const selectedRobot = activeRobot(s);
   const tile = selectedRobot.deployed ? at(s, s.x, s.y) : undefined;
@@ -660,6 +756,43 @@ function App() {
           {s.width} × {s.height} parcelle{s.width > 1 ? "s" : ""}
         </p>
       </div>
+      {showStart && s.harvested === 0 && (
+        <aside className="start-hint" aria-label="Conseils de départ">
+          <button
+            className="start-dismiss"
+            aria-label="Masquer les conseils de départ"
+            onClick={() => {
+              setShowStart(false);
+              localStorage.setItem("farmscript-tips-dismissed", "1");
+            }}
+          >
+            ×
+          </button>
+          <span className="overline">VOTRE PREMIÈRE RÉCOLTE</span>
+          <strong>Votre fermier est prêt.</strong>
+          <p>
+            Le programme est déjà écrit. Lancez-le avec ▶, puis récupérez votre
+            première récompense.
+          </p>
+          <button onClick={() => setPanel("Missions")}>
+            Découvrir ma première mission →
+          </button>
+        </aside>
+      )}
+      <button
+        className="depot-summary"
+        onClick={() => setPanel("Shop")}
+        aria-label="Voir les stocks des dépôts"
+      >
+        <span>Stockage des dépôts</span>
+        <strong>
+          {totalStock(s)} / {stockCapacity(s)}
+        </strong>
+        <progress value={totalStock(s)} max={stockCapacity(s)} />
+        {totalStock(s) >= stockCapacity(s) && (
+          <small>Dépôts pleins · Vendre ou améliorer</small>
+        )}
+      </button>
       <div className="plot-info">
         <span className="plot-coordinate">
           {s.x}, {s.y}
@@ -1007,7 +1140,7 @@ function App() {
                 "Valider et passer à la prochaine mission"
               }
               onClick={() => {
-                if (claim(farm.current, active!.id)) refresh();
+                claimMission(active!.id);
               }}
             >
               {missionBlocker(s, active!.id)
@@ -1021,8 +1154,37 @@ function App() {
           )}
         </div>
       </div>
+      {notice && (
+        <div
+          className={"action-notice " + (notice.error ? "error" : "")}
+          role={notice.error ? "alert" : "status"}
+        >
+          <span>{notice.text}</span>
+          {notice.error &&
+            selectedRobot.lastError &&
+            notice.text.includes(selectedRobot.lastError) && (
+              <button
+                onClick={() => {
+                  setPanel(null);
+                  setEditorOpen(true);
+                  setNotice(null);
+                }}
+              >
+                Voir mon programme
+              </button>
+            )}
+          <button
+            className="notice-dismiss"
+            aria-label="Fermer la notification"
+            onClick={() => setNotice(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div className="scene-hint">
-        Glisser pour tourner <span>·</span> Molette pour zoomer
+        Glisser pour tourner <span>·</span> Molette pour zoomer <span>·</span> ?
+        pour le guide
       </div>
       {panel && (
         <div
@@ -1031,7 +1193,9 @@ function App() {
             (panel === "Recherches" ||
             panel === "Shop" ||
             panel === "Flotte" ||
-            panel === "Missions"
+            panel === "Missions" ||
+            panel === "API & aide" ||
+            panel === "Session et sauvegarde"
               ? "skills-backdrop"
               : "")
           }
@@ -1046,7 +1210,9 @@ function App() {
               (panel === "Recherches" ||
               panel === "Shop" ||
               panel === "Flotte" ||
-              panel === "Missions"
+              panel === "Missions" ||
+              panel === "API & aide" ||
+              panel === "Session et sauvegarde"
                 ? "skill-screen"
                 : "")
             }
@@ -1081,6 +1247,7 @@ function App() {
                 <Icon name="close" size={18} />
               </button>
             </div>
+            <WorkspaceNav current={panel} onNavigate={setPanel} />
             <div className="panel-content">
               {panel === "Session et sauvegarde" && (
                 <SessionPanel status={syncStatus} onAction={sessionAction} />
@@ -1088,11 +1255,7 @@ function App() {
               {panel === "Missions" && (
                 <MissionPanel
                   farm={s}
-                  onClaim={(id) => {
-                    const ok = claim(farm.current, id);
-                    refresh();
-                    return ok;
-                  }}
+                  onClaim={claimMission}
                   onNavigate={navigateMission}
                 />
               )}
@@ -1122,81 +1285,80 @@ function App() {
                 <SkillTree
                   farm={s}
                   onBuy={(id) => {
-                    buy(farm.current, id);
+                    const ok = buy(farm.current, id);
                     refresh();
+                    notify(
+                      ok
+                        ? `${research.find((r) => r.id === id)?.name ?? "Recherche"} débloquée.`
+                        : "Recherche indisponible : vérifiez les prérequis et les matériaux.",
+                      !ok,
+                    );
                   }}
                   onSell={() => {
-                    sell(farm.current);
+                    const ok = sell(farm.current);
                     refresh();
+                    notify(
+                      ok
+                        ? "Vente effectuée. Votre solde d’or est à jour."
+                        : "Pas assez de blé dans les dépôts pour cette vente.",
+                      !ok,
+                    );
                   }}
                 />
               )}
               {panel === "API & aide" && (
-                <div className="docs">
-                  <h2>Un robot. Vos instructions.</h2>
-                  <p>
-                    Lancez le programme f1 pour planter, récolter et déposer
-                    automatiquement. Le plateau affiche uniquement vos cases
-                    débloquées. Glissez sur le champ pour tourner la caméra et
-                    voir tous ses côtés. La première extension ajoute deux cases
-                    à droite de (0, 0).
-                  </p>
-                  <div className="manual">
-                    <span>Essayer une commande</span>
-                    {["plant", "harvest", "deposit"].map((name) => (
-                      <button
-                        key={name}
-                        disabled={running}
-                        onClick={() => {
-                          try {
-                            const result = command(
-                              farm.current,
-                              name,
-                              name === "plant" ? ["Wheat"] : [],
-                            );
-                            log(`${name}() → ${result}`);
-                            refresh();
-                          } catch (e) {
-                            log(String(e));
-                          }
-                        }}
-                      >
-                        {name}()
-                      </button>
-                    ))}
-                  </div>
-                  {docs.map(([name, text]) => (
-                    <div className="api-entry" key={name}>
-                      <code>{name}</code>
-                      <span>{text}</span>
-                    </div>
-                  ))}
-                  <p>
-                    TypeScript : variables, boucles et fonctions nommées sont
-                    disponibles. Les callbacks, générateurs et imports ne sont
-                    pas encore pris en charge. Chaque robot a son propre
-                    programme ; sélectionnez-le dans l’éditeur ou depuis le
-                    shop. La progression est sauvegardée sur cet appareil.
-                  </p>
-                  <button
-                    className="reset-farm"
-                    onClick={() => {
-                      if (
-                        confirm(
-                          "Effacer la ferme et recommencer ? Le code sera conservé.",
-                        )
-                      ) {
-                        stopAll();
-                        farm.current = fresh();
-                        activeRobot(farm.current).code = code;
-                        refresh();
-                        log("Nouvelle ferme créée.");
-                      }
-                    }}
-                  >
-                    <Icon name="reset" size={15} /> Recommencer la ferme
-                  </button>
-                </div>
+                <HelpPanel
+                  docs={docs}
+                  busy={
+                    running ||
+                    selectedRobot.readyAt > s.time ||
+                    !!selectedRobot.moving
+                  }
+                  garage={!selectedRobot.deployed}
+                  onNavigate={(destination) => {
+                    if (destination === "code") {
+                      setEditorOpen(true);
+                      setPanel(null);
+                    } else setPanel(destination);
+                  }}
+                  onCommand={(name) => {
+                    try {
+                      const result = command(
+                        farm.current,
+                        name,
+                        name === "plant" ? ["Wheat"] : [],
+                      );
+                      refresh();
+                      const message = result
+                        ? `${name}() → ${result}`
+                        : name === "harvest"
+                          ? "Rien à récolter : la culture est absente ou encore en croissance, ou la soute est pleine."
+                          : name === "deposit"
+                            ? "Aucun dépôt effectué : vérifiez la cargaison et la proximité d’un dépôt disposant de place."
+                            : "Semis impossible : vérifiez que la case est agricole et libre.";
+                      log(message);
+                      return message;
+                    } catch (e) {
+                      return e instanceof Error ? e.message : String(e);
+                    }
+                  }}
+                  onReset={() => {
+                    if (
+                      confirm(
+                        "Effacer la ferme et recommencer ? Le code sera conservé.",
+                      )
+                    ) {
+                      stopAll();
+                      farm.current = fresh();
+                      activeRobot(farm.current).code = code;
+                      refresh();
+                      notify(
+                        "Nouvelle ferme créée. Votre code a été conservé.",
+                      );
+                      setPanel(null);
+                    }
+                  }}
+                />
               )}
             </div>
           </section>

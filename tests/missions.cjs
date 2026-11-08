@@ -80,14 +80,14 @@ const { missions } = require("../src/missions.ts");
     buy(expanded, "extension");
     expanded.visited = [0, 1, 2];
     expanded.claimed = missions.slice(0, 3).map((m) => m.id);
-    await p.evaluate(
-      (f) =>
-        localStorage.setItem(
-          "farmscript-v1",
-          JSON.stringify({ version: 1, farm: f }),
-        ),
-      expanded,
-    );
+    await p.addInitScript((f) => {
+      if (sessionStorage.getItem("campaign-expanded-fixture")) return;
+      localStorage.setItem(
+        "farmscript-v1",
+        JSON.stringify({ version: 1, farm: f }),
+      );
+      sessionStorage.setItem("campaign-expanded-fixture", "1");
+    }, expanded);
     await p.reload();
     await p
       .getByRole("button", { name: "Ouvrir les missions", exact: true })

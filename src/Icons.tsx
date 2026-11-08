@@ -20,7 +20,7 @@ const paths: Record<IconName, string> = {
   robots:
     "M8 8h8v8H8ZM12 5V3M4 12H2M22 12h-2M5 20h14M7 16v4M17 16v4M10 11h.1M14 11h.1",
   shop: "M3 8h18l-2 12H5ZM7 8l5-6 5 6M9 12v5M15 12v5",
-  code: "M12 5v14M5 12h14",
+  code: "m8 6-6 6 6 6m8-12 6 6-6 6M14 3l-4 18",
   info: "M12 11v7M12 6v1M9 18h6M10 11h2",
   research: "m5 13 7-7 7 7M5 20l7-7 7 7",
   zoom: "m16 16 5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",

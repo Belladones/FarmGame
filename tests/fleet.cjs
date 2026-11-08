@@ -67,14 +67,14 @@ const assert = require("node:assert/strict");
     fixture.stock = 180;
     fixture.resources = { Wood: 100 };
     fixture.unlocks.push("bush");
-    await p.evaluate(
-      (f) =>
-        localStorage.setItem(
-          "farmscript-v1",
-          JSON.stringify({ version: 1, farm: f }),
-        ),
-      fixture,
-    );
+    await p.addInitScript((f) => {
+      if (sessionStorage.getItem("fleet-upgrade-fixture")) return;
+      localStorage.setItem(
+        "farmscript-v1",
+        JSON.stringify({ version: 1, farm: f }),
+      );
+      sessionStorage.setItem("fleet-upgrade-fixture", "1");
+    }, fixture);
     await p.reload();
     await p.getByRole("button", { name: "Flotte", exact: true }).click();
     await p

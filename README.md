@@ -31,7 +31,7 @@ npm run build
 
 `test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
 
-Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les cinq parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les six parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
@@ -186,3 +186,25 @@ pas reconstituées. La mission industrielle compte les nouveaux cycles du moulin
 
 `npm run test:missions` vérifie le carnet, les récompenses, les niveaux, les
 changements de chapitre, la navigation et l’affichage mobile dans Chromium.
+
+
+### Navigation et aide
+
+Les outils gardent leurs libellés visibles sur ordinateur et mobile. Dans chaque
+menu, une navigation commune permet de passer aux missions, recherches, robots,
+shop, guide et sauvegarde, ou de revenir à la ferme. Le guide dispose d’une
+recherche dans les commandes, d’essais manuels avec résultat visible et de
+raccourcis vers les parcours d’apprentissage. Les conseils de première récolte
+peuvent être masqués ; ce choix est conservé sur cet appareil.
+
+Un indicateur présente la capacité totale des dépôts et mène au shop. Les
+notifications signalent les recherches, ventes, missions et erreurs de programme.
+Les erreurs restent visibles jusqu’à fermeture ; les confirmations disparaissent
+après six secondes.
+
+Au clavier : `Ctrl` / `⌘` + `Entrée` lance le programme sélectionné lorsque vous
+êtes sur la ferme ou dans l’éditeur. `Alt` + `1` à `5` ouvre missions, recherches,
+flotte, shop et guide ; `?` ouvre le guide. Ces raccourcis de navigation ne
+s’activent pas dans les champs de saisie. `Échap` ferme le menu. Le parcours au
+clavier inclut les champs et les sections dépliables à l’intérieur des menus.
+`npm run test:ux` vérifie ces parcours dans Chromium, y compris sur mobile.

@@ -6,6 +6,16 @@ const { fresh, buy, purchase } = require("../src/engine.ts");
 const { research } = require("../src/catalog.ts");
 const base = process.env.FARM_URL || "http://localhost:5173";
 const headers = { "X-FarmScript-Request": "1" };
+// Autosave can finish (or detect a conflict) while the panel is opening.
+// Request a save only when available; each scenario verifies its final state.
+async function requestSave(page) {
+  await page.evaluate(() => {
+    const button = Array.from(document.querySelectorAll("button")).find(
+      (b) => b.textContent === "Enregistrer maintenant",
+    );
+    if (button && !button.disabled) button.click();
+  });
+}
 (async () => {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -140,10 +150,10 @@ const headers = { "X-FarmScript-Request": "1" };
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
-    await p
-      .getByRole("button", { name: "Enregistrer maintenant", exact: true })
-      .click();
-    await p.waitForTimeout(300);
+    await requestSave(p);
+    await p.waitForFunction(() =>
+      document.querySelector(".sync-badge")?.classList.contains("saved"),
+    );
     data = await (await second.request.get(base + "/api/save")).json();
     const before = data.save.farm,
       external = structuredClone(before);
@@ -161,9 +171,7 @@ const headers = { "X-FarmScript-Request": "1" };
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
-    await p
-      .getByRole("button", { name: "Enregistrer maintenant", exact: true })
-      .click();
+    await requestSave(p);
     await p
       .getByRole("button", {
         name: "Reprendre la sauvegarde du compte",
@@ -212,9 +220,7 @@ const headers = { "X-FarmScript-Request": "1" };
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
-    await p
-      .getByRole("button", { name: "Enregistrer maintenant", exact: true })
-      .click();
+    await requestSave(p);
     await p
       .getByRole("button", {
         name: "Réessayer la connexion au serveur",
