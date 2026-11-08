@@ -589,7 +589,7 @@ function App() {
         <Icon name="arrow" size={18} />
       </button>
       <div className="scene-hint">
-        Cases carrées · Vue de dessus <span>·</span> Molette pour zoomer
+        Glisser pour tourner <span>·</span> Molette pour zoomer
       </div>
       {panel && (
         <div
@@ -714,8 +714,9 @@ function App() {
                   <p>
                     Lancez le programme f1 pour planter, récolter et déposer
                     automatiquement. Le plateau affiche uniquement vos cases
-                    débloquées, vues de dessus pour conserver leur forme carrée.
-                    La première extension ajoute deux cases à droite de (0, 0).
+                    débloquées. Glissez sur le champ pour tourner la caméra et
+                    voir tous ses côtés. La première extension ajoute deux cases
+                    à droite de (0, 0).
                   </p>
                   <div className="manual">
                     <span>Essayer une commande</span>

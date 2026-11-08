@@ -62,17 +62,24 @@ export function FarmScene({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.enableRotate = false;
+    controls.enableRotate = true;
+    controls.minPolarAngle = 0.15;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.rotateSpeed = 0.5;
     controls.minZoom = 0.7;
     controls.maxZoom = 2;
     controls.zoomSpeed = 0.7;
     function home() {
-      camera.up.set(0, 0, -1);
-      camera.position.set(-STEP * 0.65, 12, 0);
+      // Flush damping before restoring the initial camera pose.
+      controls.enableDamping = false;
+      controls.update();
+      camera.up.set(0, 1, 0);
+      camera.position.set(-STEP * 0.65 + 1.2, 12, 13.8);
       controls.target.set(-STEP * 0.65, 0, 0);
       camera.zoom = state.current.zoom;
       camera.updateProjectionMatrix();
       controls.update();
+      controls.enableDamping = true;
     }
     home();
     scene.add(new THREE.HemisphereLight(0xf7f1d7, 0x516149, 2.4));
@@ -336,19 +343,19 @@ export function FarmScene({
       );
       camera.updateProjectionMatrix();
       camera.updateMatrixWorld();
-      const a = new THREE.Vector3(0, 0.04, 0).project(camera);
-      const b = new THREE.Vector3(STEP, 0.04, 0).project(camera);
-      const c = new THREE.Vector3(0, 0.04, STEP).project(camera);
-      container.dataset.cellWidth = String(
-        Math.hypot(((b.x - a.x) * w) / 2, ((b.y - a.y) * h) / 2),
-      );
-      container.dataset.cellHeight = String(
-        Math.hypot(((c.x - a.x) * w) / 2, ((c.y - a.y) * h) / 2),
-      );
+      // Geometry dimensions stay equal even when the viewing angle changes.
+      container.dataset.cellWidth = String(grounds[0].scale.x);
+      container.dataset.cellHeight = String(grounds[0].scale.z);
     };
     const observer = new ResizeObserver(resize);
     observer.observe(container);
     resize();
+    const syncCamera = () => {
+      container.dataset.cameraAzimuth = String(controls.getAzimuthalAngle());
+      container.dataset.cameraPolar = String(controls.getPolarAngle());
+    };
+    controls.addEventListener("change", syncCamera);
+    syncCamera();
     const draw = (now: number) => {
       if (disposed) return;
       frame = requestAnimationFrame(draw);
@@ -410,6 +417,7 @@ export function FarmScene({
       disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
+      controls.removeEventListener("change", syncCamera);
       controls.dispose();
       scene.traverse((o) => {
         if (o instanceof THREE.Mesh || o instanceof THREE.LineSegments)

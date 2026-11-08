@@ -20,7 +20,7 @@ npm test
 npm run build
 ```
 
-Test navigateur (serveur lancé dans un autre terminal) : `npm run test:e2e`. Il utilise Chromium installé sur `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et l’adresse `FARM_URL` (défaut : port 5173). Il vérifie la production automatique, la pause, l’arrêt, une récompense, la persistance et l’absence de débordement mobile. Un second parcours vérifie le nombre réel de parcelles affichées (1 puis 3), l’égalité des côtés projetés à l’écran, les trois pages de compétences, les achats, les prérequis et les branches non achetables. Les captures sont écrites dans `/tmp`.
+Test navigateur (serveur lancé dans un autre terminal) : `npm run test:e2e`. Il utilise Chromium installé sur `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et l’adresse `FARM_URL` (défaut : port 5173). Il vérifie la production automatique, la pause, l’arrêt, une récompense, la persistance et l’absence de débordement mobile. Un second parcours vérifie le nombre réel de parcelles affichées (1 puis 3), les dimensions carrées des cases dans le modèle, la rotation de caméra et le retour à la vue initiale, les trois pages de compétences, les achats, les prérequis et les branches non achetables. Les captures sont écrites dans `/tmp`.
 
 Le serveur Vite utilise le port 5173. Aucun secret ni service externe n’est requis. Monaco et TypeScript sont installés localement, sans CDN.
 
@@ -28,7 +28,7 @@ Le serveur Vite utilise le port 5173. Aucun secret ni service externe n’est re
 
 Le jeu s’affiche en plein écran sur un fond bleu-gris, avec un îlot low poly rendu par Three.js. Les modèles et icônes sont créés dans le projet, sans assets externes. WebGL est nécessaire à la vue 3D ; un message explicite apparaît si sa création échoue, tandis que l’éditeur et la simulation restent utilisables.
 
-- La caméra reste en vue de dessus orthographique pour afficher des cases carrées sans déformation. Utiliser la molette, le pincement tactile ou le bouton loupe pour zoomer.
+- Glisser sur le champ pour tourner autour à 360° et changer son inclinaison. La caméra orthographique préserve les proportions du modèle : les cases sont carrées dans le monde 3D et leur apparence dépend de l’angle de vue. Utiliser la molette, le pincement tactile ou le bouton loupe pour zoomer.
 - Le bouton maison recentre la caméra.
 - Le bouton + affiche ou masque l’éditeur TypeScript ; il est masqué par défaut sur mobile.
 - La barre f1 permet de lancer, mettre en pause et arrêter le programme ; ×1 / ×2 / ×5 règle le temps de simulation.
@@ -50,7 +50,7 @@ Pause suspend la simulation et les commandes. Arrêt termine le programme ; la c
 - `src/engine.ts` : moteur déterministe, progression, missions, économie ; tests indépendants de React.
 - `src/runner.worker.ts` : transpilation TypeScript et instrumentation AST des boucles/appels pour rendre la main à l’interface. Un arrêt termine le Worker.
 - `src/main.tsx` : interface, Monaco, synchronisation des commandes et sauvegarde.
-- `src/FarmScene.tsx` : scène Three.js, caméra orthographique en vue de dessus, modèles procéduraux et croissance synchronisée avec le moteur.
+- `src/FarmScene.tsx` : scène Three.js, caméra orthographique orbitale, modèles procéduraux et croissance synchronisée avec le moteur.
 - `src/SkillTree.tsx` : pages des arbres de compétences et détails des recherches.
 - `src/Icons.tsx` : icônes SVG originales des ressources et commandes.
 
