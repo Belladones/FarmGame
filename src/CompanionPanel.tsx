@@ -16,77 +16,78 @@ export function CompanionAvatar({
       className="companion-avatar"
       viewBox="0 0 140 160"
       role="img"
-      aria-label="Luma, votre petite robot compagne"
+      aria-label="Luma, androïde aux cheveux blancs et aux yeux bleus"
     >
       <path
-        d="M57 115l-6 24 9 4 9-24m8-4 9 18 9-3-8-20"
+        d="M59 121l-8 26 12 4 9-27m5-3 10 21 10-5-11-21"
         fill={color}
-        stroke="#8195a5"
-        strokeWidth="2"
+        stroke="#8c90ba"
+        strokeWidth="1.5"
       />
       <path
-        d="M54 87Q48 97 62 102L63 110Q70 116 77 110L78 102Q92 97 86 87Z"
+        d="M55 95Q48 107 61 118L63 129Q70 135 78 127L81 117Q92 105 83 95Z"
         fill={color}
+        stroke="#8c90ba"
+        strokeWidth="1"
       />
       <path
-        d="M56 94L43 116m41-22 12 22"
+        d="M53 100l-15 20 3 17m45-37 14 13 14 8"
+        fill="none"
         stroke={color}
+        strokeWidth="9"
+        strokeLinecap="round"
+      />
+      <path
+        d="M38 121l3 16"
+        stroke="#7471de"
         strokeWidth="8"
         strokeLinecap="round"
       />
-      <path d="M35 30L30 7l23 17m36 0 23-17-5 28" fill="#304651" />
-      <rect
-        x="29"
-        y="21"
-        width="82"
-        height="70"
-        rx="35"
-        fill={color}
-        stroke="#8da1ad"
-        strokeWidth="2"
-      />
-      <rect x="35" y="27" width="70" height="57" rx="24" fill={accent} />
-      <rect x="39" y="31" width="62" height="49" rx="21" fill="#101d2c" />
+      <path d="M69 87v10" stroke="#283346" strokeWidth="8" />
       <path
-        d="M49 59q-3-20 8-20t9 20q-8 6-17 0m25 0q-3-20 8-20t9 20q-8 6-17 0"
-        fill="#48e9ed"
+        d="M29 77Q20 25 47 16Q86-2 108 29L115 82Q95 96 86 84H41Z"
+        fill="#f9f9ff"
+        stroke="#b9b9dd"
+        strokeWidth="1.5"
       />
-      <path d="M66 71q4 4 8 0" fill="none" stroke="#48e9ed" strokeWidth="2" />
+      <ellipse cx="70" cy="54" rx="26" ry="32" fill="#f4f4fc" />
+      {[55, 83].map((x) => (
+        <g key={x}>
+          <ellipse cx={x} cy="59" rx="9" ry="11" fill="white" />
+          <ellipse cx={x + 1} cy="60" rx="7" ry="9" fill="#268be1" />
+          <ellipse cx={x + 1} cy="61" rx="3.5" ry="6" fill="#20316d" />
+          <circle cx={x - 2} cy="56" r="2.5" fill="white" />
+          <path
+            d={`M${x - 9} 55q7-10 17-2`}
+            fill="none"
+            stroke="#34345e"
+            strokeWidth="2"
+          />
+        </g>
+      ))}
+      <path d="M65 77q5 3 9 0" fill="none" stroke="#c292b8" strokeWidth="1" />
       <path
-        d="M36 66q-14-17-15-4 0 9 15 4m0 2q-9 16-13 5 0-8 13-5"
-        fill="#679e70"
+        d="M48 19Q38 36 34 83L46 88Q42 56 54 30Q48 49 62 49L71 22Q62 49 77 48L84 25Q82 45 93 48L101 35Q97 65 102 88L113 81Q110 34 94 20Q73 6 48 19Z"
+        fill="#fafaff"
+        stroke="#c1c0e4"
+        strokeWidth="1"
       />
-      <g fill="#f294a9">
-        <circle cx="34" cy="61" r="5" />
-        <circle cx="39" cy="66" r="5" />
-        <circle cx="34" cy="71" r="5" />
-        <circle cx="29" cy="66" r="5" />
-        <circle cx="34" cy="66" r="3" fill="#ffda79" />
-      </g>
-      <ellipse
-        cx="61"
-        cy="94"
-        rx="8"
-        ry="6"
-        fill={color}
-        stroke="#a4bac5"
-        strokeWidth=".8"
+      <ellipse cx="30" cy="36" rx="10" ry="14" fill="#433b9a" />
+      <ellipse cx="30" cy="36" rx="7" ry="10" fill="#44e1f3" />
+      <circle cx="61" cy="104" r="8" fill="#293650" />
+      <circle cx="61" cy="104" r="5.5" fill="#31c8ef" />
+      <circle cx="60" cy="103" r="2.5" fill="#a3fcff" />
+      <path
+        d="M81 97l3 13-8 12m-20-9 6 8"
+        fill="none"
+        stroke={accent}
+        strokeWidth="1.2"
       />
-      <ellipse
-        cx="79"
-        cy="94"
-        rx="8"
-        ry="6"
-        fill={color}
-        stroke="#a4bac5"
-        strokeWidth=".8"
-      />
-      <path d="M70 92v15" stroke={accent} strokeWidth="2" />
       {accessory === "ribbon" && (
         <path
-          d="M92 21Q70 2 78 30L91 25Q115 35 110 13Z"
-          fill={accent}
-          stroke="#e6cfff"
+          d="M34 27Q17 8 24 31L34 30Q48 17 39 13Z"
+          fill="#fafaff"
+          stroke="#c2c1e7"
         />
       )}
       {accessory === "flower" && (

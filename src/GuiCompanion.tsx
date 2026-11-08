@@ -187,7 +187,7 @@ export function GuiCompanion({
       ref={host}
       className="gui-companion"
       role="img"
-      aria-label="Luma, votre mascotte flottante à tête de chat"
+      aria-label="Luma, votre androïde flottante aux cheveux blancs"
       aria-hidden={hidden}
       data-testid="gui-companion"
     />
