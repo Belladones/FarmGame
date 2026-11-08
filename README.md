@@ -7,9 +7,13 @@ Un premier jeu de farming pour apprendre TypeScript. Interface française, robot
 Node.js 22 ou 24 et npm.
 
 ```sh
-npm ci --cache /workspace/.npm-cache
+npm ci
 npm run dev
 ```
+
+Ouvrir ensuite http://localhost:5173 dans le navigateur. Garder le terminal ouvert : `Ctrl+C` arrête le serveur.
+
+Si une installation a échoué après avoir utilisé le chemin cloud `/workspace/.npm-cache`, relancer `npm ci --cache "$HOME/.npm"` depuis le dossier du projet, puis `npm run dev`. Ce cache appartient à votre utilisateur et fonctionne aussi sur macOS.
 
 ```sh
 npm test
