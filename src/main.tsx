@@ -12,8 +12,28 @@ import {
   missions,
   sell,
   type Farm,
+  hydrateFarm,
+  advance,
+  activeRobot,
+  capacity,
+  stockCapacity,
+  totalStock,
+  getStock,
+  selectRobot,
+  purchase,
+  sellStock,
+  fulfillOrder,
+  resellAsset,
+  repair,
+  relocateBuilding,
+  releaseReservation,
+  at,
+  cropProgress,
 } from "./engine";
 import { FarmScene } from "./FarmScene";
+import { Shop, type ShopAction } from "./Shop";
+import { declarations } from "./api";
+import { models, itemNames, sum } from "./catalog";
 import { SkillTree } from "./SkillTree";
 import { Icon, ResourceIcon } from "./Icons";
 import "./style.css";
@@ -31,7 +51,7 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   noEmit: true,
 });
 monaco.languages.typescript.typescriptDefaults.addExtraLib(
-  `declare enum Entities { Wheat = "Wheat" }\ndeclare enum Resources { Wheat = "Wheat" }\ndeclare enum Direction { North = "North", East = "East", South = "South", West = "West" }\ndeclare function plant(entity: Entities): boolean;\ndeclare function harvest(): boolean;\ndeclare function deposit(): number;\ndeclare function move(direction: Direction): boolean;\ndeclare function can_harvest(): boolean;\ndeclare function get_pos_x(): number;\ndeclare function get_pos_y(): number;\ndeclare function get_world_size(): {width: number; height: number};\ndeclare function get_inventory(resource: Resources): number;\ndeclare function get_stock(resource: Resources): number;\ndeclare function get_capacity(): number;\ndeclare function print(...values: unknown[]): void;`,
+  declarations,
   "file:///farm-api.d.ts",
 );
 const starter = `// Votre première ferme autonome 🌱\n// Chaque récolte prend 5 secondes.\nwhile (true) {\n  harvest();\n  plant(Entities.Wheat);\n  deposit();\n}\n`;
@@ -44,7 +64,10 @@ const examples: Record<string, string> = {
 };
 const docs = [
   ["plant(Entities.Wheat)", "Plante gratuitement sur la case vide du robot."],
-  ["harvest()", "Récolte une plante mûre dans la soute (20 unités)."],
+  [
+    "harvest()",
+    "Récolte une plante mûre. Fermier uniquement, soute de base : 10 unités.",
+  ],
   ["deposit()", "Transfère la soute au dépôt depuis la case (0, 0)."],
   ["move(Direction.East)", "Avance sur une case accessible, sans rebouclage."],
   ["can_harvest()", "Retourne un boolean. Recherche : Capteur de maturité."],
@@ -58,26 +81,86 @@ const docs = [
   ],
   ["get_stock(Resources.Wheat)", "Lit la quantité de blé dans le dépôt."],
   ["get_inventory(Resources.Wheat)", "Lit le blé dans la soute du robot."],
-  ["get_capacity()", "Retourne la capacité de la soute : 20."],
+  ["get_capacity()", "Retourne la capacité actuelle de la soute."],
   ['print("Bonjour !")', "Écrit dans le journal. Recherche : Journal."],
+  [
+    "load(Resources.Wood, 5)",
+    "Charge depuis un dépôt adjacent, dans la limite de la soute. Les graines sont prélevées dans la soute, pas dans les dépôts.",
+  ],
+  [
+    "till()",
+    "Alterne prairie et terre labourée sur une case vide. Recherche Labourage, fermier uniquement.",
+  ],
+  [
+    "watering() / refill_water()",
+    "Arrose avec le réservoir embarqué ; le remplit depuis un puits ou une citerne adjacente. L’eau est distincte de la soute.",
+  ],
+  [
+    "use_item(Items.Fertilizer)",
+    "Consomme un engrais transporté pour ajouter de la croissance. Recherches Consommables et Engrais.",
+  ],
+  [
+    "get_entity_type() / get_ground_type()",
+    "Identifie la culture et le sol. Recherche Analyse de la parcelle.",
+  ],
+  [
+    "get_water()",
+    "Humidité de la parcelle entre 0 et 1. Recherche Capteur d’humidité.",
+  ],
+  [
+    "harvest_group()",
+    "Bonus d’un carré de 2 × 2 citrouilles mûres du même niveau. Recherche Récolte groupée.",
+  ],
+  [
+    "is_occupied(Direction.East)",
+    "Détecte un robot incompatible dans la case voisine. Les drones peuvent coexister avec les robots terrestres.",
+  ],
+  [
+    "reserve(Direction.East) / release()",
+    "Réserve atomiquement la case suivante, pour 5 secondes au maximum. Recherche Circulation 2.",
+  ],
+  [
+    "deliver(Direction.South, Resources.Wheat, 5)",
+    "Livre une machine adjacente depuis la soute. La fabrication démarre automatiquement ; tampon d’entrée de 50 unités.",
+  ],
+  [
+    "collect(Direction.South, Resources.Flour, 1)",
+    "Récupère la sortie d’une machine dans la soute. Déposez-la avant de la vendre ou de financer une recherche.",
+  ],
+  [
+    "get_building_stock(direction, item)",
+    "Quantité dans les tampons d’entrée et de sortie du bâtiment adjacent.",
+  ],
+  [
+    "get_building_status(direction)",
+    "working, missing_input, output_full, idle, ou null. Recherche Construction.",
+  ],
+  [
+    "sell(Resources.Wheat, 10)",
+    "Vend uniquement depuis les dépôts au tarif normal. Recherche Commerce automatisé.",
+  ],
+  [
+    "get_gold()",
+    "Solde d’or disponible. Les ventes du shop sont accessibles dès le début.",
+  ],
 ];
 function load(): Farm {
   try {
-    const data = JSON.parse(localStorage.getItem("farmscript-v1") || "null");
-    if (
-      data?.version === 1 &&
-      Array.isArray(data.farm.tiles) &&
-      data.farm.tiles.length === data.farm.width
-    )
-      return data.farm;
-  } catch {}
-  return fresh();
+    const saved = JSON.parse(localStorage.getItem("farmscript-v1") || "null");
+    return hydrateFarm(saved?.farm, localStorage.getItem("farmscript-code"));
+  } catch {
+    return fresh();
+  }
+}
+interface Runtime {
+  worker?: Worker;
+  queue: { id: number; name: string; args: unknown[] }[];
 }
 function App() {
   const farm = useRef(load());
   const [s, setS] = useState({ ...farm.current });
   const [code, setCode] = useState(
-    () => localStorage.getItem("farmscript-code") || starter,
+    () => activeRobot(farm.current).code || starter,
   );
   const [panel, setPanel] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(() => window.innerWidth >= 900);
@@ -123,11 +206,10 @@ function App() {
       previous?.focus();
     };
   }, [panel]);
-  const runId = useRef(0);
+  const runtimes = useRef(new Map<string, Runtime>());
+  const generations = useRef(new Map<string, number>());
   const pausedRef = useRef(false),
-    speedRef = useRef(1),
-    worker = useRef<Worker | null>(null),
-    queue = useRef<any[]>([]);
+    speedRef = useRef(1);
   const [logs, setLogs] = useState<string[]>([
     "Bienvenue ! Lancez votre premier programme.",
   ]);
@@ -142,38 +224,63 @@ function App() {
       JSON.stringify({ version: 1, farm: farm.current }),
     );
   };
-  const stop = () => {
-    runId.current++;
-    worker.current?.terminate();
-    worker.current = null;
-    queue.current = [];
-    setRunning(false);
-    setPaused(false);
-    pausedRef.current = false;
+  const stop = (id = farm.current.activeRobotId, unpause = true) => {
+    generations.current.set(id, (generations.current.get(id) ?? 0) + 1);
+    runtimes.current.get(id)?.worker?.terminate();
+    runtimes.current.delete(id);
+    releaseReservation(farm.current, id);
+    if (id === farm.current.activeRobotId) setRunning(false);
+    if (!runtimes.current.size && unpause) {
+      setPaused(false);
+      pausedRef.current = false;
+    }
+  };
+  const stopAll = () => {
+    for (const id of runtimes.current.keys()) stop(id);
   };
   useEffect(() => {
+    const r = activeRobot(farm.current);
+    if (r) {
+      setCode(r.code || starter);
+      setRunning(runtimes.current.has(r.id));
+    }
+  }, [s.activeRobotId]);
+  useEffect(() => {
     let previousTick = performance.now();
-    const timer = window.setInterval(() => {
-      const now = performance.now();
-      // Keep growth tied to elapsed time when rendering is slow, without offline catch-up.
-      const elapsed = Math.min(1, (now - previousTick) / 1000);
+    const timer = setInterval(() => {
+      const now = performance.now(),
+        elapsed = Math.min(1, (now - previousTick) / 1000);
       previousTick = now;
       if (pausedRef.current) return;
-      farm.current.time += elapsed * speedRef.current;
-      const request = queue.current.shift();
-      if (request && worker.current) {
+      advance(farm.current, elapsed * speedRef.current);
+      for (const [id, rt] of runtimes.current) {
+        const r = farm.current.robots.find((r) => r.id === id && !r.destroyed);
+        if (!r) {
+          log(`[${id}] Robot détruit ou retiré ; programme conservé.`);
+          stop(id);
+          continue;
+        }
+        if (
+          !rt.worker ||
+          !rt.queue.length ||
+          r.readyAt > farm.current.time ||
+          r.moving
+        )
+          continue;
+        const request = rt.queue.shift()!;
         try {
           const value =
             request.name === "__step"
               ? undefined
-              : command(farm.current, request.name, request.args);
-          if (request.name === "print") log(request.args.map(String).join(" "));
-          worker.current.postMessage({ type: "result", id: request.id, value });
+              : command(farm.current, request.name, request.args, id);
+          if (request.name === "print")
+            log(`[${id}] ` + request.args.map(String).join(" "));
+          rt.worker.postMessage({ type: "result", id: request.id, value });
         } catch (e) {
-          worker.current.postMessage({
+          rt.worker.postMessage({
             type: "result",
             id: request.id,
-            error: String(e instanceof Error ? e.message : e),
+            error: e instanceof Error ? e.message : String(e),
           });
         }
       }
@@ -181,68 +288,133 @@ function App() {
     }, 100);
     return () => {
       clearInterval(timer);
-      worker.current?.terminate();
+      for (const rt of runtimes.current.values()) rt.worker?.terminate();
+      runtimes.current.clear();
     };
   }, []);
   async function run() {
-    stop();
-    const generation = runId.current;
+    const id = farm.current.activeRobotId;
+    stop(id);
+    const generation = generations.current.get(id),
+      rt: Runtime = { queue: [] };
+    runtimes.current.set(id, rt);
     setRunning(true);
+    const source = code;
+    const r = farm.current.robots.find((r) => r.id === id);
+    if (!r || r.destroyed) {
+      stop(id);
+      return;
+    }
+    r.code = source;
     const model = monaco.editor
       .getModels()
       .find((m) => m.getLanguageId() === "typescript");
     if (model) {
       try {
         const getClient =
-          await monaco.languages.typescript.getTypeScriptWorker();
-        const client = await getClient(model.uri);
+            await monaco.languages.typescript.getTypeScriptWorker(),
+          client = await getClient(model.uri);
         const diagnostics = [
           ...(await client.getSyntacticDiagnostics(model.uri.toString())),
           ...(await client.getSemanticDiagnostics(model.uri.toString())),
         ];
+        if (generations.current.get(id) !== generation) return;
         if (diagnostics.length) {
-          const d = diagnostics[0];
-          const pos = model.getPositionAt(d.start ?? 0);
-          const message =
-            typeof d.messageText === "string"
-              ? d.messageText
-              : d.messageText.messageText;
+          const d = diagnostics[0],
+            pos = model.getPositionAt(d.start ?? 0),
+            message =
+              typeof d.messageText === "string"
+                ? d.messageText
+                : d.messageText.messageText;
           log(`Erreur TypeScript, ligne ${pos.lineNumber} : ${message}`);
-          stop();
+          stop(id);
           return;
         }
       } catch {
-        log("Le service TypeScript n’est pas prêt. Réessayez dans un instant.");
-        stop();
+        if (generations.current.get(id) === generation) {
+          log(
+            "Le service TypeScript n’est pas prêt. Réessayez dans un instant.",
+          );
+          stop(id);
+        }
         return;
       }
     }
-    if (generation !== runId.current) return;
+    if (generations.current.get(id) !== generation) return;
     const w = new Worker(new URL("./runner.worker.ts", import.meta.url), {
       type: "module",
     });
-    worker.current = w;
+    rt.worker = w;
     w.onmessage = ({ data }) => {
-      if (worker.current !== w) return;
-      if (data.type === "call") queue.current.push(data);
+      if (runtimes.current.get(id) !== rt) return;
+      if (data.type === "call") rt.queue.push(data);
       else {
-        if (data.type === "error") log("Erreur : " + data.message);
-        else log("Programme terminé.");
-        stop();
+        log(
+          `[${id}] ` +
+            (data.type === "error"
+              ? "Erreur : " + data.message
+              : "Programme terminé."),
+        );
+        stop(id);
       }
     };
     w.onerror = (e) => {
-      log("Erreur du programme : " + e.message);
-      stop();
+      log(`[${id}] Erreur du programme : ${e.message}`);
+      stop(id);
     };
     w.postMessage({
       type: "run",
-      code,
+      code: source,
       conditions: farm.current.unlocks.includes("conditions"),
     });
-    setRunning(true);
-    log("Programme lancé.");
+    log(`[${id}] Programme lancé.`);
   }
+  const chooseRobot = (id: string) => {
+    if (selectRobot(farm.current, id)) {
+      setCode(activeRobot(farm.current).code || starter);
+      setRunning(runtimes.current.has(id));
+      refresh();
+    }
+  };
+  const shopAction = (action: ShopAction): boolean => {
+    try {
+      let result = false;
+      if (action.type === "buy")
+        result = purchase(
+          farm.current,
+          action.kind,
+          action.quantity,
+          action.site,
+        );
+      else if (action.type === "sell")
+        result = sellStock(farm.current, action.item, action.quantity) > 0;
+      else if (action.type === "order")
+        result = fulfillOrder(farm.current, action.id);
+      else if (action.type === "repair")
+        result = repair(farm.current, action.id);
+      else if (action.type === "resell") {
+        stop(action.id, false);
+        result = resellAsset(farm.current, action.id);
+      } else if (action.type === "relocate")
+        result = relocateBuilding(
+          farm.current,
+          action.id,
+          action.site,
+          pausedRef.current,
+        );
+      else if (action.type === "select") {
+        chooseRobot(action.id);
+        setEditorOpen(true);
+        setPanel(null);
+        result = true;
+      }
+      refresh();
+      return result;
+    } catch (e) {
+      log(e instanceof Error ? e.message : String(e));
+      return false;
+    }
+  };
   const active = missions.find((m) => !s.claimed.includes(m.id));
   const togglePanel = (name: string) =>
     setPanel((p) => (p === name ? null : name));
@@ -250,9 +422,9 @@ function App() {
     pausedRef.current = !paused;
     setPaused(!paused);
   };
-  const tile = s.tiles[s.x];
-  const growth =
-    tile.planted === null ? 0 : Math.min(1, (s.time - tile.planted) / 5);
+  const selectedRobot = activeRobot(s);
+  const tile = at(s, s.x, s.y);
+  const growth = cropProgress(s, tile);
   return (
     <div className={"game " + (!editorOpen ? "editor-collapsed" : "")}>
       <FarmScene
@@ -265,34 +437,31 @@ function App() {
       />
       <header className="game-header">
         <div className="resources" aria-label="Ressources de la ferme">
-          <div className="resource" title={`Blé au dépôt : ${s.stock} / 200`}>
+          <div
+            className="resource"
+            title={`Blé au dépôt : ${s.stock} / ${stockCapacity(s)}`}
+          >
             <ResourceIcon kind="wheat" />
             <strong>{s.stock}</strong>
             <span>BLÉ</span>
           </div>
-          <div
-            className="resource unavailable"
-            title="Le bois sera disponible dans une prochaine version"
-          >
+          <div className="resource" title="Bois dans les dépôts">
             <ResourceIcon kind="wood" />
-            <strong>—</strong>
-            <span>BOIS · VERROUILLÉ</span>
+            <strong>{getStock(s, "Wood")}</strong>
+            <span>BOIS</span>
           </div>
-          <div
-            className="resource unavailable"
-            title="Les carottes seront disponibles dans une prochaine version"
-          >
+          <div className="resource" title="Carottes dans les dépôts">
             <ResourceIcon kind="carrot" />
-            <strong>—</strong>
-            <span>CAROTTES · VERROUILLÉ</span>
+            <strong>{getStock(s, "Carrot")}</strong>
+            <span>CAROTTES</span>
           </div>
           <div
-            className="resource unavailable"
-            title="L’eau sera disponible dans une prochaine version"
+            className="resource"
+            title="Eau dans le réservoir du robot sélectionné"
           >
             <ResourceIcon kind="water" />
-            <strong>—</strong>
-            <span>EAU · VERROUILLÉE</span>
+            <strong>{selectedRobot.water.toFixed(1)}</strong>
+            <span>EAU EMBARQUÉE</span>
           </div>
         </div>
         <div className="game-brand">
@@ -303,7 +472,9 @@ function App() {
           <span>VOTRE CODE. VOTRE RÉCOLTE.</span>
           <div className="economy">
             <span title="Pièces d’or">◈ {s.gold} or</span>
-            <span title="Cargaison du robot">▣ {s.cargo} / 20</span>
+            <span title="Cargaison du robot">
+              ▣ {sum(selectedRobot.inventory)} / {capacity(s)}
+            </span>
           </div>
         </div>
       </header>
@@ -320,26 +491,32 @@ function App() {
               : "Robot au travail"
             : "La ferme attend vos instructions"}
           <span className="caption-divider">/</span>
-          {s.width} × 1 parcelle{s.width > 1 ? "s" : ""}
+          {s.width} × {s.height} parcelle{s.width > 1 ? "s" : ""}
         </p>
       </div>
       <div className="plot-info">
-        <span className="plot-coordinate">{s.x}, 0</span>
+        <span className="plot-coordinate">
+          {s.x}, {s.y}
+        </span>
         <div>
           <strong>
-            {tile.planted === null
-              ? "Prêt à planter"
-              : growth >= 1
-                ? "Le blé est mûr !"
-                : "Le blé pousse…"}
+            {!tile
+              ? "Hors parcelle agricole"
+              : tile.planted === null
+                ? "Prêt à planter"
+                : growth >= 1
+                  ? "La culture est mûre !"
+                  : "La culture pousse…"}
           </strong>
           <span>
-            {tile.planted === null
-              ? "plant(Entities.Wheat)"
-              : `${Math.round(growth * 100)} % · ${growth >= 1 ? "harvest()" : "5 secondes à ×1"}`}
+            {!tile
+              ? "Case de construction"
+              : tile.planted === null
+                ? "plant(Entities.Wheat)"
+                : `${Math.round(growth * 100)} % · ${growth >= 1 ? "harvest()" : "Croissance en cours"}`}
           </span>
         </div>
-        {tile.planted !== null && (
+        {tile && tile.planted !== null && (
           <div className="growth-meter">
             <i style={{ width: growth * 100 + "%" }} />
           </div>
@@ -356,8 +533,22 @@ function App() {
       >
         <div className="window-titlebar">
           <span className="file-icon">TS</span>
-          <strong>f1</strong>
-          <span className="filename">mon-premier-robot.ts</span>
+          <strong>{s.activeRobotId}</strong>
+          <select
+            className="robot-picker"
+            aria-label="Robot à programmer"
+            value={s.activeRobotId}
+            onChange={(e) => chooseRobot(e.target.value)}
+          >
+            {s.robots
+              .filter((r) => !r.destroyed)
+              .map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.id} · {models[r.model].name}
+                  {runtimes.current.has(r.id) ? " · ▶" : ""}
+                </option>
+              ))}
+          </select>
           <div className="window-actions">
             <button
               title="Réduire l’éditeur"
@@ -383,6 +574,7 @@ function App() {
             onChange={(e) => {
               if (e.target.value) {
                 setCode(examples[e.target.value]);
+                activeRobot(farm.current).code = examples[e.target.value];
                 localStorage.setItem(
                   "farmscript-code",
                   examples[e.target.value],
@@ -408,6 +600,7 @@ function App() {
             value={code}
             onChange={(v) => {
               setCode(v || "");
+              activeRobot(farm.current).code = v || "";
               localStorage.setItem("farmscript-code", v || "");
             }}
             options={{
@@ -457,7 +650,7 @@ function App() {
                   className="action-button orange"
                   aria-label="Arrêter le programme"
                   title="Arrêter le programme"
-                  onClick={stop}
+                  onClick={() => stop()}
                 >
                   <Icon name="stop" size={22} />
                 </button>
@@ -486,7 +679,7 @@ function App() {
             onClick={() => setEditorOpen(!editorOpen)}
             title="Afficher ou masquer le code"
           >
-            <strong>f1</strong>
+            <strong>{s.activeRobotId}</strong>
             <span>
               {running ? (paused ? "EN PAUSE" : "EN COURS") : "PRÊT À EXÉCUTER"}
             </span>
@@ -538,6 +731,15 @@ function App() {
           >
             <Icon name="research" size={29} />
             <span>Recherches</span>
+          </button>
+          <button
+            className={"dock-button " + (panel === "Shop" ? "selected" : "")}
+            aria-label="Shop"
+            title="Shop"
+            onClick={() => togglePanel("Shop")}
+          >
+            <Icon name="shop" size={29} />
+            <span>Shop</span>
           </button>
           <button
             className="dock-button"
@@ -595,7 +797,9 @@ function App() {
         <div
           className={
             "panel-backdrop " +
-            (panel === "Recherches" ? "skills-backdrop" : "")
+            (panel === "Recherches" || panel === "Shop"
+              ? "skills-backdrop"
+              : "")
           }
           onClick={() => setPanel(null)}
         >
@@ -605,7 +809,7 @@ function App() {
             aria-label={panel}
             className={
               "detail-panel floating-window " +
-              (panel === "Recherches" ? "skill-screen" : "")
+              (panel === "Recherches" || panel === "Shop" ? "skill-screen" : "")
             }
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
@@ -621,7 +825,9 @@ function App() {
                     ? "flag"
                     : panel === "Recherches"
                       ? "research"
-                      : "info"
+                      : panel === "Shop"
+                        ? "shop"
+                        : "info"
                 }
                 size={19}
               />
@@ -675,7 +881,7 @@ function App() {
                               disabled={
                                 !available ||
                                 m.progress(s) < m.target ||
-                                s.stock + m.reward > 200
+                                totalStock(s) + m.reward > stockCapacity(s)
                               }
                               onClick={() => {
                                 claim(farm.current, m.id);
@@ -694,6 +900,14 @@ function App() {
                     })}
                   </div>
                 </>
+              )}
+              {panel === "Shop" && (
+                <Shop
+                  farm={s}
+                  paused={paused}
+                  onPause={pause}
+                  onAction={shopAction}
+                />
               )}
               {panel === "Recherches" && (
                 <SkillTree
@@ -750,9 +964,10 @@ function App() {
                   ))}
                   <p>
                     TypeScript : variables, boucles et fonctions nommées sont
-                    disponibles. Les callbacks, générateurs, imports et cultures
-                    autres que le blé ne sont pas encore pris en charge. La
-                    progression est sauvegardée sur cet appareil.
+                    disponibles. Les callbacks, générateurs et imports ne sont
+                    pas encore pris en charge. Chaque robot a son propre
+                    programme ; sélectionnez-le dans l’éditeur ou depuis le
+                    shop. La progression est sauvegardée sur cet appareil.
                   </p>
                   <button
                     className="reset-farm"
@@ -762,8 +977,9 @@ function App() {
                           "Effacer la ferme et recommencer ? Le code sera conservé.",
                         )
                       ) {
-                        stop();
+                        stopAll();
                         farm.current = fresh();
+                        activeRobot(farm.current).code = code;
                         refresh();
                         log("Nouvelle ferme créée.");
                       }

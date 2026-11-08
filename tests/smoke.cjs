@@ -18,6 +18,21 @@ const { chromium } = require("playwright");
       await page.locator(".monaco-editor").waitFor();
     };
     const errors = [];
+    const replaceSavedCode = async (source, key) => {
+      await page.addInitScript(
+        ({ source, key }) => {
+          if (sessionStorage.getItem(key)) return;
+          const saved = JSON.parse(localStorage.getItem("farmscript-v1"));
+          saved.farm.robots.find(
+            (r) => r.id === saved.farm.activeRobotId,
+          ).code = source;
+          localStorage.setItem("farmscript-v1", JSON.stringify(saved));
+          localStorage.setItem("farmscript-code", source);
+          sessionStorage.setItem(key, "1");
+        },
+        { source, key },
+      );
+    };
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(process.env.FARM_URL || "http://localhost:5173");
     await openEditor();
@@ -83,11 +98,9 @@ const { chromium } = require("playwright");
       )
     )
       throw Error("Mobile overflow");
-    await page.evaluate(() =>
-      localStorage.setItem(
-        "farmscript-code",
-        'const quantite: number = "texte";',
-      ),
+    await replaceSavedCode(
+      'const quantite: number = "texte";',
+      "test-type-error",
     );
     await page.reload();
     await openEditor();
@@ -97,9 +110,7 @@ const { chromium } = require("playwright");
         .querySelector(".log-lines")
         .textContent.includes("Erreur TypeScript"),
     );
-    await page.evaluate(() =>
-      localStorage.setItem("farmscript-code", "while (true) {}"),
-    );
+    await replaceSavedCode("while (true) {}", "test-empty-loop");
     await page.reload();
     await openEditor();
     await page.getByRole("button", { name: "▶ Exécuter", exact: true }).click();

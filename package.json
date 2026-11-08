@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "test": "tsx --test src/engine.test.ts",
-    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs"
+    "test": "tsx --test src/*.test.ts",
+    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

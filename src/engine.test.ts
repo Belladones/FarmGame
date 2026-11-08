@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, command, buy, claim, sell } from "./engine";
+import { fresh, command, buy, claim, sell, advance } from "./engine";
 test("growth, harvesting and adjacent deposit follow game time", () => {
   const s = fresh();
   assert.equal(command(s, "plant", ["Wheat"]), true);
@@ -32,9 +32,11 @@ test("expansion preserves coordinates, blocks borders and distant deposit", () =
   buy(s, "extension");
   assert.equal(command(s, "move", ["West"]), false);
   assert.equal(command(s, "move", ["East"]), true);
+  advance(s, 1);
   s.cargo = 3;
   assert.equal(command(s, "deposit", []), 0);
   command(s, "move", ["East"]);
+  advance(s, 1);
   assert.equal(command(s, "move", ["East"]), false);
   assert.deepEqual(s.visited, [0, 1, 2]);
 });
@@ -43,7 +45,7 @@ test("partial harvest conserves excess yield when cargo is nearly full", () => {
   s.wheatLevel = 2;
   command(s, "plant", ["Wheat"]);
   s.time = 5;
-  s.cargo = 19;
+  s.cargo = 9;
   command(s, "harvest", []);
   assert.equal(s.tiles[0].yield, 4);
   assert.notEqual(s.tiles[0].planted, null);

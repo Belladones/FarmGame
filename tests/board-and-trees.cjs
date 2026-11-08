@@ -87,7 +87,8 @@ const { chromium } = require("playwright");
     await p
       .getByRole("button", { name: "Rechercher · 20 blés", exact: true })
       .click();
-    await p.locator('[data-skill="analysis"]').click();
+    await p.getByRole("button", { name: /Programmation/ }).click();
+    await p.locator('[data-skill="lists"]').click();
     if (
       !(await p
         .getByRole("button", { name: "Disponible ultérieurement" })

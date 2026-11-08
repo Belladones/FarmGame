@@ -1,18 +1,7 @@
 import ts from "typescript";
-const api = [
-  "plant",
-  "harvest",
-  "deposit",
-  "move",
-  "can_harvest",
-  "get_pos_x",
-  "get_pos_y",
-  "get_world_size",
-  "get_inventory",
-  "get_stock",
-  "get_capacity",
-  "print",
-];
+import { apiNames } from "./api";
+import { cropData, items } from "./catalog";
+const api = apiNames;
 let serial = 0;
 const pending = new Map<number, (v: any) => void>();
 self.onmessage = async ({ data }) => {
@@ -168,6 +157,8 @@ self.onmessage = async ({ data }) => {
       "Entities",
       "Resources",
       "Direction",
+      "Items",
+      "Grounds",
       out.outputText,
     )(
       ...api.map(
@@ -176,9 +167,13 @@ self.onmessage = async ({ data }) => {
             rpc(name, args),
       ),
       () => rpc("__step", []),
-      { Wheat: "Wheat" },
-      { Wheat: "Wheat" },
+      Object.fromEntries(Object.keys(cropData).map((k) => [k, k])),
+      Object.fromEntries(
+        items.filter((i) => i !== "Fertilizer").map((k) => [k, k]),
+      ),
       { North: "North", South: "South", East: "East", West: "West" },
+      { Fertilizer: "Fertilizer" },
+      { Grassland: "Grassland", Soil: "Soil" },
     );
     self.postMessage({ type: "done" });
   } catch (e) {

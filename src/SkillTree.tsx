@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { research, type Farm } from "./engine";
+import {
+  research,
+  researchBlocker,
+  getStock,
+  stockCapacity,
+  type Farm,
+} from "./engine";
+import { formatCost, type Item } from "./catalog";
 import { Icon, ResourceIcon } from "./Icons";
 type Branch = "Agriculture" | "Programmation" | "Technologie";
 type Art = "wheat" | "wood" | "carrot" | "water";
@@ -23,7 +30,7 @@ interface Tree {
   nodes: Node[];
 }
 // Roadmap entries remain informational: they cannot consume resources or grant abilities.
-const trees: Tree[] = [
+const baseTrees: Tree[] = [
   {
     name: "Agriculture",
     caption: "De la première graine à une exploitation florissante.",
@@ -246,7 +253,7 @@ const trees: Tree[] = [
         parents: [],
         base: true,
         detail:
-          "Votre premier robot est gratuit. Sa soute contient 20 unités. Le dépôt adjacent stocke jusqu’à 200 unités.",
+          "Votre premier robot est gratuit. Sa soute contient 10 unités. Le dépôt adjacent stocke jusqu’à 200 unités.",
       },
       {
         id: "sensor",
@@ -322,6 +329,46 @@ const trees: Tree[] = [
     ],
   },
 ];
+const trees: Tree[] = baseTrees.map((tree) => {
+  const nodes = tree.nodes.map((n) => {
+    const r = research.find((r) => r.id === (n.research ?? n.id));
+    return r
+      ? {
+          ...n,
+          research: r.id,
+          detail: r.detail,
+          cost: formatCost(r.materials),
+          prerequisite:
+            r.prerequisites
+              .map((p) => research.find((r) => r.id === p)?.name ?? p)
+              .join(" + ") || undefined,
+        }
+      : n;
+  });
+  const extra = research.filter(
+    (r) => r.category === tree.name && !nodes.some((n) => n.id === r.id),
+  );
+  const start = Math.max(...nodes.map((n) => n.y)) + 180;
+  extra.forEach((r, i) =>
+    nodes.push({
+      id: r.id,
+      title: r.name,
+      symbol: r.id.startsWith("extension") ? r.name.split("·")[1] : "⬡",
+      x: 45 + (i % 3) * 220,
+      y: start + Math.floor(i / 3) * 180,
+      parents: r.prerequisites.filter((p) =>
+        research.some((t) => t.id === p && t.category === tree.name),
+      ),
+      research: r.id,
+      detail: r.detail,
+      cost: formatCost(r.materials),
+      prerequisite: r.prerequisites
+        .map((p) => research.find((r) => r.id === p)?.name ?? p)
+        .join(" + "),
+    }),
+  );
+  return { ...tree, nodes };
+});
 function isAcquired(node: Node, farm: Farm) {
   return (
     !!node.base || (!!node.research && farm.unlocks.includes(node.research))
@@ -351,8 +398,13 @@ export function SkillTree({
   const researchItem = research.find((r) => r.id === node.research);
   const acquired = isAcquired(node, farm),
     future = !node.base && !node.research;
-  const prerequisiteMissing = node.research === "position" && farm.width < 3;
-  const affordable = !!researchItem && farm.stock >= researchItem.cost;
+  const blocker = node.research ? researchBlocker(farm, node.research) : null;
+  const prerequisiteMissing = !!blocker?.startsWith("Requis");
+  const affordable =
+    !!researchItem &&
+    Object.entries(researchItem.materials).every(
+      ([i, n]) => getStock(farm, i as Item) >= n,
+    );
   const changePage = (index: number) => {
     setPage(index);
     setSelected(trees[index].nodes[0].id);
@@ -369,7 +421,7 @@ export function SkillTree({
           <div>
             <strong>
               {farm.stock}
-              <small> / 200</small>
+              <small> / {stockCapacity(farm)}</small>
             </strong>
             <span>blés disponibles</span>
           </div>
@@ -454,7 +506,7 @@ export function SkillTree({
                     }
                     style={{ left: n.x, top: n.y }}
                     aria-pressed={n.id === node.id}
-                    aria-label={`${n.title} · ${owned ? "Acquis" : planned ? "À venir" : r?.cost + " blés"}`}
+                    aria-label={`${n.title} · ${owned ? "Acquis" : planned ? "À venir" : r ? formatCost(r.materials) : ""}`}
                     onClick={() => setSelected(n.id)}
                   >
                     <div className="node-art">
@@ -486,7 +538,7 @@ export function SkillTree({
                         ? "✓ Acquis"
                         : planned
                           ? "À venir"
-                          : `${r?.cost} blés`}
+                          : `${r ? formatCost(r.materials) : ""}`}
                     </span>
                   </button>
                 );
@@ -524,7 +576,7 @@ export function SkillTree({
               {node.base
                 ? "Gratuit"
                 : researchItem
-                  ? `${researchItem.cost} blés`
+                  ? formatCost(researchItem.materials)
                   : node.cost}
             </strong>
           </div>
@@ -538,10 +590,13 @@ export function SkillTree({
               : future
                 ? "Disponible ultérieurement"
                 : prerequisiteMissing
-                  ? "Débloquez Trois parcelles"
+                  ? node.research === "position"
+                    ? "Débloquez Trois parcelles"
+                    : "Prérequis manquants"
                   : !affordable
-                    ? "Blés insuffisants"
-                    : "Rechercher · " + researchItem?.cost + " blés"}
+                    ? "Matériaux insuffisants"
+                    : "Rechercher · " +
+                      (researchItem ? formatCost(researchItem.materials) : "")}
           </button>
           {future && (
             <small className="planned-note">

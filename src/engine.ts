@@ -1,15 +1,80 @@
-export type Crop = "Wheat";
+import {
+  buildings,
+  constructionSlots,
+  cropData,
+  formatCost,
+  itemNames,
+  items,
+  models,
+  recipes,
+  research,
+  salePrices,
+  sum,
+  tradeOrders,
+  type BuildingKind,
+  type Inventory,
+  type Item,
+  type Model,
+} from "./catalog";
+export { research } from "./catalog";
+export type Crop = keyof typeof cropData;
+export const DEFAULT_PROGRAM =
+  "// Mon premier fermier terrestre\nwhile (true) {\n  harvest();\n  plant(Entities.Wheat);\n  deposit();\n}\n";
 export interface Tile {
   planted: number | null;
   yield: number;
+  entity?: Crop;
+  ground?: "Grassland" | "Soil";
+  water?: number;
+  progress?: number;
+  updatedAt?: number;
+  level?: number;
+  grouped?: boolean;
+}
+export interface Robot {
+  id: string;
+  model: Model;
+  x: number;
+  y: number;
+  inventory: Inventory;
+  water: number;
+  code: string;
+  paid: number;
+  loan: boolean;
+  destroyed: boolean;
+  readyAt: number;
+  moving?: {
+    x: number;
+    y: number;
+    fromX: number;
+    fromY: number;
+    started: number;
+    ends: number;
+  };
+  reservation?: { x: number; y: number; expires: number };
+}
+export interface Building {
+  id: string;
+  kind: BuildingKind;
+  x: number;
+  y: number;
+  paid: number;
+  inventory: Inventory;
+  input: Inventory;
+  output: Inventory;
+  water: number;
+  cycle?: { ends: number };
 }
 export interface Farm {
   time: number;
   width: number;
+  height: number;
   x: number;
+  y: number;
   tiles: Tile[];
   cargo: number;
   stock: number;
+  resources: Inventory;
   gold: number;
   harvested: number;
   deposited: number;
@@ -18,14 +83,66 @@ export interface Farm {
   wheatLevel: number;
   unlocks: string[];
   claimed: string[];
+  robots: Robot[];
+  buildings: Building[];
+  activeRobotId: string;
+  nextId: number;
+  orderPeriods: Record<string, number>;
 }
+const tile = (): Tile => ({
+  planted: null,
+  yield: 1,
+  ground: "Grassland",
+  water: 0,
+  progress: 0,
+});
+const robot = (
+  id: string,
+  model: Model,
+  x = 0,
+  y = 0,
+  paid = 0,
+  loan = false,
+): Robot => ({
+  id,
+  model,
+  x,
+  y,
+  paid,
+  loan,
+  inventory: {},
+  water: 0,
+  code: DEFAULT_PROGRAM,
+  destroyed: false,
+  readyAt: 0,
+});
+const building = (
+  id: string,
+  kind: BuildingKind,
+  x: number,
+  y: number,
+  paid = 0,
+): Building => ({
+  id,
+  kind,
+  x,
+  y,
+  paid,
+  inventory: {},
+  input: {},
+  output: {},
+  water: 0,
+});
 export const fresh = (): Farm => ({
   time: 0,
   width: 1,
+  height: 1,
   x: 0,
-  tiles: [{ planted: null, yield: 1 }],
+  y: 0,
+  tiles: [tile()],
   cargo: 0,
   stock: 0,
+  resources: {},
   gold: 0,
   harvested: 0,
   deposited: 0,
@@ -34,128 +151,1068 @@ export const fresh = (): Farm => ({
   wheatLevel: 1,
   unlocks: [],
   claimed: [],
+  robots: [robot("f1", "Farmer")],
+  buildings: [building("b1", "Depot", -1, 0)],
+  activeRobotId: "f1",
+  nextId: 2,
+  orderPeriods: {},
 });
-export const research = [
-  {
-    id: "wheat",
-    name: "Blé · niveau 2",
-    cost: 20,
-    detail: "5 blés par nouvelle plantation",
-  },
-  {
-    id: "sensor",
-    name: "Capteur de maturité",
-    cost: 10,
-    detail: "Débloque can_harvest()",
-  },
-  {
-    id: "conditions",
-    name: "Conditions",
-    cost: 10,
-    detail: "Apprendre if et else",
-  },
-  { id: "print", name: "Journal", cost: 5, detail: "Débloque print()" },
-  {
-    id: "extension",
-    name: "Trois parcelles",
-    cost: 25,
-    detail: "Étend la ferme à 3 × 1",
-  },
-  {
-    id: "position",
-    name: "Positionnement",
-    cost: 20,
-    detail: "Coordonnées et dimensions · exige 3 parcelles",
-  },
-];
-export function buy(s: Farm, id: string): boolean {
-  const r = research.find((r) => r.id === id);
+export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
+  if (!raw || typeof raw !== "object") return fresh();
+  const v = raw as Partial<Farm>;
   if (
-    !r ||
-    s.unlocks.includes(id) ||
-    s.stock < r.cost ||
-    (id === "position" && s.width < 3)
+    !Number.isInteger(v.width) ||
+    v.width! < 1 ||
+    v.width! > 7 ||
+    !Array.isArray(v.tiles) ||
+    v.tiles.length !== v.width! * (v.height ?? 1)
   )
-    return false;
-  s.stock -= r.cost;
-  s.unlocks.push(id);
-  if (id === "wheat") s.wheatLevel = 2;
-  if (id === "extension") {
-    s.width = 3;
-    s.tiles.push({ planted: null, yield: 1 }, { planted: null, yield: 1 });
+    return fresh();
+  const s = {
+    ...fresh(),
+    ...v,
+    height: v.height ?? 1,
+    resources: v.resources ?? {},
+    orderPeriods: v.orderPeriods ?? {},
+    tiles: v.tiles.map((t) => ({
+      ...tile(),
+      ...t,
+      entity: t.planted !== null ? (t.entity ?? "Wheat") : t.entity,
+    })),
+  } as Farm;
+  if (!Array.isArray(v.robots) || !v.robots.length) {
+    s.robots = [robot("f1", "Farmer", s.x, s.y)];
+    s.robots[0].inventory.Wheat = s.cargo;
+    s.robots[0].code = legacyCode || DEFAULT_PROGRAM;
   }
+  if (!Array.isArray(v.buildings) || !v.buildings.length) {
+    s.buildings = [building("b1", "Depot", -1, 0)];
+    s.buildings[0].inventory = { ...s.resources, Wheat: s.stock };
+  }
+  syncBefore(s);
+  sync(s);
+  return s;
+}
+export const level = (s: Farm, id: string, max = 3) => {
+  let n = s.unlocks.includes(id) ? 1 : 0;
+  for (let i = 2; i <= max; i++) if (s.unlocks.includes(id + i)) n = i;
+  return n;
+};
+export const activeRobot = (s: Farm) =>
+  s.robots.find((r) => r.id === s.activeRobotId && !r.destroyed) ??
+  s.robots.find((r) => !r.destroyed)!;
+export const capacity = (s: Farm, r: Robot = activeRobot(s)) =>
+  models[r.model].capacity * ([1, 2, 4, 8][level(s, "hold")] ?? 1);
+export const depotCapacity = (s: Farm) =>
+  [200, 200, 500, 2500, 10000][level(s, "storage", 4)] ?? 200;
+export const stockCapacity = (s: Farm) =>
+  s.buildings.filter((b) => b.kind === "Depot").length * depotCapacity(s);
+export const getStock = (s: Farm, item: Item) =>
+  item === "Wheat" ? s.stock : (s.resources[item] ?? 0);
+export const totalStock = (s: Farm) => s.stock + sum(s.resources);
+export const slotCount = (s: Farm) =>
+  [1, 2, 4, 8, 16][level(s, "land", 4)] ?? 1;
+export const at = (s: Farm, x: number, y: number) =>
+  x >= 0 && y >= 0 && x < s.width && y < s.height
+    ? s.tiles[y * s.width + x]
+    : undefined;
+const isItem = (value: unknown): value is Item =>
+  typeof value === "string" && Object.hasOwn(itemNames, value);
+const adjacent = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+  Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+const ids = (s: Farm, prefix: string) => prefix + s.nextId++;
+const depots = (s: Farm) => s.buildings.filter((b) => b.kind === "Depot");
+// Legacy wheat fields are maintained for existing saves and the UI. Every transfer uses real depot inventories.
+function syncBefore(s: Farm) {
+  const ds = depots(s);
+  if (ds[0])
+    for (const item of items) {
+      const aggregate = ds.reduce((n, b) => n + (b.inventory[item] ?? 0), 0),
+        expected = getStock(s, item);
+      if (expected !== aggregate)
+        ds[0].inventory[item] = Math.max(
+          0,
+          (ds[0].inventory[item] ?? 0) + expected - aggregate,
+        );
+    }
+  const r = s.robots.find((r) => r.id === s.activeRobotId && !r.destroyed);
+  if (r) {
+    r.x = s.x;
+    r.y = s.y ?? 0;
+    r.inventory.Wheat = s.cargo;
+  }
+}
+function sync(s: Farm) {
+  s.stock = 0;
+  s.resources = {};
+  for (const b of depots(s))
+    for (const item of items) {
+      if (item === "Wheat") s.stock += b.inventory[item] ?? 0;
+      else
+        s.resources[item] = (s.resources[item] ?? 0) + (b.inventory[item] ?? 0);
+    }
+  const r = activeRobot(s);
+  if (r) {
+    s.activeRobotId = r.id;
+    s.x = r.x;
+    s.y = r.y;
+    s.cargo = r.inventory.Wheat ?? 0;
+  }
+}
+export function selectRobot(s: Farm, id: string) {
+  syncBefore(s);
+  const r = s.robots.find((r) => r.id === id && !r.destroyed);
+  if (!r) return false;
+  s.activeRobotId = id;
+  sync(s);
   return true;
 }
-export function command(s: Farm, name: string, args: unknown[]): unknown {
-  const tile = s.tiles[s.x];
-  const ready = tile.planted !== null && s.time - tile.planted >= 5;
+function removeStock(s: Farm, item: Item, n: number) {
+  for (const b of depots(s)) {
+    const amount = Math.min(n, b.inventory[item] ?? 0);
+    b.inventory[item] = (b.inventory[item] ?? 0) - amount;
+    n -= amount;
+    if (!n) break;
+  }
+}
+function addStock(s: Farm, inventory: Inventory): boolean {
+  const n = sum(inventory);
+  if (totalStock(s) + n > stockCapacity(s)) return false;
+  for (const item of items) {
+    let left = inventory[item] ?? 0;
+    for (const b of depots(s)) {
+      const amount = Math.min(
+        left,
+        Math.max(0, depotCapacity(s) - sum(b.inventory)),
+      );
+      b.inventory[item] = (b.inventory[item] ?? 0) + amount;
+      left -= amount;
+      if (!left) break;
+    }
+  }
+  sync(s);
+  return true;
+}
+export function researchBlocker(s: Farm, id: string): string | null {
+  const r = research.find((r) => r.id === id);
+  if (!r) return "Recherche inconnue";
+  if (s.unlocks.includes(id)) return "Compétence déjà acquise";
+  const missing = r.prerequisites.filter(
+    (p) => !s.unlocks.includes(p) && !(p === "extension" && s.width >= 3),
+  );
+  if (missing.length)
+    return (
+      "Requis : " +
+      missing.map((p) => research.find((r) => r.id === p)?.name ?? p).join(", ")
+    );
+  if (Object.entries(r.materials).some(([i, n]) => getStock(s, i as Item) < n))
+    return "Matériaux insuffisants : " + formatCost(r.materials);
+  return null;
+}
+export function buy(s: Farm, id: string): boolean {
+  syncBefore(s);
+  if (researchBlocker(s, id)) return false;
+  const r = research.find((r) => r.id === id)!;
+  for (const [item, n] of Object.entries(r.materials))
+    removeStock(s, item as Item, n);
+  s.unlocks.push(id);
+  if (id === "wheat") s.wheatLevel = 2;
+  else if (/^wheat[3-5]$/.test(id)) s.wheatLevel = Number(id.slice(-1));
+  if (id === "extension") resizeFarm(s, 3, 1);
+  else if (/^extension[3-7]$/.test(id)) {
+    const n = Number(id.slice(-1));
+    resizeFarm(s, n, n);
+  }
+  sync(s);
+  return true;
+}
+function resizeFarm(s: Farm, w: number, h: number) {
+  const old = s.tiles,
+    oldW = s.width,
+    oldH = s.height;
+  s.tiles = Array.from({ length: w * h }, (_, i) => {
+    const x = i % w,
+      y = Math.floor(i / w);
+    return x < oldW && y < oldH ? old[y * oldW + x] : tile();
+  });
+  s.width = w;
+  s.height = h;
+  s.visited = s.visited.map((i) => Math.floor(i / oldW) * w + (i % oldW));
+}
+function growth(s: Farm, t: Tile, index: number) {
+  if (t.planted === null) return;
+  const kind = t.entity ?? "Wheat";
+  let duration = cropData[kind].seconds;
+  if (kind === "Tree") {
+    const x = index % s.width,
+      y = Math.floor(index / s.width);
+    let neighbors = 0;
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ])
+      if (
+        at(s, x + dx, y + dy)?.entity === "Tree" &&
+        at(s, x + dx, y + dy)?.planted !== null
+      )
+        neighbors++;
+    duration *= 1 + 0.5 * neighbors;
+  }
+  const dt = Math.max(0, s.time - (t.updatedAt ?? t.planted));
+  const bonus = [0, 0.25, 0.5, 1][level(s, "watering")] ?? 0;
+  t.progress = Math.min(
+    1,
+    (t.progress ?? 0) + (dt / duration) * (1 + bonus * (t.water ?? 0)),
+  );
+  t.updatedAt = s.time;
+}
+export const cropProgress = (s: Farm, t: Tile | undefined) =>
+  !t || t.planted === null
+    ? 0
+    : Math.min(
+        1,
+        t.progress ??
+          (s.time - t.planted) / cropData[t.entity ?? "Wheat"].seconds,
+      );
+function allowed(s: Farm, x: number, y: number) {
+  return (
+    !!at(s, x, y) ||
+    constructionSlots.slice(0, slotCount(s)).some((p) => p.x === x && p.y === y)
+  );
+}
+function walkable(s: Farm, x: number, y: number) {
+  return allowed(s, x, y) && !s.buildings.some((b) => b.x === x && b.y === y);
+}
+function spawn(s: Farm, model: Model, ignore?: string) {
+  const medium = models[model].medium;
+  const candidates = [
+    ...Array.from({ length: s.width * s.height }, (_, i) => ({
+      x: i % s.width,
+      y: Math.floor(i / s.width),
+    })),
+    ...constructionSlots.slice(0, slotCount(s)),
+  ];
+  return candidates.find(
+    (p) =>
+      walkable(s, p.x, p.y) &&
+      !s.robots.some(
+        (r) =>
+          r.id !== ignore &&
+          !r.destroyed &&
+          models[r.model].medium === medium &&
+          ((r.x === p.x && r.y === p.y) ||
+            (r.moving?.x === p.x && r.moving?.y === p.y)),
+      ),
+  );
+}
+export function freeSlots(s: Farm) {
+  return constructionSlots
+    .slice(0, slotCount(s))
+    .filter(
+      (p) =>
+        !s.buildings.some((b) => b.x === p.x && b.y === p.y) &&
+        !s.robots.some((r) => !r.destroyed && r.x === p.x && r.y === p.y),
+    );
+}
+export function shopBlocker(
+  s: Farm,
+  kind: Model | BuildingKind | "Fertilizer",
+  quantity = 1,
+  site?: { x: number; y: number },
+): string | null {
+  if (!Number.isSafeInteger(quantity) || quantity <= 0)
+    return "Choisissez une quantité entière positive";
+  const spec =
+    kind === "Fertilizer"
+      ? { price: 25, research: "consumables" }
+      : kind in models
+        ? models[kind as Model]
+        : buildings[kind as BuildingKind];
+  if (!spec) return "Article inconnu";
+  if (!s.unlocks.includes(spec.research))
+    return (
+      "Recherche requise : " +
+      (research.find((r) => r.id === spec.research)?.name ?? spec.research)
+    );
+  if (quantity !== 1 && kind !== "Fertilizer")
+    return "Un seul exemplaire par achat";
+  if (s.gold < spec.price * quantity) return "Or insuffisant";
+  if (kind === "Fertilizer" && totalStock(s) + quantity > stockCapacity(s))
+    return "Dépôts pleins";
+  if (kind in models) {
+    const loan = s.robots.find(
+      (r) => r.loan && !r.destroyed && kind === "Farmer",
+    );
+    if (!spawn(s, kind as Model, loan?.id))
+      return "Aucune case de départ libre pour ce modèle";
+  }
+  if (kind in buildings) {
+    const slots = freeSlots(s);
+    if (!slots.length) return "Débloquez un emplacement constructible libre";
+    if (site && !slots.some((p) => p.x === site.x && p.y === site.y))
+      return "Emplacement inaccessible ou occupé";
+  }
+  return null;
+}
+export function purchase(
+  s: Farm,
+  kind: Model | BuildingKind | "Fertilizer",
+  quantity = 1,
+  site?: { x: number; y: number },
+): boolean {
+  syncBefore(s);
+  if (shopBlocker(s, kind, quantity, site)) return false;
+  if (kind === "Fertilizer") {
+    s.gold -= 25 * quantity;
+    addStock(s, { Fertilizer: quantity });
+  } else if (kind in models) {
+    const model = kind as Model;
+    const loan = s.robots.find(
+      (r) => r.loan && !r.destroyed && model === "Farmer",
+    );
+    const pos = spawn(s, model, loan?.id)!;
+    const next = robot(ids(s, "f"), model, pos.x, pos.y, models[model].price);
+    if (loan) {
+      next.inventory = { ...loan.inventory };
+      next.water = loan.water;
+      next.code = loan.code;
+      s.robots = s.robots.filter((r) => r.id !== loan.id);
+      if (s.activeRobotId === loan.id) s.activeRobotId = next.id;
+    }
+    s.robots.push(next);
+    s.gold -= models[model].price;
+  } else {
+    const type = kind as BuildingKind,
+      pos = site ?? freeSlots(s)[0];
+    s.buildings.push(
+      building(ids(s, "b"), type, pos.x, pos.y, buildings[type].price),
+    );
+    s.gold -= buildings[type].price;
+  }
+  sync(s);
+  return true;
+}
+function quantity(n: unknown): number {
+  if (typeof n !== "number" || !Number.isSafeInteger(n) || n <= 0)
+    throw new Error("La quantité doit être un entier positif.");
+  return n;
+}
+export function sellStock(s: Farm, item: Item, n: number): number {
+  syncBefore(s);
+  quantity(n);
+  if (!isItem(item)) throw new Error("Cette ressource n’est pas vendable.");
+  const amount = Math.min(n, getStock(s, item));
+  removeStock(s, item, amount);
+  s.gold += amount * salePrices[item];
+  sync(s);
+  return amount;
+}
+export function sell(s: Farm): boolean {
+  if (s.stock < 10) return false;
+  return sellStock(s, "Wheat", 10) === 10;
+}
+export function fulfillOrder(s: Farm, id: string): boolean {
+  syncBefore(s);
+  const o = tradeOrders.find((o) => o.id === id),
+    period = Math.floor(s.time / 600);
+  if (
+    !o ||
+    (o.unlock && !s.unlocks.includes(o.unlock)) ||
+    s.orderPeriods[id] === period ||
+    getStock(s, o.item) < o.quantity
+  )
+    return false;
+  removeStock(s, o.item, o.quantity);
+  s.gold += o.payment;
+  s.orderPeriods[id] = period;
+  sync(s);
+  return true;
+}
+function ensureFarmer(s: Farm) {
+  if (s.robots.some((r) => r.model === "Farmer" && !r.destroyed)) return;
+  const pos = spawn(s, "Farmer");
+  if (pos) {
+    const loan = robot(ids(s, "f"), "Farmer", pos.x, pos.y, 0, true);
+    s.robots.push(loan);
+  }
+}
+export function assetBlocker(s: Farm, id: string): string | null {
+  const r = s.robots.find((r) => r.id === id);
+  if (r) {
+    if (r.destroyed) return "Une carcasse ne peut pas être revendue";
+    if (r.loan) return "Le fermier de secours est prêté et non vendable";
+    if (sum(r.inventory) || r.water)
+      return "Videz la soute et le réservoir avant revente";
+    if (r.moving || r.readyAt > s.time) return "Attendez la fin de l’action";
+    return null;
+  }
+  const b = s.buildings.find((b) => b.id === id);
+  if (!b) return "Objet introuvable";
+  if (b.id === "b1") return "Conservez le dépôt initial pour repartir";
+  if (sum(b.inventory) || sum(b.input) || sum(b.output) || b.water || b.cycle)
+    return "Videz le bâtiment et terminez son cycle";
+  return null;
+}
+export function resellAsset(s: Farm, id: string): boolean {
+  syncBefore(s);
+  if (assetBlocker(s, id)) return false;
+  const r = s.robots.find((r) => r.id === id),
+    b = s.buildings.find((b) => b.id === id);
+  s.gold += (r?.paid ?? b?.paid ?? 0) / 2;
+  s.robots = s.robots.filter((r) => r.id !== id);
+  s.buildings = s.buildings.filter((b) => b.id !== id);
+  ensureFarmer(s);
+  sync(s);
+  return true;
+}
+export function repair(s: Farm, id: string): boolean {
+  syncBefore(s);
+  const r = s.robots.find((r) => r.id === id && r.destroyed);
+  if (!r || !s.buildings.some((b) => b.kind === "Workshop")) return false;
+  const loan = s.robots.find(
+    (b) => b.loan && !b.destroyed && r.model === "Farmer",
+  );
+  const pos = spawn(s, r.model, loan?.id);
+  const cost = models[r.model].price * 0.4;
+  if (!pos || s.gold < cost) return false;
+  s.gold -= cost;
+  r.destroyed = false;
+  r.x = pos.x;
+  r.y = pos.y;
+  r.inventory = loan ? { ...loan.inventory } : {};
+  r.water = loan?.water ?? 0;
+  r.readyAt = s.time;
+  if (loan) {
+    s.robots = s.robots.filter((b) => b.id !== loan.id);
+    if (s.activeRobotId === loan.id) s.activeRobotId = r.id;
+  }
+  sync(s);
+  return true;
+}
+export function relocateBuilding(
+  s: Farm,
+  id: string,
+  site: { x: number; y: number },
+  paused: boolean,
+): boolean {
+  syncBefore(s);
+  const b = s.buildings.find((b) => b.id === id);
+  if (
+    !paused ||
+    !b ||
+    sum(b.inventory) ||
+    sum(b.input) ||
+    sum(b.output) ||
+    b.water ||
+    b.cycle ||
+    !freeSlots(s).some((p) => p.x === site.x && p.y === site.y)
+  )
+    return false;
+  b.x = site.x;
+  b.y = site.y;
+  return true;
+}
+function destroy(r: Robot) {
+  r.destroyed = true;
+  r.inventory = {};
+  r.water = 0;
+  delete r.moving;
+  delete r.reservation;
+}
+export function releaseReservation(s: Farm, id: string) {
+  const r = s.robots.find((r) => r.id === id);
+  if (r) delete r.reservation;
+}
+function waterGroup(s: Farm, first: Building) {
+  const group = [first];
+  for (let i = 0; i < group.length; i++)
+    for (const b of s.buildings)
+      if (
+        (b.kind === "Well" || b.kind === "Cistern") &&
+        !group.includes(b) &&
+        adjacent(group[i], b)
+      )
+        group.push(b);
+  return group;
+}
+const waterCapacity = (s: Farm, b: Building) =>
+  (b.kind === "Well" ? 100 : 400) * (s.unlocks.includes("reservoir2") ? 3 : 1);
+function setWater(s: Farm, group: Building[], n: number) {
+  for (const b of group) {
+    b.water = Math.min(n, waterCapacity(s, b));
+    n -= b.water;
+  }
+}
+export function buildingStatus(
+  b: Building,
+): "working" | "missing_input" | "output_full" | "idle" | null {
+  const recipe = recipes[b.kind];
+  if (!recipe) return null;
+  if (b.cycle) return "working";
+  if (sum(b.output) + sum(recipe.output) > 50) return "output_full";
+  return sum(b.input) || sum(b.output) ? "missing_input" : "idle";
+}
+function machine(s: Farm, b: Building, cursor: number) {
+  const recipe = recipes[b.kind];
+  if (!recipe) return;
+  let loops = 0;
+  while (loops++ < 1000) {
+    if (b.cycle) {
+      if (b.cycle.ends > s.time) return;
+      for (const [item, n] of Object.entries(recipe.output))
+        b.output[item as Item] = (b.output[item as Item] ?? 0) + n;
+      cursor = b.cycle.ends;
+      delete b.cycle;
+    }
+    if (
+      sum(b.output) + sum(recipe.output) > 50 ||
+      Object.entries(recipe.input).some(
+        ([i, n]) => (b.input[i as Item] ?? 0) < n,
+      )
+    )
+      return;
+    for (const [i, n] of Object.entries(recipe.input))
+      b.input[i as Item] = (b.input[i as Item] ?? 0) - n;
+    const multiplier = s.unlocks.includes("mechanization2")
+      ? 0.5
+      : s.unlocks.includes("mechanization")
+        ? 0.75
+        : 1;
+    b.cycle = { ends: cursor + recipe.duration * multiplier };
+    if (b.cycle.ends > s.time) return;
+  }
+}
+export function advance(s: Farm, delta: number) {
+  syncBefore(s);
+  const previous = s.time;
+  s.time += Math.max(0, delta);
+  for (let i = 0; i < s.tiles.length; i++) {
+    growth(s, s.tiles[i], i);
+    s.tiles[i].water = Math.max(
+      0,
+      (s.tiles[i].water ?? 0) - Math.max(0, delta) * 0.01,
+    );
+  }
+  const live = s.robots.filter((r) => !r.destroyed),
+    arriving = live.filter((r) => r.moving && r.moving.ends <= s.time),
+    crashed = new Set<Robot>();
+  for (const r of arriving) {
+    const m = r.moving!;
+    for (const other of live) {
+      if (other === r || models[r.model].medium !== models[other.model].medium)
+        continue;
+      const om = other.moving;
+      if (
+        om &&
+        om.x === m.fromX &&
+        om.y === m.fromY &&
+        om.fromX === m.x &&
+        om.fromY === m.y &&
+        Math.max(om.started, m.started) <= Math.min(om.ends, m.ends)
+      ) {
+        crashed.add(r);
+        crashed.add(other);
+      }
+    }
+    r.x = m.x;
+    r.y = m.y;
+    delete r.moving;
+    delete r.reservation;
+    if (at(s, r.x, r.y)) {
+      const index = r.y * s.width + r.x;
+      if (!s.visited.includes(index)) s.visited.push(index);
+    }
+  }
+  for (let i = 0; i < live.length; i++)
+    for (let j = i + 1; j < live.length; j++) {
+      const a = live[i],
+        b = live[j];
+      if (
+        a.x === b.x &&
+        a.y === b.y &&
+        models[a.model].medium === models[b.model].medium
+      ) {
+        crashed.add(a);
+        crashed.add(b);
+      }
+    }
+  for (const r of crashed) destroy(r);
+  for (const r of live)
+    if (r.reservation && r.reservation.expires <= s.time) delete r.reservation;
+  const seen = new Set<string>();
+  for (const b of s.buildings) {
+    machine(s, b, previous);
+    if ((b.kind === "Well" || b.kind === "Cistern") && !seen.has(b.id)) {
+      const g = waterGroup(s, b);
+      g.forEach((b) => seen.add(b.id));
+      const amount =
+        g.reduce((n, b) => n + b.water, 0) +
+        g.filter((b) => b.kind === "Well").length * Math.max(0, delta);
+      setWater(
+        s,
+        g,
+        Math.min(
+          amount,
+          g.reduce((n, b) => n + waterCapacity(s, b), 0),
+        ),
+      );
+    }
+  }
+  ensureFarmer(s);
+  sync(s);
+}
+const offsets: Record<string, [number, number]> = {
+  North: [0, 1],
+  South: [0, -1],
+  East: [1, 0],
+  West: [-1, 0],
+};
+export function command(
+  s: Farm,
+  name: string,
+  args: unknown[],
+  robotId = s.activeRobotId,
+): unknown {
+  syncBefore(s);
+  const r = s.robots.find((r) => r.id === robotId && !r.destroyed);
+  if (!r) throw new Error("Ce robot est détruit ou indisponible.");
   const requireUnlock = (id: string) => {
     if (!s.unlocks.includes(id))
       throw new Error(
-        `Recherchez « ${research.find((r) => r.id === id)?.name} » avant cet appel.`,
+        `Recherchez « ${research.find((r) => r.id === id)?.name ?? id} » avant cet appel.`,
       );
   };
+  const current = at(s, r.x, r.y),
+    index = r.y * s.width + r.x;
+  if (current) growth(s, current, index);
+  const ready =
+    !!current && current.planted !== null && (current.progress ?? 0) >= 1;
+  const direction = (value: unknown) => {
+    const d = offsets[String(value)];
+    if (!d) throw new Error("Direction invalide.");
+    return { x: r.x + d[0], y: r.y + d[1] };
+  };
+  const targetBuilding = (value: unknown) => {
+    const p = direction(value);
+    return s.buildings.find((b) => b.x === p.x && b.y === p.y);
+  };
+  const getItem = (value: unknown) => {
+    if (!isItem(value)) throw new Error("Ressource ou consommable inconnu.");
+    return value;
+  };
+  const farmerOnly = () => r.model === "Farmer";
+  const consumeTime = () => {
+    const movement =
+      name === "move"
+        ? 1 /
+          (models[r.model].speed * ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1))
+        : [
+              "plant",
+              "harvest",
+              "till",
+              "watering",
+              "use_item",
+              "harvest_group",
+            ].includes(name)
+          ? ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1)
+          : 1;
+    return movement * (r.loan ? 2 : 1);
+  };
+  const actions = [
+    "plant",
+    "harvest",
+    "deposit",
+    "load",
+    "move",
+    "till",
+    "watering",
+    "use_item",
+    "harvest_group",
+    "refill_water",
+    "deliver",
+    "collect",
+    "sell",
+  ];
+  if (actions.includes(name)) r.readyAt = s.time + consumeTime();
+  let result: unknown;
   switch (name) {
-    case "plant":
-      if (args[0] !== "Wheat") throw new Error("Utilisez Entities.Wheat.");
-      if (tile.planted !== null) return false;
-      tile.planted = s.time;
-      tile.yield = s.wheatLevel === 2 ? 5 : 1;
+    case "plant": {
+      const kind = args[0] as Crop;
+      if (!Object.hasOwn(cropData, String(kind)))
+        throw new Error("Culture inconnue.");
+      const spec = cropData[kind];
+      if (spec.unlock) requireUnlock(spec.unlock);
+      if (
+        !farmerOnly() ||
+        !current ||
+        current.planted !== null ||
+        (spec.soil !== "Any" &&
+          (current.ground ?? "Grassland") !== spec.soil) ||
+        Object.entries(spec.cost).some(
+          ([i, n]) => (r.inventory[i as Item] ?? 0) < n,
+        )
+      ) {
+        result = false;
+        break;
+      }
+      for (const [i, n] of Object.entries(spec.cost))
+        r.inventory[i as Item] = (r.inventory[i as Item] ?? 0) - n;
+      const base =
+        kind === "Wheat"
+          ? s.wheatLevel
+          : level(s, kind.toLowerCase(), spec.yields.length);
+      current.planted = s.time;
+      current.entity = kind;
+      current.progress = 0;
+      current.updatedAt = s.time;
+      current.level = Math.max(1, base);
+      current.yield = spec.yields[Math.max(0, base - 1)] ?? spec.yields[0];
+      current.grouped = false;
       s.planted++;
-      return true;
+      result = true;
+      break;
+    }
     case "harvest": {
-      if (!ready || s.cargo >= 20) return false;
-      const n = Math.min(tile.yield, 20 - s.cargo);
-      s.cargo += n;
+      if (!farmerOnly() || !ready || !current) {
+        result = false;
+        break;
+      }
+      const n = Math.min(
+        current.yield,
+        Math.max(0, capacity(s, r) - sum(r.inventory)),
+      );
+      if (n <= 0) {
+        result = false;
+        break;
+      }
+      const item = cropData[current.entity ?? "Wheat"].resource;
+      r.inventory[item] = (r.inventory[item] ?? 0) + n;
       s.harvested += n;
-      tile.yield -= n;
-      if (!tile.yield) tile.planted = null;
-      return true;
+      current.yield -= n;
+      if (!current.yield) {
+        current.planted = null;
+        delete current.entity;
+        current.progress = 0;
+      }
+      result = true;
+      break;
     }
     case "deposit": {
-      if (s.x !== 0) return 0;
-      const n = Math.min(s.cargo, 200 - s.stock);
-      s.stock += n;
-      s.cargo -= n;
-      s.deposited += n;
-      return n;
+      let total = 0;
+      for (const b of depots(s).filter((b) => adjacent(r, b))) {
+        for (const item of items) {
+          const n = Math.min(
+            r.inventory[item] ?? 0,
+            Math.max(0, depotCapacity(s) - sum(b.inventory)),
+          );
+          b.inventory[item] = (b.inventory[item] ?? 0) + n;
+          r.inventory[item] = (r.inventory[item] ?? 0) - n;
+          total += n;
+        }
+      }
+      s.deposited += total;
+      result = total;
+      break;
+    }
+    case "load": {
+      const item = getItem(args[0]);
+      const requirement: Partial<Record<Item, string>> = {
+        Wood: "bush",
+        Carrot: "carrot",
+        Pumpkin: "pumpkin",
+        Flour: "milling",
+        Bread: "bakery",
+        Plank: "sawmill",
+        Fertilizer: "consumables",
+      };
+      if (requirement[item]) requireUnlock(requirement[item]!);
+      let remaining = quantity(args[1]),
+        total = 0;
+      for (const b of depots(s).filter((b) => adjacent(r, b))) {
+        const n = Math.min(
+          remaining,
+          b.inventory[item] ?? 0,
+          Math.max(0, capacity(s, r) - sum(r.inventory)),
+        );
+        b.inventory[item] = (b.inventory[item] ?? 0) - n;
+        r.inventory[item] = (r.inventory[item] ?? 0) + n;
+        remaining -= n;
+        total += n;
+      }
+      result = total;
+      break;
     }
     case "move": {
-      const d = args[0];
-      if (!["East", "West", "North", "South"].includes(String(d)))
-        throw new Error("Direction invalide.");
-      const x = s.x + (d === "East" ? 1 : d === "West" ? -1 : 0);
-      if (d === "North" || d === "South" || x < 0 || x >= s.width) return false;
-      s.x = x;
-      if (!s.visited.includes(x)) s.visited.push(x);
-      return true;
+      const p = direction(args[0]);
+      const reserved = s.robots.some(
+        (other) =>
+          other.id !== r.id &&
+          !other.destroyed &&
+          models[other.model].medium === models[r.model].medium &&
+          other.reservation &&
+          other.reservation.expires > s.time &&
+          other.reservation.x === p.x &&
+          other.reservation.y === p.y,
+      );
+      if (!walkable(s, p.x, p.y) || reserved || r.moving) {
+        result = false;
+        break;
+      }
+      r.moving = {
+        ...p,
+        fromX: r.x,
+        fromY: r.y,
+        started: s.time,
+        ends: r.readyAt,
+      };
+      result = true;
+      break;
+    }
+    case "till":
+      requireUnlock("till");
+      if (!farmerOnly() || !current || current.planted !== null) {
+        result = false;
+        break;
+      }
+      current.ground = current.ground === "Soil" ? "Grassland" : "Soil";
+      result = true;
+      break;
+    case "watering":
+      requireUnlock("watering");
+      requireUnlock("tank");
+      if (
+        r.model === "Transporter" ||
+        !current ||
+        r.water < 1 ||
+        (current.water ?? 0) >= 1
+      ) {
+        result = false;
+        break;
+      }
+      r.water--;
+      current.water = Math.min(1, (current.water ?? 0) + 0.25);
+      result = true;
+      break;
+    case "use_item": {
+      requireUnlock("consumables");
+      requireUnlock("fertilizer");
+      if (args[0] !== "Fertilizer")
+        throw new Error("Utilisez Items.Fertilizer.");
+      if (
+        r.model === "Transporter" ||
+        !current ||
+        current.planted === null ||
+        ready ||
+        (r.inventory.Fertilizer ?? 0) < 1
+      ) {
+        result = false;
+        break;
+      }
+      r.inventory.Fertilizer!--;
+      current.progress = Math.min(
+        1,
+        (current.progress ?? 0) +
+          ([0, 0.2, 0.35, 0.5][level(s, "fertilizer")] ?? 0.2),
+      );
+      result = true;
+      break;
+    }
+    case "harvest_group": {
+      requireUnlock("group");
+      const square = [
+        at(s, r.x, r.y),
+        at(s, r.x + 1, r.y),
+        at(s, r.x, r.y + 1),
+        at(s, r.x + 1, r.y + 1),
+      ];
+      square.forEach((t, i) => {
+        if (t)
+          growth(s, t, (r.y + Math.floor(i / 2)) * s.width + r.x + (i % 2));
+      });
+      if (
+        !farmerOnly() ||
+        square.some(
+          (t) =>
+            !t ||
+            t.entity !== "Pumpkin" ||
+            t.planted === null ||
+            (t.progress ?? 0) < 1 ||
+            t.grouped ||
+            t.level !== square[0]?.level,
+        )
+      ) {
+        result = false;
+        break;
+      }
+      for (const t of square) {
+        t!.yield = Math.floor(
+          t!.yield * (s.unlocks.includes("group2") ? 2 : 1.5),
+        );
+        t!.grouped = true;
+      }
+      result = command(s, "harvest", [], r.id);
+      break;
+    }
+    case "refill_water": {
+      requireUnlock("tank");
+      const b = s.buildings.find(
+        (b) => (b.kind === "Well" || b.kind === "Cistern") && adjacent(r, b),
+      );
+      if (!b || r.model === "Transporter" || r.water >= 10) {
+        result = false;
+        break;
+      }
+      const g = waterGroup(s, b),
+        available = g.reduce((n, b) => n + b.water, 0),
+        n = Math.min(10 - r.water, available);
+      r.water += n;
+      setWater(s, g, available - n);
+      result = n > 0;
+      break;
     }
     case "can_harvest":
       requireUnlock("sensor");
-      return ready;
+      result = ready;
+      break;
+    case "get_entity_type":
+      requireUnlock("analysis");
+      result = current?.planted !== null ? (current?.entity ?? null) : null;
+      break;
+    case "get_ground_type":
+      requireUnlock("analysis");
+      result = current?.ground ?? null;
+      break;
+    case "get_water":
+      requireUnlock("humidity");
+      result = current?.water ?? 0;
+      break;
     case "get_pos_x":
       requireUnlock("position");
-      return s.x;
+      result = r.x;
+      break;
     case "get_pos_y":
       requireUnlock("position");
-      return 0;
+      result = r.y;
+      break;
     case "get_world_size":
       requireUnlock("position");
-      return { width: s.width, height: 1 };
+      result = { width: s.width, height: s.height };
+      break;
     case "get_inventory":
-      if (args[0] !== "Wheat") throw new Error("Utilisez Resources.Wheat.");
-      return s.cargo;
+      result = r.inventory[getItem(args[0])] ?? 0;
+      break;
     case "get_stock":
-      if (args[0] !== "Wheat") throw new Error("Utilisez Resources.Wheat.");
-      return s.stock;
+      result = getStock(s, getItem(args[0]));
+      break;
     case "get_capacity":
-      return 20;
+      result = capacity(s, r);
+      break;
+    case "get_gold":
+      result = s.gold;
+      break;
     case "print":
       requireUnlock("print");
-      return null;
+      result = null;
+      break;
+    case "is_occupied":
+    case "reserve": {
+      requireUnlock(name === "reserve" ? "traffic2" : "traffic");
+      const p = direction(args[0]);
+      const occupied = s.robots.some(
+        (other) =>
+          other.id !== r.id &&
+          !other.destroyed &&
+          models[other.model].medium === models[r.model].medium &&
+          ((other.x === p.x && other.y === p.y) ||
+            (other.moving?.x === p.x && other.moving?.y === p.y)),
+      );
+      if (name === "is_occupied") {
+        result = occupied;
+        break;
+      }
+      const reserved = s.robots.some(
+        (o) =>
+          o.id !== r.id &&
+          o.reservation &&
+          o.reservation.expires > s.time &&
+          models[o.model].medium === models[r.model].medium &&
+          o.reservation.x === p.x &&
+          o.reservation.y === p.y,
+      );
+      if (occupied || reserved || !walkable(s, p.x, p.y)) {
+        result = false;
+        break;
+      }
+      r.reservation = { ...p, expires: s.time + 5 };
+      result = true;
+      break;
+    }
+    case "release":
+      requireUnlock("traffic2");
+      result = !!r.reservation;
+      delete r.reservation;
+      break;
+    case "deliver":
+    case "collect": {
+      requireUnlock("construction");
+      const b = targetBuilding(args[0]),
+        item = getItem(args[1]),
+        n = quantity(args[2]);
+      if (!b || !recipes[b.kind]) {
+        result = 0;
+        break;
+      }
+      if (name === "deliver") {
+        requireUnlock(buildings[b.kind].research);
+        if (!Object.hasOwn(recipes[b.kind]!.input, item)) {
+          result = 0;
+          break;
+        }
+        const amount = Math.min(
+          n,
+          r.inventory[item] ?? 0,
+          Math.max(0, 50 - sum(b.input)),
+        );
+        r.inventory[item] = (r.inventory[item] ?? 0) - amount;
+        b.input[item] = (b.input[item] ?? 0) + amount;
+        machine(s, b, s.time);
+        result = amount;
+      } else {
+        const amount = Math.min(
+          n,
+          b.output[item] ?? 0,
+          Math.max(0, capacity(s, r) - sum(r.inventory)),
+        );
+        b.output[item] = (b.output[item] ?? 0) - amount;
+        r.inventory[item] = (r.inventory[item] ?? 0) + amount;
+        result = amount;
+      }
+      break;
+    }
+    case "get_building_stock": {
+      requireUnlock("construction");
+      const b = targetBuilding(args[0]),
+        item = getItem(args[1]);
+      result = b ? (b.input[item] ?? 0) + (b.output[item] ?? 0) : 0;
+      break;
+    }
+    case "get_building_status": {
+      requireUnlock("construction");
+      const b = targetBuilding(args[0]);
+      result = b ? buildingStatus(b) : null;
+      break;
+    }
+    case "sell":
+      requireUnlock("commerce");
+      result = sellStock(s, getItem(args[0]), quantity(args[1]));
+      break;
     default:
       throw new Error(`Commande inconnue : ${name}`);
   }
+  sync(s);
+  return result;
 }
 export const missions = [
   {
@@ -192,6 +1249,7 @@ export const missions = [
   },
 ];
 export function claim(s: Farm, id: string): boolean {
+  syncBefore(s);
   const index = missions.findIndex((m) => m.id === id),
     m = missions[index];
   if (
@@ -199,16 +1257,10 @@ export function claim(s: Farm, id: string): boolean {
     s.claimed.includes(id) ||
     (index > 0 && !s.claimed.includes(missions[index - 1].id)) ||
     m.progress(s) < m.target ||
-    s.stock + m.reward > 200
+    totalStock(s) + m.reward > stockCapacity(s)
   )
     return false;
-  s.stock += m.reward;
+  addStock(s, { Wheat: m.reward });
   s.claimed.push(id);
-  return true;
-}
-export function sell(s: Farm): boolean {
-  if (s.stock < 10) return false;
-  s.stock -= 10;
-  s.gold += 10;
   return true;
 }
