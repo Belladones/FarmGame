@@ -1,0 +1,1105 @@
+/* Command centre: dark glass, fine metal borders and functional orange accents. */
+:root {
+  --surface: #101b25e8;
+  --surface-soft: #17242ec2;
+  --surface-raised: #23323fd9;
+  --line: #a4bdcf38;
+  --text: #e9f0f5;
+  --muted: #9fb3c3;
+  --accent: #ff7a1a;
+  --accent-soft: #ff7a1a1f;
+  font-family: Inter, "Segoe UI", "DejaVu Sans", system-ui, sans-serif;
+  color: var(--text);
+  background: #060c13;
+  font-weight: 400;
+}
+.game {
+  background: radial-gradient(
+    ellipse at 22% 68%,
+    #163f54 0,
+    #0a1b29 28%,
+    #080f17 55%,
+    #05090f 100%
+  );
+  overflow: clip;
+}
+.game::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  pointer-events: none;
+  width: 170%;
+  height: 80%;
+  left: -44%;
+  top: 60%;
+  border-top: 1px solid #77c5e77a;
+  border-radius: 50%;
+  transform: rotate(-14deg);
+  background: radial-gradient(
+    ellipse at 58% 0%,
+    #4295b54d,
+    #1d405336 30%,
+    transparent 63%
+  );
+  box-shadow: 0 -14px 70px #46bde52b;
+}
+.game::after {
+  content: "";
+  position: absolute;
+  z-index: 15;
+  inset: 12px;
+  border: 1px solid #8294a64d;
+  box-shadow:
+    0 0 0 5px #10192380,
+    inset 0 0 0 1px #061019;
+  pointer-events: none;
+}
+.command-masthead {
+  position: absolute;
+  left: 29px;
+  top: 27px;
+  color: #fff;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.9px;
+  line-height: 1;
+}
+.command-masthead > span {
+  color: #a9bfce;
+  font-weight: 400;
+}
+.command-masthead small {
+  display: block;
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 1.7px;
+  margin-top: 11px;
+}
+.command-top-nav {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  background: #060b11b3;
+}
+.command-top-nav button {
+  padding: 12px 20px;
+  background: #27323d80;
+  color: #c6d3dd;
+  font-size: 12px;
+  border: 1px solid #8197aa18;
+}
+.command-top-nav .selected {
+  background: var(--accent);
+  color: #fff;
+  border-color: #ffb57499;
+  box-shadow: 0 0 20px #ff7a1a15;
+}
+.game-header {
+  top: 94px;
+  left: 29px;
+  right: 29px;
+}
+.game-header .resources {
+  gap: 7px;
+}
+.game-header .resource {
+  width: 82px;
+  padding: 9px 5px 7px;
+  background: linear-gradient(130deg, #819aad20, #14232d60);
+  border: 1px solid var(--line);
+  filter: none;
+}
+.game-header .resource-art {
+  width: 40px;
+  height: 40px;
+}
+.game-header .resource strong {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  text-shadow: none;
+  margin-top: 4px;
+}
+.game-header .resource > span {
+  color: #b7c7d3;
+  font-size: 7px;
+  margin-top: 5px;
+  letter-spacing: 1px;
+  opacity: 1;
+}
+.game-brand {
+  position: absolute;
+  right: 0;
+  top: -70px;
+  padding: 0;
+}
+.game-brand > b,
+.game-brand > span {
+  display: none;
+}
+.game-brand .economy {
+  color: #c9d8e2;
+  font-size: 10px;
+  margin: 0 0 8px;
+}
+.game .sync-badge {
+  background: var(--surface-soft);
+  color: #d5e2ec;
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  padding: 8px 10px;
+}
+.game .sync-badge small {
+  color: var(--muted);
+}
+.game .sync-badge > span,
+.status-light.on {
+  color: var(--accent);
+}
+.game .depot-summary {
+  top: 205px;
+  left: 29px;
+  width: 349px;
+  padding: 8px 11px;
+  color: #c5d5df;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  font-size: 9px;
+}
+.game .depot-summary strong {
+  color: #fff;
+  font-weight: 500;
+}
+.game .depot-summary progress {
+  accent-color: var(--accent);
+}
+.game .island-caption {
+  top: 258px;
+  left: 29px;
+}
+.game .island-caption .overline {
+  color: #8ba7bb;
+}
+.game .island-caption h1 {
+  color: #e8f0f6;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+.game .island-caption p {
+  color: var(--muted);
+  font-size: 9px;
+}
+.game .start-hint {
+  top: 335px;
+  left: 29px;
+  width: 270px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: 1px;
+  padding: 13px 15px;
+  backdrop-filter: blur(16px);
+}
+.game .start-hint p {
+  display: none;
+}
+.game .start-hint strong {
+  color: #e7eef4;
+  font-size: 15px;
+  margin: 8px 0;
+}
+.game .start-hint .overline {
+  color: var(--muted);
+}
+.game .start-hint button,
+.game .start-dismiss {
+  color: #ffac72;
+}
+.game .floating-window,
+.game .program-strip {
+  border: 1px solid #b7cada55;
+  border-radius: 1px;
+  background: var(--surface);
+  box-shadow: 0 12px 40px #0005;
+  backdrop-filter: blur(18px);
+}
+.game .window-titlebar {
+  background: linear-gradient(100deg, #8fa9bd26, #22333f80);
+  color: #dbe7ef;
+  border-bottom: 1px solid var(--line);
+  min-height: 39px;
+}
+.game .window-titlebar .file-icon {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 1px;
+}
+.game .window-titlebar button {
+  background: #32475577;
+  color: #d7e4ec;
+  border-radius: 1px;
+  border: 1px solid #8ea7b533;
+}
+.game .robot-picker,
+.game .toolbar select,
+.game .speed {
+  color: #d5e3eb;
+  border: 1px solid var(--line);
+  background: #273845;
+  border-radius: 1px;
+}
+.game .toolbar {
+  background: #182731ce;
+  color: var(--muted);
+  border-color: var(--line);
+}
+.game .editor-status {
+  background: #101d27;
+  color: #8ca5b7;
+}
+.game .editor-status b {
+  color: #ffab70;
+}
+.game .log {
+  background: #0c1821e8;
+  border-color: var(--line);
+}
+.game .log-label,
+.game .log-lines {
+  color: #a3b7c7;
+}
+.game .log-lines div > span {
+  color: #f99b5e;
+}
+.game .program-name span {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 9px;
+}
+.game .program-name strong {
+  font-size: 19px;
+}
+.game .action-button,
+.game .action-button.orange {
+  background: var(--accent);
+  border: 1px solid #ffb37680;
+  border-radius: 1px;
+  color: #fff;
+  box-shadow: 0 0 15px #ff7a1a15;
+}
+.game .plot-info {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  color: #b4c9d8;
+  backdrop-filter: blur(12px);
+}
+.game .plot-coordinate {
+  background: #56768c26;
+  color: #d2e0e9;
+}
+.game .plot-info strong {
+  color: #e5edf3;
+}
+.game .plot-info span {
+  color: #9cb6c9;
+}
+.game .campaign-peek {
+  background: linear-gradient(115deg, #182c39e8, #101a24ef);
+  border: 1px solid #9ab7cc66;
+  border-radius: 1px;
+  color: #e6eef4;
+  backdrop-filter: blur(18px);
+}
+.game .campaign-peek.ready {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px #ff7a1a19;
+}
+.game .mission-emblem {
+  border-color: var(--line);
+  background: #809caf1a;
+  color: #c0d5e4;
+  border-radius: 1px;
+}
+.game .mission-peek-open .overline,
+.game .peek-objective,
+.game .peek-footer {
+  color: #a6bdcd;
+}
+.game .peek-footer {
+  border-color: var(--line);
+}
+.game .peek-footer button {
+  color: #ffae76;
+}
+.game .campaign-peek.ready .peek-footer button:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 1px;
+}
+.game progress {
+  accent-color: var(--accent);
+}
+.game progress::-webkit-progress-bar {
+  background: #40586b55;
+}
+.game progress::-webkit-progress-value {
+  background: var(--accent);
+  border-radius: 0;
+}
+.game .mission-progress i,
+.game .cargo-meter i,
+.game .growth-meter i {
+  background: var(--accent);
+}
+.game .scene-hint {
+  color: #8ea9bc;
+  font-family: inherit;
+  font-size: 9px;
+}
+.game .action-notice {
+  background: #132834f5;
+  border: 1px solid #9db8cc77;
+  border-left: 3px solid var(--accent);
+  border-radius: 1px;
+  color: #e9f1f7;
+  backdrop-filter: blur(18px);
+}
+.game .action-notice.error {
+  background: #33231ff5;
+  border-color: #d28f6b;
+}
+.game .action-notice button {
+  color: #ffb47f;
+}
+.game .skills-backdrop {
+  background: #02070ca3;
+  backdrop-filter: blur(14px);
+}
+.game .skill-screen {
+  background: linear-gradient(130deg, #10202bf2, #080f17f7 70%);
+  box-shadow: inset 0 0 0 1px #94afc34d;
+  color: var(--text);
+}
+.game .skill-screen > .window-titlebar {
+  background: transparent;
+  border-color: var(--line);
+}
+.game .workspace-nav {
+  border-color: var(--line);
+}
+.game .workspace-nav button,
+.game .skill-tabs button,
+.game .shop-tabs button,
+.game .fleet-nav button {
+  background: #6d8a9f1f;
+  border: 1px solid #91aab82b;
+  color: #b7ccd9;
+  border-radius: 1px;
+  font-family: inherit;
+}
+.game .workspace-nav button.selected,
+.game .skill-tabs button.selected,
+.game .shop-tabs button.selected,
+.game .fleet-nav button.selected {
+  background: var(--accent-soft);
+  color: #ffad73;
+  border-color: #ff8d40b3;
+  box-shadow: none;
+}
+.game .workspace-nav .back-to-farm {
+  background: transparent;
+  border-color: transparent;
+  color: #adc1cf;
+}
+.game
+  :is(
+    .skill-header h2,
+    .shop-heading h2,
+    .fleet-heading h2,
+    .campaign-heading h2,
+    .campaign-chapter-title h3,
+    .help-panel h2,
+    .session-panel h2
+  ) {
+  color: #edf3f7;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+.game
+  :is(
+    .skill-header p,
+    .shop-heading p,
+    .fleet-heading p,
+    .campaign-heading p,
+    .campaign-chapter-title p,
+    .help-panel p,
+    .session-panel p,
+    .skill-detail p
+  ) {
+  color: #a8bfce;
+}
+.game .overline {
+  color: #83a4ba;
+  font-family: inherit;
+}
+.game
+  :is(
+    .product-card,
+    .order-card,
+    .asset-card,
+    .fleet-card,
+    .help-start button,
+    .help-practice,
+    .help-api article,
+    .career-rank,
+    .campaign-mission,
+    .campaign-finale,
+    .sync-message,
+    .session-note
+  ) {
+  background: linear-gradient(120deg, #809aaf14, #192b3680);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  box-shadow: none;
+  color: var(--text);
+}
+.game
+  :is(
+    .product-card h3,
+    .order-card h3,
+    .asset-card h3,
+    .fleet-card h3,
+    .campaign-mission h3,
+    .career-rank strong,
+    .help-start strong
+  ) {
+  color: #e1ecf3;
+  font-weight: 500;
+}
+.game
+  :is(
+    .product-card p,
+    .order-card p,
+    .asset-card p,
+    .fleet-card p,
+    .campaign-mission p,
+    .help-start span,
+    .help-api p,
+    .fleet-footer,
+    .shop-footer
+  ) {
+  color: #a5bdce;
+}
+.game
+  :is(
+    .product-price,
+    .skill-price strong,
+    .campaign-reward,
+    .mission-state.ready,
+    .career-rank span,
+    .help-api code,
+    .help-panel summary,
+    .fleet-global-pause
+  ) {
+  color: #ffad73;
+}
+.game
+  :is(
+    .shop-buy,
+    .sell-all,
+    .purchase-skill,
+    .fleet-card-actions .fleet-primary,
+    .campaign-actions .campaign-claim:not(:disabled),
+    .session-primary
+  ) {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid #ffb27d80;
+  border-radius: 1px;
+  box-shadow: none;
+}
+.game
+  :is(
+    .shop-pause,
+    .fleet-global-pause,
+    .asset-actions button,
+    .order-card button,
+    .fleet-card-actions button,
+    .campaign-actions button,
+    .campaign-chapter-title button,
+    .campaign-finale button,
+    .help-panel button:not(.help-start button),
+    .session-actions button,
+    .conflict-actions button,
+    .skill-trade button,
+    .skill-pagination button,
+    .auth-tabs button
+  ) {
+  background: #7190a426;
+  border: 1px solid var(--line);
+  color: #d6e5ee;
+  border-radius: 1px;
+  box-shadow: none;
+}
+.game .fleet-card.current,
+.game .campaign-mission.current {
+  border-color: #ff9c5d9c;
+  background: linear-gradient(120deg, #32465370, #11212bee);
+}
+.game .fleet-summary {
+  background: #14263277;
+  border-color: var(--line);
+}
+.game .fleet-summary > div {
+  border-color: var(--line);
+}
+.game .fleet-summary strong,
+.game .fleet-stats strong {
+  color: #e7f0f6;
+}
+.game .fleet-stats span,
+.game .fleet-position,
+.game .fleet-summary span {
+  color: #9eb7c9;
+}
+.game .fleet-inventory span,
+.game .fleet-capabilities .enabled {
+  color: #bed6e4;
+  background: #5e829826;
+  border-color: #9dc2d02e;
+}
+.game .fleet-capabilities .locked {
+  color: #7d95a5;
+}
+.game .deployment-tag.deployed,
+.game .robot-state.idle,
+.game .robot-state.working {
+  background: #23556666;
+  color: #b7e6e9;
+  border-color: #70bbc244;
+}
+.game .deployment-tag.garage,
+.game .robot-state.garage {
+  background: #53647444;
+  color: #b9c9d5;
+}
+.game .robot-error,
+.game .mission-blocker {
+  color: #ffb08c;
+}
+.game .campaign-chapters button {
+  background: #829cac15;
+  color: #a9bfce;
+  border: 1px solid var(--line);
+  border-radius: 1px;
+}
+.game .campaign-chapters button.selected {
+  background: var(--accent-soft);
+  border-color: #ef9357;
+  color: #ffd1af;
+}
+.game .campaign-step {
+  color: #fba366;
+}
+.game .campaign-overview,
+.game .campaign-footer {
+  color: #a7bece;
+  border-color: var(--line);
+}
+.game .campaign-overview strong {
+  color: #e9f2f7;
+}
+.game .mission-state {
+  color: #9bb5c5;
+}
+.game .mission-help,
+.game .skill-detail,
+.game .skill-pagination,
+.game .help-shortcuts,
+.game .help-reset,
+.game .fleet-footer,
+.game .shop-footer {
+  border-color: var(--line);
+}
+.game .mission-help summary {
+  color: #ffb37d;
+}
+.game .mission-help pre {
+  background: #07121ce6;
+  color: #bcd2e0;
+  border: 1px solid var(--line);
+  border-radius: 1px;
+}
+.game .skill-node {
+  border-color: #627d8e;
+  background: #0c1821;
+  box-shadow: none;
+  border-radius: 1px;
+}
+.game .skill-node.acquired {
+  border-color: #8baabb;
+}
+.game .skill-node.available {
+  border-color: #b26d3f;
+}
+.game .skill-node.chosen {
+  border-color: #ff944c;
+  box-shadow: 0 0 0 2px #ff944c26;
+}
+.game .skill-node .node-art {
+  background: #152632;
+  color: #e3b38e;
+}
+.game .skill-node .node-title {
+  color: #d4e2eb;
+}
+.game .skill-node .node-status {
+  background: #718ea226;
+  color: #a7c4d6;
+}
+.game .skill-links path {
+  stroke: #536e7e;
+}
+.game .skill-links path.unlocked {
+  stroke: #dc8e58;
+}
+.game
+  :is(
+    input,
+    .auth-form input,
+    .help-search input,
+    .fleet-filters input,
+    .fleet-filters select,
+    .sale-row input
+  ) {
+  color: #e4eff6;
+  background: #0d202d;
+  border: 1px solid #849fb458;
+  border-radius: 1px;
+  font-family: inherit;
+}
+.game input::placeholder {
+  color: #7f9eaf;
+}
+.game .help-empty {
+  background: #1d344077;
+}
+.game .help-results-heading > span,
+.game .help-shortcuts dd,
+.game .help-shortcuts dt {
+  color: #a6bfd0;
+}
+.game .help-practice .help-result {
+  color: #edbd99;
+}
+.game .auth-tabs .active {
+  color: #ffb27e;
+  border-color: #ff9a5877;
+}
+.game .sync-message.saved {
+  border-color: #71a9b077;
+}
+.game .sync-message.conflict,
+.game .sync-message.offline {
+  border-color: #d6976277;
+}
+.game .shop-message {
+  color: #ffb582;
+}
+@media (min-width: 1001px) {
+  .game .control-hub,
+  .game.editor-collapsed .control-hub {
+    left: calc(50% - 195px);
+    transform: none;
+    width: 390px;
+    bottom: 28px;
+  }
+  .game .program-strip {
+    height: 62px;
+  }
+  .game .dock {
+    position: fixed;
+    left: 29px;
+    top: clamp(410px, 45vh, 480px);
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .game .dock-button {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 9px 12px;
+    height: 40px;
+    width: 100%;
+    background: #28415366;
+    border: 1px solid #97b4c342;
+    border-radius: 1px;
+    box-shadow: none;
+    backdrop-filter: blur(14px);
+  }
+  .game .dock-button > span {
+    font-size: 11px;
+    color: #c2d5e1;
+  }
+  .game .dock-button svg {
+    width: 18px;
+    height: 18px;
+    color: #bfd4e1;
+  }
+  .game .dock-button.selected {
+    background: #ff7a1a21;
+    border-color: #ff9a587d;
+    border-left: 3px solid var(--accent);
+    outline: 0;
+  }
+  .game .dock-button.selected > span,
+  .game .dock-button.selected svg {
+    color: #ffaf78;
+  }
+  .game .campaign-peek {
+    width: 280px;
+    left: 29px;
+    bottom: 28px;
+  }
+  .game .plot-info {
+    bottom: 110px;
+    left: calc(50% - 120px);
+    transform: none;
+  }
+  .game .action-notice {
+    top: 86px;
+  }
+}
+@media (min-width: 1001px) and (max-height: 800px) {
+  .game .start-hint {
+    display: none;
+  }
+  .game .island-caption {
+    top: 249px;
+  }
+  .game .dock {
+    top: 310px;
+    gap: 3px;
+  }
+  .game .dock-button {
+    height: 30px;
+    padding: 4px 12px;
+  }
+  .game .campaign-peek {
+    font-size: 10px;
+  }
+}
+@media (max-width: 1000px) {
+  .command-top-nav {
+    display: none;
+  }
+  .command-masthead {
+    left: 24px;
+    top: 21px;
+    font-size: 21px;
+  }
+  .command-masthead small {
+    display: none;
+  }
+  .game-header {
+    top: 63px;
+    left: 24px;
+    right: 24px;
+  }
+  .game-header .resources {
+    gap: 5px;
+  }
+  .game-header .resource {
+    width: 68px;
+    padding: 7px 4px;
+  }
+  .game-header .resource-art {
+    width: 32px;
+    height: 32px;
+  }
+  .game-header .resource strong {
+    font-size: 20px;
+  }
+  .game-header .resource > span {
+    font-size: 6px;
+    letter-spacing: 0.6px;
+  }
+  .game-brand {
+    top: -43px;
+  }
+  .game .sync-badge {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+  .game-brand .economy {
+    position: absolute;
+    top: 136px;
+    right: 0;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+  .game .depot-summary {
+    left: 24px;
+    top: 158px;
+    width: 175px;
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+  .game .start-hint {
+    top: 202px;
+    left: 24px;
+    width: calc(100% - 48px);
+    padding: 9px 13px;
+  }
+  .game .start-hint strong {
+    font-size: 13px;
+    margin: 4px 0;
+  }
+  .game .start-hint button {
+    font-size: 9px;
+  }
+  .game .dock-button {
+    background: #284153b3;
+    border: 1px solid #8ba8bb55;
+    border-radius: 1px;
+    box-shadow: none;
+  }
+  .game .dock-button.selected {
+    border-color: #ff9655;
+    background: #ff7a1a26;
+    outline: 0;
+  }
+  .game .dock-button > span {
+    color: #c2d7e4;
+  }
+  .game .dock-button.selected > span,
+  .game .dock-button.selected svg {
+    color: #ffb17d;
+  }
+  .game .control-hub {
+    bottom: 28px;
+  }
+  .game .campaign-peek {
+    bottom: 159px;
+  }
+  .game::after {
+    inset: 9px;
+    box-shadow: 0 0 0 3px #10192380;
+  }
+  .game .program-strip {
+    padding: 7px 10px;
+  }
+  .game .program-name span {
+    font-size: 8px;
+  }
+  .game .action-notice {
+    bottom: 320px;
+    top: auto;
+  }
+  .game .skill-screen {
+    padding: 15px 18px 12px;
+  }
+}
+@media (max-width: 360px) {
+  .game-header .resource {
+    width: 59px;
+  }
+  .game-header .resource-art {
+    width: 29px;
+    height: 29px;
+  }
+  .command-masthead {
+    font-size: 18px;
+  }
+  .game .sync-badge {
+    font-size: 7px;
+  }
+  .game .depot-summary {
+    width: 155px;
+  }
+  .game .start-hint {
+    top: 198px;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .game .floating-window,
+  .game .campaign-peek,
+  .game .start-hint,
+  .game .program-strip,
+  .game .action-notice {
+    backdrop-filter: none;
+    background: #101e29;
+  }
+}
+.game .console {
+  background: #0b1922;
+  border-color: var(--line);
+}
+.game .console-heading {
+  color: #93b0c4;
+}
+.game .console-heading button {
+  color: #aac0ce;
+}
+.game .console-heading i {
+  background: var(--accent);
+}
+.game .island-caption {
+  top: 244px;
+}
+.game
+  :is(
+    .sale-row,
+    .consumable-card,
+    .placement-picker,
+    .shop-section-heading,
+    .trade-panel,
+    .fleet-stats
+  ) {
+  background-color: #62899f0f;
+  border-color: var(--line);
+  color: #b3c9d7;
+}
+.game
+  :is(
+    .sale-row strong,
+    .sale-row .sale-price,
+    .order-card strong,
+    .asset-card strong,
+    .product-heading strong,
+    .robot-specs span,
+    .career-rank small,
+    .mission-help small
+  ) {
+  color: #c6dbe7;
+}
+.game :is(.product-visual, .consumable-card .product-art) {
+  background-color: #5e869b18;
+}
+.game .quantity input,
+.game .placement-picker select,
+.game .asset-actions select {
+  background: #152a37;
+  color: #dceaf3;
+  border-color: var(--line);
+}
+.game .purchase-blocker {
+  color: #a1b4c0;
+}
+.game .shop-note {
+  color: #9cb5c6;
+}
+.robot-telemetry {
+  display: none;
+}
+@media (min-width: 1200px) and (min-height: 900px) {
+  .robot-telemetry {
+    display: block;
+    position: absolute;
+    right: 36px;
+    bottom: 28px;
+    width: 410px;
+    padding: 14px;
+    color: #dce8f0;
+    border: 1px solid #a8c0cf55;
+    background: linear-gradient(125deg, #60869e2b, #0d1925d9);
+    backdrop-filter: blur(18px);
+  }
+  .robot-telemetry header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+  .robot-telemetry header span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .robot-telemetry header strong {
+    font-size: 10px;
+    color: #89acbf;
+    font-weight: 500;
+  }
+  .robot-telemetry dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 10px 0 0;
+  }
+  .robot-telemetry dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 8px;
+    background: #8cacc01a;
+    font-size: 10px;
+  }
+  .robot-telemetry dt {
+    color: #9fb8ca;
+  }
+  .robot-telemetry dd {
+    margin: 0;
+    color: #e3edf4;
+    font-weight: 500;
+  }
+  .workspace.expanded:not(.window-hidden) ~ .robot-telemetry {
+    display: none;
+  }
+}
+@media (min-width: 1001px) and (max-height: 800px) {
+  .game .island-caption p {
+    display: none;
+  }
+  .game .island-caption h1 {
+    font-size: 18px;
+  }
+  .game .dock {
+    top: 310px;
+    gap: 2px;
+  }
+  .game .dock-button {
+    height: 28px;
+  }
+  .game .campaign-peek {
+    left: 200px;
+    width: 260px;
+  }
+  .game .control-hub,
+  .game.editor-collapsed .control-hub {
+    left: auto;
+    right: 29px;
+    width: 350px;
+  }
+}
+.game .fleet-stats > div > span,
+.game .fleet-position {
+  font-size: 11px;
+}
+.game .fleet-capabilities span {
+  font-size: 9px;
+}
+.game .sale-row small,
+.game .robot-specs span {
+  font-size: 10px;
+}
+@media (min-width: 1200px) and (min-height: 900px) {
+  .robot-telemetry dl > div {
+    font-size: 11px;
+  }
+}

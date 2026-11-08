@@ -15,6 +15,7 @@ import {
   advance,
   activeRobot,
   capacity,
+  robotSpeed,
   stockCapacity,
   missionBlocker,
   getStock,
@@ -51,6 +52,7 @@ import { models, itemNames, sum, research } from "./catalog";
 import { SkillTree } from "./SkillTree";
 import { Icon, ResourceIcon } from "./Icons";
 import "./style.css";
+import "./command-theme.css";
 (self as any).MonacoEnvironment = {
   getWorker: (_: unknown, label: string) =>
     label === "typescript" || label === "javascript"
@@ -58,6 +60,26 @@ import "./style.css";
       : new EditorWorker(),
 };
 loader.config({ monaco });
+monaco.editor.defineTheme("farmscript-command", {
+  base: "vs-dark",
+  inherit: true,
+  rules: [
+    { token: "comment", foreground: "8297A6" },
+    { token: "keyword", foreground: "FF9A55" },
+    { token: "number", foreground: "E8BF7E" },
+    { token: "string", foreground: "9BC9C3" },
+  ],
+  colors: {
+    "editor.background": "#0D151E",
+    "editor.foreground": "#E7EEF4",
+    "editorLineNumber.foreground": "#667E90",
+    "editorLineNumber.activeForeground": "#FF9A55",
+    "editorCursor.foreground": "#FF8B3D",
+    "editor.selectionBackground": "#385166",
+    "editor.lineHighlightBackground": "#172330",
+    "editorIndentGuide.background1": "#253744",
+  },
+});
 monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   target: monaco.languages.typescript.ScriptTarget.ES2020,
@@ -674,6 +696,34 @@ function App() {
         resetView={resetView}
         editorOpen={editorOpen}
       />
+      <div className="command-masthead">
+        farm<span>script</span>
+        <small>AGRICULTURE / AUTOMATISATION</small>
+      </div>
+      <nav className="command-top-nav" aria-label="Navigation principale">
+        <button
+          className={!panel ? "selected" : ""}
+          aria-label="Navigation : Ferme"
+          onClick={() => setPanel(null)}
+        >
+          Ferme
+        </button>
+        <button
+          aria-label="Navigation : Missions"
+          onClick={() => setPanel("Missions")}
+        >
+          Missions
+        </button>
+        <button
+          aria-label="Navigation : Robots"
+          onClick={() => setPanel("Flotte")}
+        >
+          Robots
+        </button>
+        <button aria-label="Navigation : Shop" onClick={() => setPanel("Shop")}>
+          Shop
+        </button>
+      </nav>
       <header className="game-header">
         <div className="resources" aria-label="Ressources de la ferme">
           <div
@@ -742,7 +792,7 @@ function App() {
       </header>
       <div className="island-caption">
         <span className="overline">VOTRE EXPLOITATION</span>
-        <h1>Un petit monde à programmer.</h1>
+        <h1>Centre de contrôle agricole.</h1>
         <p>
           <span
             className={"status-light " + (running && !paused ? "on" : "")}
@@ -904,7 +954,7 @@ function App() {
             path="file:///robot.ts"
             height="100%"
             language="typescript"
-            theme="vs-dark"
+            theme="farmscript-command"
             value={code}
             onChange={(v) => {
               setCode(v || "");
@@ -950,6 +1000,43 @@ function App() {
           </span>
         </div>
       </section>
+      <aside
+        className="robot-telemetry"
+        aria-label="Statistiques du robot sélectionné"
+      >
+        <header>
+          <span>
+            <Icon name="robots" size={17} /> Systèmes du robot
+          </span>
+          <strong>
+            {selectedRobot.id} · {models[selectedRobot.model].name}
+          </strong>
+        </header>
+        <dl>
+          <div>
+            <dt>Position</dt>
+            <dd>
+              ({selectedRobot.x}, {selectedRobot.y})
+            </dd>
+          </div>
+          <div>
+            <dt>Déplacement</dt>
+            <dd>
+              {robotSpeed(s, selectedRobot).toLocaleString("fr-FR")} case/s
+            </dd>
+          </div>
+          <div>
+            <dt>Soute</dt>
+            <dd>
+              {sum(selectedRobot.inventory)} / {capacity(s, selectedRobot)}
+            </dd>
+          </div>
+          <div>
+            <dt>Déploiement</dt>
+            <dd>{selectedRobot.deployed ? "Sur le terrain" : "Au garage"}</dd>
+          </div>
+        </dl>
+      </aside>
       <div className="control-hub">
         <div className="program-strip">
           <div className="run-controls">

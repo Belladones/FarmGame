@@ -208,3 +208,18 @@ flotte, shop et guide ; `?` ouvre le guide. Ces raccourcis de navigation ne
 s’activent pas dans les champs de saisie. `Échap` ferme le menu. Le parcours au
 clavier inclut les champs et les sections dépliables à l’intérieur des menus.
 `npm run test:ux` vérifie ces parcours dans Chromium, y compris sur mobile.
+
+
+### Thème du centre de contrôle
+
+L’interface utilise une palette bleu nuit, des panneaux translucides, des contours
+fins et un accent orange pour les sélections et actions principales. Les couleurs
+et adaptations du thème sont regroupées dans `src/command-theme.css` ; les règles
+de disposition communes restent dans `src/style.css`. L’éditeur possède un thème
+Monaco assorti, sans chargement de police ou d’image externe.
+
+Sur ordinateur, les outils forment une barre latérale. Les fenêtres basses gardent
+les commandes et le suivi des missions dans des zones séparées. Sur mobile, les
+outils restent dans la barre inférieure. Le tableau de télémétrie apparaît sur les
+grands écrans et affiche les données réelles du robot sélectionné. La caméra,
+les parcelles débloquées et la simulation restent indépendantes du thème.

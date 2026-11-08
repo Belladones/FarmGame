@@ -20,7 +20,45 @@ const assert = require("node:assert/strict");
       await p.locator(".dock-button > span").first().isVisible(),
       true,
     );
+    await p
+      .getByRole("button", { name: "Navigation : Missions", exact: true })
+      .click();
+    await p.getByRole("dialog", { name: "Missions", exact: true }).waitFor();
+    await p
+      .getByRole("button", { name: "Retour à la ferme", exact: true })
+      .click();
+    assert.match(
+      await p
+        .getByRole("complementary", {
+          name: "Statistiques du robot sélectionné",
+          exact: true,
+        })
+        .innerText(),
+      /0 \/ 10/,
+    );
     await p.screenshot({ path: "/tmp/farm-ux-desktop.png" });
+    await p.setViewportSize({ width: 1024, height: 720 });
+    const layout = await p.evaluate(() => {
+      const dock = document.querySelector(".dock").getBoundingClientRect();
+      const mission = document
+        .querySelector(".mission-peek")
+        .getBoundingClientRect();
+      return {
+        fits: dock.top >= 0 && dock.bottom <= innerHeight,
+        noOverlap: dock.right <= mission.left || dock.bottom <= mission.top,
+      };
+    });
+    assert.equal(layout.fits, true);
+    assert.equal(layout.noOverlap, true);
+    await p.screenshot({ path: "/tmp/farm-theme-compact.png" });
+    await p.setViewportSize({ width: 320, height: 740 });
+    assert.equal(
+      await p.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+    );
+
     await p.setViewportSize({ width: 390, height: 844 });
     if (await p.locator(".workspace").isVisible())
       await p
