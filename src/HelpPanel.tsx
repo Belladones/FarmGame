@@ -41,7 +41,7 @@ export function HelpPanel({
           <strong>02 · Programmer mon robot</strong>
           <span>Le programme fourni plante, récolte et dépose en boucle.</span>
         </button>
-        <button onClick={() => onNavigate("Flotte")}>
+        <button onClick={() => onNavigate("Robots")}>
           <strong>03 · Comprendre ma flotte</strong>
           <span>Statut, soute, déploiement et améliorations.</span>
         </button>
@@ -104,14 +104,14 @@ export function HelpPanel({
       <details className="help-shortcuts">
         <summary>Caméra et raccourcis clavier</summary>
         <p>
-          Glissez sur le champ pour tourner autour. Utilisez la molette ou le
-          bouton Zoom pour vous rapprocher. Ferme recentre la vue.
+          Glissez sur le champ pour tourner autour. Utilisez la molette pour
+          vous rapprocher.
         </p>
         <dl>
           <dt>Ctrl / ⌘ + Entrée</dt>
           <dd>Lancer le programme depuis la ferme ou l’éditeur</dd>
           <dt>Alt + 1 à 5</dt>
-          <dd>Missions, recherches, robots, shop, guide</dd>
+          <dd>Missions, recherches, robots, magasin, guide</dd>
           <dt>?</dt>
           <dd>Ouvrir le guide, hors d’un champ de saisie</dd>
           <dt>Échap</dt>
@@ -131,9 +131,7 @@ export function HelpPanel({
           rappellé au garage conserve son code et sa cargaison ; son programme
           se relance manuellement après déploiement.
         </p>
-        <button onClick={() => onNavigate("Session et sauvegarde")}>
-          Gérer ma sauvegarde →
-        </button>
+        <p>Cliquez sur votre compte pour accéder aux sauvegardes.</p>
       </details>
       <details className="help-reset">
         <summary>Recommencer une partie</summary>

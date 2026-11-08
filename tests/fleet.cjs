@@ -14,7 +14,7 @@ const assert = require("node:assert/strict");
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     await p.locator(".farm-scene canvas").waitFor();
-    await p.getByRole("button", { name: "Flotte", exact: true }).click();
+    await p.getByRole("button", { name: "Robots", exact: true }).click();
     assert.equal(await p.locator(".fleet-card").count(), 1);
     await p.getByRole("button", { name: "Rappeler f1", exact: true }).click();
     await p.waitForFunction(
@@ -22,7 +22,7 @@ const assert = require("node:assert/strict");
     );
     assert.equal(await p.locator(".deployment-tag").innerText(), "Non déployé");
     await p.reload();
-    await p.getByRole("button", { name: "Flotte", exact: true }).click();
+    await p.getByRole("button", { name: "Robots", exact: true }).click();
     assert.equal(await p.locator(".robot-state").innerText(), "Au garage");
     await p.getByRole("button", { name: /Déployer f1/ }).click();
     await p.waitForFunction(
@@ -76,7 +76,7 @@ const assert = require("node:assert/strict");
       sessionStorage.setItem("fleet-upgrade-fixture", "1");
     }, fixture);
     await p.reload();
-    await p.getByRole("button", { name: "Flotte", exact: true }).click();
+    await p.getByRole("button", { name: "Robots", exact: true }).click();
     await p
       .getByRole("button", { name: "Arbre de compétences", exact: true })
       .click();

@@ -113,13 +113,14 @@ export const robotTrees = [
   },
   {
     name: "Capteurs et flotte",
-    caption: "Observer, coordonner et débloquer de nouveaux modèles au shop.",
+    caption:
+      "Observer, coordonner et débloquer de nouveaux modèles au magasin.",
     nodes: [
       root(
         "fleet-base",
         "Robot fermier initial",
         "f1",
-        "Le premier fermier est offert. La recherche Flotte autorise les fermiers supplémentaires, qui restent à acheter dans le shop avec de l’or.",
+        "Le premier fermier est offert. La recherche Flotte autorise les fermiers supplémentaires, qui restent à acheter dans le magasin avec de l’or.",
       ),
       node("sensor", 180, 205, ["fleet-base"], "can_harvest()"),
       node("position", 455, 205, ["fleet-base"], "(x, y)"),

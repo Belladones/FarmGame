@@ -75,14 +75,14 @@ Le blé pousse en 5 secondes de simulation. Les appels agricoles et transferts p
 - Le plateau affiche uniquement les parcelles débloquées : 1 × 1, puis 3 × 1, 3 × 3, jusqu’à 7 × 7. Les cellules sont carrées dans le modèle 3D ; leur projection dépend de l’angle de vue. Les coordonnées et cultures existantes sont conservées lors des extensions.
 - Les emplacements constructibles sont débloqués séparément et ont un sol en bois, distinct de la zone agricole.
 - Le bouton + affiche l’éditeur, masqué initialement sur mobile. Choisir un robot dans l’éditeur pour modifier son programme. Chaque robot exécute son propre programme ; les autres continuent pendant le changement de sélection.
-- La barre du programme lance, suspend ou arrête son exécution. ×1 / ×2 / ×5 règle le temps de simulation. La pause s’applique à toute la ferme ; le shop permet aussi de suspendre la simulation sans lancer un robot.
-- Le bouton i ouvre le guide et l’API ; les chevrons ouvrent les trois pages de recherches ; le panier ouvre le shop ; la carte de mission ouvre les objectifs.
+- La barre du programme lance, suspend ou arrête son exécution. ×1 / ×2 / ×5 règle le temps de simulation. La pause s’applique à toute la ferme ; le magasin permet aussi de suspendre la simulation sans lancer un robot.
+- Le bouton i ouvre le guide et l’API ; les chevrons ouvrent les trois pages de recherches ; le panier ouvre le magasin ; la carte de mission ouvre les objectifs.
 
 Les anciennes sauvegardes locales sont migrées automatiquement, puis importables dans un compte. Le blé, la cargaison, les cultures, le code, les recherches et l’or sont conservés. Une ancienne cargaison supérieure aux nouvelles 10 unités n’est pas détruite : déposez-la avant de récolter davantage. Les processus ne sont pas relancés automatiquement après rechargement.
 
-## Shop et économie
+## Magasin et économie
 
-Les recherches consomment les matériaux déposés ; les achats du shop consomment l’or. Un bâtiment n’exige aucun second paiement de matériaux après sa recherche. Le shop est accessible dès le départ, sans bâtiment commercial.
+Les recherches consomment les matériaux déposés ; les achats du magasin consomment l’or. Un bâtiment n’exige aucun second paiement de matériaux après sa recherche. Le shop est accessible dès le départ, sans bâtiment commercial.
 
 - **Vendre** : blé 1 or, bois 3, carotte 6, citrouille 12, farine 8, pain 25, planche 12 et engrais 18. Seuls les stocks des dépôts sont vendus, jamais les soutes ni les machines. Les marchandises ne sont pas achetables et l’eau n’est pas vendable.
 - **Robots** : fermier 250 or (1 case/s, soute 10), transporteur 600 or (0,75 case/s, soute 100), drone 1 000 or (2 cases/s, soute 10). Les recherches Flotte, Transporteur et Drone débloquent les achats correspondants. Une case de départ libre dans le bon milieu est requise. Seul le fermier peut planter, récolter et labourer ; le drone peut transporter, arroser et appliquer de l’engrais. Le transporteur se limite aux transferts.
@@ -132,12 +132,12 @@ Après perte du dernier fermier, un unique fermier de secours non vendable et de
 - `src/catalog.ts` : catalogue et prix issus du document, recherches implémentées, recettes, modèles, cultures et commandes commerciales.
 - `src/engine.ts` : état de la ferme, migration, actions, achats, stocks locaux, cycles, eau, déplacements, collisions et réparation. Tests dans `src/engine.test.ts` et `src/shop.test.ts`.
 - `src/FarmScene.tsx` : caméra orbitale et modèles 3D procéduraux originaux des robots, cultures et bâtiments, sans assets téléchargés.
-- `src/Shop.tsx` : catalogue du shop, achats, ventes, placement et gestion des biens.
+- `src/Shop.tsx` : catalogue du magasin, achats, ventes, placement et gestion des biens.
 - `src/SkillTree.tsx` : trois pages d’arbres reliés. Les recherches implémentées sont achetables ; les branches encore prévues restent « À venir ».
 - `src/api.ts` : API typée injectée dans Monaco et partagée avec le runtime.
 - `src/runner.worker.ts` : transpilation TypeScript et instrumentation des boucles et appels dans un Worker ; chaque robot a un runtime indépendant.
 
-Le **catalogue du shop** et ses systèmes associés sont implémentés ; la **campagne de 56 missions** n’est pas encore intégrée. Les quatre missions du prototype gardent des compteurs simplifiés et ne certifient pas l’emploi d’une notion pédagogique. L’accès aux constructions du langage n’est pas encore entièrement verrouillé selon l’arbre : Variables et Fonctions servent de prérequis de progression, mais leur syntaxe reste libre pour conserver les programmes existants. Les aides `range`, `list`, `len`, `str` et les branches de programmation avancée restent à venir.
+Le **catalogue du magasin** et ses systèmes associés sont implémentés ; la **campagne de 56 missions** n’est pas encore intégrée. Les quatre missions du prototype gardent des compteurs simplifiés et ne certifient pas l’emploi d’une notion pédagogique. L’accès aux constructions du langage n’est pas encore entièrement verrouillé selon l’arbre : Variables et Fonctions servent de prérequis de progression, mais leur syntaxe reste libre pour conserver les programmes existants. Les aides `range`, `list`, `len`, `str` et les branches de programmation avancée restent à venir.
 
 Le runtime supporte boucles, conditions, variables et fonctions nommées. Il ne prend pas en charge les callbacks, générateurs ou imports. Monaco refuse le lancement d’un code présentant des erreurs TypeScript. Le Worker préserve la réactivité mais n’est pas une frontière de sécurité pour du code hostile : exécuter son propre code. La CSP limite les connexions distantes. Les prix et le rythme restent à équilibrer en jouant, comme le précise le document.
 
@@ -153,7 +153,7 @@ Un rappel attend la fin de l’action en cours, arrête le programme et conserve
 code, la cargaison et l’eau. Le robot au garage ne bloque aucune case et ne peut
 pas exécuter de commandes. Le déploiement cherche une case libre compatible ;
 le programme se relance manuellement. Cet état est sauvegardé localement et dans
-PostgreSQL pour les comptes connectés. Les achats du shop restent déployés dès
+PostgreSQL pour les comptes connectés. Les achats du magasin restent déployés dès
 leur acquisition.
 
 L’onglet **Arbre de compétences** comprend cinq pages : Soutes, Motorisation,
@@ -169,7 +169,7 @@ Le carnet de ferme propose **19 missions en quatre chapitres** : Premiers pas,
 Une ferme autonome, Cultiver autrement, Changer d’échelle. L’objectif actif reste
 sur l’écran de jeu, avec son compteur et la récupération directe de la récompense.
 Le carnet affiche les chapitres, les étapes futures, les conseils TypeScript et
-les raccourcis vers le programme, les recherches, la flotte ou le shop.
+les raccourcis vers le programme, les recherches, la flotte ou le magasin.
 
 Les récompenses sont récupérées une seule fois, dans l’ordre. Elles accordent de
 l’expérience et, selon l’étape, du blé ou de l’or pour financer la progression.
@@ -190,21 +190,21 @@ changements de chapitre, la navigation et l’affichage mobile dans Chromium.
 
 ### Navigation et aide
 
-Les outils gardent leurs libellés visibles sur ordinateur et mobile. Dans chaque
-menu, une navigation commune permet de passer aux missions, recherches, robots,
-shop, guide et sauvegarde, ou de revenir à la ferme. Le guide dispose d’une
+Les outils gardent leurs libellés visibles sur ordinateur et mobile. Les menus
+Missions, Recherches et Robots partagent leurs onglets. Le Guide et le Magasin
+ont des espaces distincts ; les sauvegardes sont accessibles depuis le compte. Le guide dispose d’une
 recherche dans les commandes, d’essais manuels avec résultat visible et de
 raccourcis vers les parcours d’apprentissage. Les conseils de première récolte
 peuvent être masqués ; ce choix est conservé sur cet appareil.
 
-Un indicateur présente la capacité totale des dépôts et mène au shop. Les
+Un indicateur présente la capacité totale des dépôts et mène au magasin. Les
 notifications signalent les recherches, ventes, missions et erreurs de programme.
 Les erreurs restent visibles jusqu’à fermeture ; les confirmations disparaissent
 après six secondes.
 
 Au clavier : `Ctrl` / `⌘` + `Entrée` lance le programme sélectionné lorsque vous
 êtes sur la ferme ou dans l’éditeur. `Alt` + `1` à `5` ouvre missions, recherches,
-flotte, shop et guide ; `?` ouvre le guide. Ces raccourcis de navigation ne
+robots, magasin et guide ; `?` ouvre le guide. Ces raccourcis de navigation ne
 s’activent pas dans les champs de saisie. `Échap` ferme le menu. Le parcours au
 clavier inclut les champs et les sections dépliables à l’intérieur des menus.
 `npm run test:ux` vérifie ces parcours dans Chromium, y compris sur mobile.
@@ -230,3 +230,16 @@ un flux vertical. La mission reste séparée en bas ; sur une fenêtre basse, la
 partie supérieure défile pour garder les outils accessibles. Le message de dépôt
 plein et les récompenses de mission n’empiètent donc pas sur les autres blocs.
 `npm run test:sidebar` vérifie ce cas sur sept tailles de fenêtre, jusqu’à 320 px.
+
+
+### Organisation des menus
+
+La barre supérieure a été supprimée. Les outils de gauche sont Code, Guide,
+Recherches, Robots et Magasin. Le zoom reste disponible avec la molette de la
+souris ; il n’y a plus de boutons Zoom ou Ferme dans cette barre.
+
+Missions, Recherches et Robots partagent un groupe de trois onglets. Le Guide
+s’ouvre dans une fenêtre de documentation dédiée ; le Magasin utilise son propre
+espace et ses rayons de vente, robots, bâtiments et consommables. Ces fenêtres
+n’affichent pas les onglets de progression. La gestion du compte et des
+sauvegardes s’ouvre exclusivement depuis le bouton du compte sur la ferme.

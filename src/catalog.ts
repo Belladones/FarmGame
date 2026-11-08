@@ -482,7 +482,7 @@ export const research: Research[] = [
     { Wheat: 80, Wood: 40 },
     ["bush"],
     T,
-    "Débloque les dépôts au shop et les transferts vers les bâtiments.",
+    "Débloque les dépôts au magasin et les transferts vers les bâtiments.",
   ),
   r(
     "tank",
@@ -498,7 +498,7 @@ export const research: Research[] = [
     { Wheat: 150, Wood: 100 },
     ["construction"],
     T,
-    "Débloque puits et citernes au shop.",
+    "Débloque puits et citernes au magasin.",
   ),
   r(
     "reservoir2",
@@ -546,7 +546,7 @@ export const research: Research[] = [
     { Wheat: 400, Wood: 200, Carrot: 100 },
     ["fleet", "storage2"],
     T,
-    "Débloque le transporteur au shop, à 600 or.",
+    "Débloque le transporteur au magasin, à 600 or.",
   ),
   r(
     "drone",
@@ -554,7 +554,7 @@ export const research: Research[] = [
     { Wheat: 1500, Wood: 800, Carrot: 400 },
     ["fleet", "tank"],
     T,
-    "Débloque le drone au shop, à 1 000 or. Pas de récolte ni de labourage.",
+    "Débloque le drone au magasin, à 1 000 or. Pas de récolte ni de labourage.",
   ),
   r(
     "storage2",
@@ -690,7 +690,7 @@ export const research: Research[] = [
     { Wheat: 150, Wood: 100 },
     ["construction"],
     T,
-    "Débloque le moulin au shop (300 or).",
+    "Débloque le moulin au magasin (300 or).",
   ),
   r(
     "bakery",
@@ -698,7 +698,7 @@ export const research: Research[] = [
     { Wheat: 300, Wood: 200, Carrot: 100 },
     ["milling"],
     T,
-    "Débloque le four au shop (450 or).",
+    "Débloque le four au magasin (450 or).",
   ),
   r(
     "sawmill",
@@ -706,7 +706,7 @@ export const research: Research[] = [
     { Wheat: 200, Wood: 150 },
     ["construction", "tree"],
     T,
-    "Débloque la scierie au shop (350 or).",
+    "Débloque la scierie au magasin (350 or).",
   ),
   r(
     "composting",
@@ -714,7 +714,7 @@ export const research: Research[] = [
     { Wheat: 200, Wood: 100, Carrot: 50 },
     ["construction", "consumables"],
     T,
-    "Débloque le composteur au shop (400 or).",
+    "Débloque le composteur au magasin (400 or).",
   ),
   r(
     "commerce",
@@ -730,7 +730,7 @@ export const research: Research[] = [
     { Wheat: 400, Wood: 250, Carrot: 100 },
     ["construction", "fleet"],
     T,
-    "Débloque l’atelier de réparation au shop (800 or).",
+    "Débloque l’atelier de réparation au magasin (800 or).",
   ),
   r(
     "mechanization",

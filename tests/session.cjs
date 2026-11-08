@@ -139,7 +139,7 @@ async function requestSave(page) {
         9,
     );
     await p.getByRole("button", { name: "Fermer le panneau" }).click();
-    await p.getByRole("button", { name: "Shop", exact: true }).click();
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
     await p
       .getByRole("button", {
         name: "Mettre la simulation en pause",
@@ -164,7 +164,7 @@ async function requestSave(page) {
     });
     assert.equal(write.status(), 200);
     await p.getByRole("button", { name: "Fermer le panneau" }).click();
-    await p.getByRole("button", { name: "Shop", exact: true }).click();
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
     await p.getByLabel("Quantité de Blé", { exact: true }).fill("1");
     await p.getByRole("button", { name: "Vendre · 1 or", exact: true }).click();
     await p.getByRole("button", { name: "Fermer le panneau" }).click();
@@ -213,7 +213,7 @@ async function requestSave(page) {
       await route.abort();
     });
     await p.getByRole("button", { name: "Fermer le panneau" }).click();
-    await p.getByRole("button", { name: "Shop", exact: true }).click();
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
     await p.getByLabel("Quantité de Blé", { exact: true }).fill("1");
     await p.getByRole("button", { name: "Vendre · 1 or", exact: true }).click();
     await p.getByRole("button", { name: "Fermer le panneau" }).click();

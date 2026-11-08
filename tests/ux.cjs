@@ -20,10 +20,15 @@ const assert = require("node:assert/strict");
       await p.locator(".dock-button > span").first().isVisible(),
       true,
     );
+    assert.equal(await p.locator(".command-top-nav").count(), 0);
+    assert.equal(await p.locator(".dock-button").count(), 5);
     await p
-      .getByRole("button", { name: "Navigation : Missions", exact: true })
+      .getByRole("button", { name: "Ouvrir les missions", exact: true })
       .click();
-    await p.getByRole("dialog", { name: "Missions", exact: true }).waitFor();
+    assert.equal(
+      await p.locator('.progression-nav [aria-label^="Aller à"]').count(),
+      3,
+    );
     await p
       .getByRole("button", { name: "Retour à la ferme", exact: true })
       .click();
@@ -109,31 +114,40 @@ const assert = require("node:assert/strict");
       /Rien à récolter/,
     );
     await p.screenshot({ path: "/tmp/farm-ux-guide-mobile.png" });
+    assert.equal(
+      await p.locator('.workspace-nav [aria-label^="Aller à"]').count(),
+      0,
+    );
     await p
-      .getByRole("button", { name: "Aller à Missions", exact: true })
+      .getByRole("button", { name: "Retour à la ferme", exact: true })
       .click();
-    await p.getByRole("dialog", { name: "Missions", exact: true }).waitFor();
     await p
-      .getByRole("button", { name: "Aller à Flotte", exact: true })
+      .getByRole("button", { name: "Ouvrir les missions", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "Aller à Robots", exact: true })
       .click();
     await p.locator(".fleet-panel").waitFor();
     await p
       .getByRole("button", { name: "Retour à la ferme", exact: true })
       .click();
-    await p.locator('[role="dialog"]').waitFor({ state: "detached" });
     await p.evaluate(() => document.activeElement.blur());
     await p.keyboard.press("Alt+Digit4");
-    await p.getByRole("dialog", { name: "Shop", exact: true }).waitFor();
+    await p.getByRole("dialog", { name: "Magasin", exact: true }).waitFor();
     await p.keyboard.press("Escape");
     await p
       .getByRole("button", { name: "Voir les stocks des dépôts", exact: true })
       .click();
-    await p.getByRole("dialog", { name: "Shop", exact: true }).waitFor();
+    await p.getByRole("dialog", { name: "Magasin", exact: true }).waitFor();
+    assert.equal(
+      await p.locator('.workspace-nav [aria-label^="Aller à"]').count(),
+      0,
+    );
     await p
-      .getByRole("button", {
-        name: "Aller à Session et sauvegarde",
-        exact: true,
-      })
+      .getByRole("button", { name: "Retour à la ferme", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
     await p
       .getByRole("dialog", { name: "Session et sauvegarde", exact: true })
@@ -145,6 +159,11 @@ const assert = require("node:assert/strict");
       true,
     );
     await p.keyboard.press("Escape");
+    await p.waitForFunction(
+      () =>
+        document.activeElement?.getAttribute("aria-label") ===
+        "Session et sauvegarde",
+    );
     await p.setViewportSize({ width: 1440, height: 1000 });
     await p.evaluate(() => document.activeElement.blur());
     await p.keyboard.press("Control+Enter");

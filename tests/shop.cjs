@@ -21,7 +21,7 @@ const { research } = require("../src/catalog.ts");
       await p.locator(".farm-scene").getAttribute("data-starter-model"),
       "Farmer",
     );
-    await p.getByRole("button", { name: "Shop", exact: true }).click();
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
     assert.equal(await p.locator(".sale-row").count(), 8);
     await p.getByRole("button", { name: "Robots", exact: true }).click();
     assert.equal(await p.locator(".robot-products .product-card").count(), 3);
@@ -52,7 +52,7 @@ const { research } = require("../src/catalog.ts");
       sessionStorage.setItem("shop-fixture", "1");
     }, fixture);
     await p.reload();
-    await p.getByRole("button", { name: "Shop", exact: true }).click();
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
     await p
       .getByRole("button", { name: "Vendre · 10 or", exact: true })
       .click();
@@ -148,7 +148,7 @@ const { research } = require("../src/catalog.ts");
       .click();
     await p.screenshot({ path: "/tmp/farm-terrestrial-fleet.png" });
     await p.setViewportSize({ width: 390, height: 844 });
-    await p.getByRole("button", { name: "Shop", exact: true }).click();
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
     await p.getByRole("button", { name: "Bâtiments", exact: true }).click();
     await p.screenshot({ path: "/tmp/farm-shop-mobile.png" });
     assert.equal(

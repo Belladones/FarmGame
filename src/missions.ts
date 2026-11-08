@@ -21,7 +21,7 @@ export const chapters = [
     skill: "Coordination et logistique",
   },
 ];
-export type MissionDestination = "code" | "Recherches" | "Shop" | "Flotte";
+export type MissionDestination = "code" | "Recherches" | "Magasin" | "Robots";
 export interface Mission {
   id: string;
   chapter: number;
@@ -211,7 +211,7 @@ export const missions: Mission[] = [
     100,
     75,
     "La capacité double pour les modèles compatibles. Le stockage des dépôts reste indépendant. Produisez et déposez le bois nécessaire.",
-    "Flotte",
+    "Robots",
     "Améliorer les soutes",
   ),
   milestone(
@@ -224,7 +224,7 @@ export const missions: Mission[] = [
     125,
     75,
     "Le moteur accélère le déplacement ; les outils réduisent la durée des actions agricoles. Les gains profitent aussi aux futurs robots.",
-    "Flotte",
+    "Robots",
     "Améliorer les robots",
   ),
   milestone(
@@ -263,8 +263,8 @@ export const missions: Mission[] = [
     researched("fleet"),
     250,
     100,
-    "La recherche autorise des fermiers supplémentaires ; elle n’en offre pas. La récompense de cette étape finance un nouveau fermier au shop.",
-    "Flotte",
+    "La recherche autorise des fermiers supplémentaires ; elle n’en offre pas. La récompense de cette étape finance un nouveau fermier au magasin.",
+    "Robots",
     "Débloquer la flotte",
   ),
   milestone(
@@ -276,8 +276,8 @@ export const missions: Mission[] = [
     (s) => s.robots.filter((r) => !r.destroyed && !r.loan).length,
     200,
     100,
-    "Achetez un robot dans le shop. Chaque robot a son propre programme et sa soute. Évitez les collisions : gardez des itinéraires distincts, ou utilisez les réservations une fois débloquées.",
-    "Shop",
+    "Achetez un robot dans le magasin. Chaque robot a son propre programme et sa soute. Évitez les collisions : gardez des itinéraires distincts, ou utilisez les réservations une fois débloquées.",
+    "Magasin",
     "Recruter un robot",
   ),
   milestone(
@@ -290,7 +290,7 @@ export const missions: Mission[] = [
     300,
     100,
     "Recherchez Meunerie puis achetez un moulin (300 or). Prévoyez une case voisine accessible pour livrer le blé et collecter la farine.",
-    "Shop",
+    "Magasin",
     "Construire un moulin",
     "deliver(Direction.East, Resources.Wheat, 5);\n// Attendre un cycle du moulin voisin.\ncollect(Direction.East, Resources.Flour, 1);",
   ),
@@ -318,7 +318,7 @@ export const missions: Mission[] = [
     350,
     125,
     "Passez d’abord les dépôts à 2 500 unités pour réunir les 700 ressources nécessaires à la recherche Transporteur. Ce robot transporte sans cultiver ; son achat reste séparé de la recherche.",
-    "Flotte",
+    "Robots",
     "Organiser la logistique",
   ),
   milestone(

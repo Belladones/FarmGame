@@ -76,30 +76,6 @@
   letter-spacing: 1.7px;
   margin-top: 11px;
 }
-.command-top-nav {
-  position: absolute;
-  top: 26px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 3px;
-  padding: 3px;
-  border: 1px solid var(--line);
-  background: #060b11b3;
-}
-.command-top-nav button {
-  padding: 12px 20px;
-  background: #27323d80;
-  color: #c6d3dd;
-  font-size: 12px;
-  border: 1px solid #8197aa18;
-}
-.command-top-nav .selected {
-  background: var(--accent);
-  color: #fff;
-  border-color: #ffb57499;
-  box-shadow: 0 0 20px #ff7a1a15;
-}
 .game-header {
   top: 94px;
   left: 29px;
@@ -802,9 +778,6 @@
   }
 }
 @media (max-width: 1000px) {
-  .command-top-nav {
-    display: none;
-  }
   .command-masthead {
     left: 24px;
     top: 21px;
@@ -1242,5 +1215,78 @@
   }
   .game .sidebar-scroll .dock {
     position: fixed;
+  }
+}
+/* Progression, documentation, commerce and account are separate menu spaces. */
+.game .menu-guide {
+  width: min(1120px, calc(100% - 64px));
+  height: calc(100% - 56px);
+  margin: auto;
+  background: linear-gradient(140deg, #192c3a, #0a1520);
+  border: 1px solid #98b7cc66;
+  box-shadow: 0 24px 100px #0008;
+}
+.game .menu-guide .help-start button {
+  border-top: 2px solid #7eb7d3;
+  background: #43677b1a;
+}
+.game .menu-guide .help-search input {
+  border-color: #7eb7d380;
+}
+.game .menu-market {
+  background:
+    radial-gradient(ellipse at 90% 0%, #593a232b, transparent 60%), #0d141c;
+}
+.game .menu-market .shop-tabs button.selected {
+  background: #ff7a1a;
+  color: #fff;
+}
+.game .menu-market .shop-header {
+  border-bottom: 1px solid #c9914f55;
+}
+.game .menu-market .shop-wallet {
+  padding: 12px 16px;
+  background: #b9844320;
+  border: 1px solid #c9914f55;
+}
+.game .menu-account {
+  width: min(780px, calc(100% - 64px));
+  height: min(900px, calc(100% - 56px));
+  margin: auto;
+  border: 1px solid #829fb566;
+  box-shadow: 0 24px 100px #0008;
+}
+.game .menu-section-label {
+  margin-left: auto;
+  color: #8eaaba;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+.game .standalone-nav {
+  justify-content: space-between;
+}
+@media (max-width: 650px) {
+  .game .menu-guide,
+  .game .menu-account {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+  }
+  .game .standalone-nav {
+    display: flex;
+    gap: 12px;
+  }
+  .game .menu-section-label {
+    font-size: 7px;
+    letter-spacing: 0.8px;
+    max-width: 145px;
+    text-align: right;
+  }
+  .game .menu-market .shop-wallet {
+    padding: 8px;
+  }
+  .game .dock-button {
+    min-height: 58px;
   }
 }

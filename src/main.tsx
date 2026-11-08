@@ -180,7 +180,7 @@ const docs = [
   ],
   [
     "get_gold()",
-    "Solde d’or disponible. Les ventes du shop sont accessibles dès le début.",
+    "Solde d’or disponible. Les ventes du magasin sont accessibles dès le début.",
   ],
 ];
 function load(): Farm {
@@ -216,8 +216,6 @@ function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   const [expanded, setExpanded] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [resetView, setResetView] = useState(0);
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(1);
@@ -232,10 +230,12 @@ function App() {
     message: "Recherche de votre session…",
   });
   const dialogRef = useRef<HTMLElement>(null);
+  const menuOpener = useRef<HTMLElement | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!panel) return;
-    const previous = document.activeElement as HTMLElement | null;
+    const previous =
+      menuOpener.current ?? (document.activeElement as HTMLElement | null);
     dialogRef.current?.focus();
     const keydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setPanel(null);
@@ -544,7 +544,7 @@ function App() {
   const fleetAction = (action: FleetAction): boolean => {
     let result = false;
     if (action.type === "shop") {
-      setPanel("Shop");
+      setPanel("Magasin");
       return true;
     }
     if (action.type === "select") {
@@ -651,8 +651,8 @@ function App() {
       const destinations = [
         "Missions",
         "Recherches",
-        "Flotte",
-        "Shop",
+        "Robots",
+        "Magasin",
         "API & aide",
       ];
       if (event.altKey && /^Digit[1-5]$/.test(event.code)) {
@@ -682,7 +682,12 @@ function App() {
   const tile = selectedRobot.deployed ? at(s, s.x, s.y) : undefined;
   const growth = cropProgress(s, tile);
   return (
-    <div className={"game " + (!editorOpen ? "editor-collapsed" : "")}>
+    <div
+      onFocusCapture={(event) => {
+        if (!panel) menuOpener.current = event.target as HTMLElement;
+      }}
+      className={"game " + (!editorOpen ? "editor-collapsed" : "")}
+    >
       {!sessionReady && (
         <div className="session-loading" role="status">
           Chargement de la session…
@@ -692,39 +697,15 @@ function App() {
         farm={s}
         paused={paused}
         running={running}
-        zoom={zoom}
-        resetView={resetView}
+        zoom={1}
+        resetView={0}
         editorOpen={editorOpen}
       />
       <div className="command-masthead">
         farm<span>script</span>
         <small>AGRICULTURE / AUTOMATISATION</small>
       </div>
-      <nav className="command-top-nav" aria-label="Navigation principale">
-        <button
-          className={!panel ? "selected" : ""}
-          aria-label="Navigation : Ferme"
-          onClick={() => setPanel(null)}
-        >
-          Ferme
-        </button>
-        <button
-          aria-label="Navigation : Missions"
-          onClick={() => setPanel("Missions")}
-        >
-          Missions
-        </button>
-        <button
-          aria-label="Navigation : Robots"
-          onClick={() => setPanel("Flotte")}
-        >
-          Robots
-        </button>
-        <button aria-label="Navigation : Shop" onClick={() => setPanel("Shop")}>
-          Shop
-        </button>
-      </nav>
-      <header className="game-header">
+      <header className="game-header" inert={!!panel} aria-hidden={!!panel}>
         <div className="game-brand">
           <b>
             farm<span>script</span>
@@ -762,7 +743,12 @@ function App() {
           </button>
         </div>
       </header>
-      <aside className="left-rail" aria-label="Gestion de la ferme">
+      <aside
+        inert={!!panel}
+        aria-hidden={!!panel}
+        className="left-rail"
+        aria-label="Gestion de la ferme"
+      >
         <div
           className="sidebar-scroll"
           tabIndex={0}
@@ -799,7 +785,7 @@ function App() {
           </div>
           <button
             className="depot-summary"
-            onClick={() => setPanel("Shop")}
+            onClick={() => setPanel("Magasin")}
             aria-label="Voir les stocks des dépôts"
           >
             <span>Stockage des dépôts</span>
@@ -884,44 +870,25 @@ function App() {
             </button>
             <button
               className={
-                "dock-button " + (panel === "Flotte" ? "selected" : "")
+                "dock-button " + (panel === "Robots" ? "selected" : "")
               }
-              aria-label="Flotte"
-              title="Flotte"
-              onClick={() => togglePanel("Flotte")}
+              aria-label="Robots"
+              title="Robots"
+              onClick={() => togglePanel("Robots")}
             >
               <Icon name="robots" size={29} />
               <span>Robots</span>
             </button>
             <button
-              className={"dock-button " + (panel === "Shop" ? "selected" : "")}
-              aria-label="Shop"
-              title="Shop"
-              onClick={() => togglePanel("Shop")}
+              className={
+                "dock-button " + (panel === "Magasin" ? "selected" : "")
+              }
+              aria-label="Magasin"
+              title="Magasin"
+              onClick={() => togglePanel("Magasin")}
             >
               <Icon name="shop" size={29} />
-              <span>Shop</span>
-            </button>
-            <button
-              className="dock-button"
-              aria-label="Zoomer sur la ferme"
-              title="Zoomer sur la ferme"
-              onClick={() => setZoom((z) => (z >= 1.5 ? 1 : z + 0.25))}
-            >
-              <Icon name="zoom" size={29} />
-              <span>Zoom</span>
-            </button>
-            <button
-              className="dock-button"
-              aria-label="Recentrer la vue"
-              title="Recentrer la vue"
-              onClick={() => {
-                setZoom(1);
-                setResetView((r) => r + 1);
-              }}
-            >
-              <Icon name="home" size={29} />
-              <span>Ferme</span>
+              <span>Magasin</span>
             </button>
           </nav>
         </div>{" "}
@@ -1025,8 +992,9 @@ function App() {
           (!editorOpen ? "window-hidden " : "") +
           (expanded ? "expanded" : "")
         }
+        inert={!!panel}
         aria-label="Éditeur TypeScript"
-        aria-hidden={!editorOpen}
+        aria-hidden={!editorOpen || !!panel}
       >
         <div className="window-titlebar">
           <span className="file-icon">TS</span>
@@ -1181,7 +1149,7 @@ function App() {
           </div>
         </dl>
       </aside>
-      <div className="control-hub">
+      <div className="control-hub" inert={!!panel} aria-hidden={!!panel}>
         <div className="program-strip">
           <div className="run-controls">
             {running ? (
@@ -1289,8 +1257,8 @@ function App() {
           className={
             "panel-backdrop " +
             (panel === "Recherches" ||
-            panel === "Shop" ||
-            panel === "Flotte" ||
+            panel === "Magasin" ||
+            panel === "Robots" ||
             panel === "Missions" ||
             panel === "API & aide" ||
             panel === "Session et sauvegarde"
@@ -1305,9 +1273,16 @@ function App() {
             aria-label={panel}
             className={
               "detail-panel floating-window " +
+              (panel === "API & aide"
+                ? "menu-guide "
+                : panel === "Magasin"
+                  ? "menu-market "
+                  : panel === "Session et sauvegarde"
+                    ? "menu-account "
+                    : "menu-progression ") +
               (panel === "Recherches" ||
-              panel === "Shop" ||
-              panel === "Flotte" ||
+              panel === "Magasin" ||
+              panel === "Robots" ||
               panel === "Missions" ||
               panel === "API & aide" ||
               panel === "Session et sauvegarde"
@@ -1328,9 +1303,9 @@ function App() {
                     ? "flag"
                     : panel === "Recherches"
                       ? "research"
-                      : panel === "Flotte"
+                      : panel === "Robots"
                         ? "robots"
-                        : panel === "Shop"
+                        : panel === "Magasin"
                           ? "shop"
                           : "info"
                 }
@@ -1357,7 +1332,7 @@ function App() {
                   onNavigate={navigateMission}
                 />
               )}
-              {panel === "Flotte" && (
+              {panel === "Robots" && (
                 <FleetPanel
                   farm={s}
                   paused={paused}
@@ -1371,7 +1346,7 @@ function App() {
                   onAction={fleetAction}
                 />
               )}
-              {panel === "Shop" && (
+              {panel === "Magasin" && (
                 <Shop
                   farm={s}
                   paused={paused}

@@ -89,8 +89,6 @@ const { chromium } = require("playwright");
     await page
       .getByRole("button", { name: "Afficher le code", exact: true })
       .click();
-    await page.getByRole("button", { name: "Zoomer sur la ferme" }).click();
-    await page.getByRole("button", { name: "Recentrer la vue" }).click();
     await page.screenshot({
       path: "/tmp/farmscript-mobile.png",
       fullPage: true,

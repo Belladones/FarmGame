@@ -20,8 +20,7 @@ const { chromium } = require("playwright");
     console.log("initial", d);
     if (d.plotCount !== "1" || Math.abs(d.cellWidth / d.cellHeight - 1) > 0.001)
       throw Error("Initial board not one square");
-    const initialAzimuth = Number(d.cameraAzimuth),
-      initialPolar = Number(d.cameraPolar);
+    const initialAzimuth = Number(d.cameraAzimuth);
     await p.mouse.move(470, 480);
     await p.mouse.down();
     await p.mouse.move(650, 550, { steps: 12 });
@@ -33,17 +32,6 @@ const { chromium } = require("playwright");
             initial,
         ) > 0.1,
       initialAzimuth,
-    );
-    await p.getByRole("button", { name: "Recentrer la vue" }).click();
-    await p.waitForFunction(
-      ({ azimuth, polar }) => {
-        const d = document.querySelector(".farm-scene").dataset;
-        return (
-          Math.abs(Number(d.cameraAzimuth) - azimuth) < 0.01 &&
-          Math.abs(Number(d.cameraPolar) - polar) < 0.01
-        );
-      },
-      { azimuth: initialAzimuth, polar: initialPolar },
     );
     await p.screenshot({ path: "/tmp/farm-one-square.png" });
     await p.addInitScript(() => {

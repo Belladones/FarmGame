@@ -198,10 +198,12 @@ export function MissionPanel({
                     </button>
                     <button
                       onClick={() =>
-                        onNavigate(ready && blocker ? "Shop" : m.destination)
+                        onNavigate(ready && blocker ? "Magasin" : m.destination)
                       }
                     >
-                      {ready && blocker ? "Libérer le dépôt au shop" : m.action}{" "}
+                      {ready && blocker
+                        ? "Libérer le dépôt au magasin"
+                        : m.action}{" "}
                       ↗
                     </button>
                   </div>
@@ -223,7 +225,7 @@ export function MissionPanel({
             La campagne est terminée. Continuez à expérimenter, améliorer vos
             robots et développer votre production.
           </p>
-          <button onClick={() => onNavigate("Flotte")}>
+          <button onClick={() => onNavigate("Robots")}>
             Retrouver ma flotte →
           </button>
         </div>

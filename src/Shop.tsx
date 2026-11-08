@@ -249,7 +249,7 @@ export function Shop({
       <header className="shop-header">
         <div>
           <span className="overline">LE COMPTOIR DE VOTRE FERME</span>
-          <h2>Le shop</h2>
+          <h2>Le magasin</h2>
           <p>Produisez. Vendez. Équipez votre exploitation.</p>
         </div>
         <div className="shop-wallet">
@@ -266,7 +266,7 @@ export function Shop({
           </button>
         </div>
       </header>
-      <nav className="shop-tabs" aria-label="Catégories du shop">
+      <nav className="shop-tabs" aria-label="Rayons du magasin">
         {[
           "Vendre",
           "Robots",
@@ -768,7 +768,7 @@ export function Shop({
       <footer className="shop-footer">
         <span role="status">
           {message ||
-            "Les recherches consomment des matériaux. Le shop consomme de l’or."}
+            "Les recherches consomment des matériaux. Le magasin consomme de l’or."}
         </span>
         <span>◈ {farm.gold.toLocaleString("fr-FR")} or</span>
       </footer>

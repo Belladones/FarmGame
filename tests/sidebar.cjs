@@ -62,7 +62,7 @@ const { fresh, buy } = require("../src/engine.ts");
       );
       assert.ok(before.width <= before.viewport);
       const last = p.getByRole("button", {
-        name: "Recentrer la vue",
+        name: "Magasin",
         exact: true,
       });
       await last.scrollIntoViewIfNeeded();
@@ -89,6 +89,10 @@ const { fresh, buy } = require("../src/engine.ts");
       assert.equal(hit.inside, true);
       assert.equal(hit.clear, true);
       await last.click();
+      await p.getByRole("dialog", { name: "Magasin", exact: true }).waitFor();
+      await p
+        .getByRole("button", { name: "Retour à la ferme", exact: true })
+        .click();
       const claim = p
         .locator(".peek-footer")
         .getByRole("button", { name: "Récupérer la récompense", exact: true });
