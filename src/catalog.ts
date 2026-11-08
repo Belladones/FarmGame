@@ -748,7 +748,60 @@ export const research: Research[] = [
     T,
     "Durée des cycles des machines ×0,5.",
   ),
-];
+].map((entry): Research => {
+  const prerequisites = new Set(entry.prerequisites);
+  const providers: Partial<Record<Item, string>> = {
+    Wood: "bush",
+    Carrot: "carrot",
+    Pumpkin: "pumpkin",
+    Flour: "milling",
+    Bread: "bakery",
+    Plank: "sawmill",
+    Fertilizer: "consumables",
+  };
+  for (const [item, n] of Object.entries(entry.materials)) {
+    const provider = providers[item as Item];
+    if (n && provider && provider !== entry.id) prerequisites.add(provider);
+  }
+  if (
+    ["milling", "sawmill", "composting", "maintenance", "reservoir"].includes(
+      entry.id,
+    )
+  )
+    prerequisites.add("land");
+  if (entry.id === "bakery") prerequisites.add("land2");
+  if (entry.id === "fleet") prerequisites.add("extension");
+  const total = Object.values(entry.materials).reduce(
+    (n, value) => n + (value ?? 0),
+    0,
+  );
+  // Each tier must itself be affordable using the preceding tier.
+  const storage =
+    total > 2500
+      ? "storage4"
+      : total > 500
+        ? "storage3"
+        : total > 200
+          ? "storage2"
+          : undefined;
+  if (storage && storage !== entry.id) prerequisites.add(storage);
+  const sites =
+    total > 80000
+      ? "land4"
+      : total > 40000
+        ? "land3"
+        : total > 20000
+          ? "land2"
+          : total > 10000
+            ? "land"
+            : undefined;
+  if (sites && sites !== entry.id) prerequisites.add(sites);
+  return {
+    ...entry,
+    category: entry.id === "commerce" ? "Programmation" : entry.category,
+    prerequisites: [...prerequisites],
+  };
+});
 export const formatCost = (cost: Inventory) =>
   Object.entries(cost)
     .map(

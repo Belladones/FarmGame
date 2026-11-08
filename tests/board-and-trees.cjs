@@ -76,13 +76,15 @@ const { chromium } = require("playwright");
       .getByRole("button", { name: "Rechercher · 20 blés", exact: true })
       .click();
     await p.getByRole("button", { name: /Programmation/ }).click();
-    await p.locator('[data-skill="lists"]').click();
+    await p.locator('[data-skill="functions"]').click();
     if (
       !(await p
-        .getByRole("button", { name: "Disponible ultérieurement" })
+        .getByRole("button", { name: "Prérequis manquants", exact: true })
         .isDisabled())
     )
-      throw Error("Future research purchasable");
+      throw Error("Functions should require variables and wood production");
+    if (await p.locator(".skill-node.planned").count())
+      throw Error("Unimplemented research should not be in progression");
     const saved = await p.evaluate(
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
     );

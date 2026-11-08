@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { cropProgress, slotCount, type Farm, type Crop } from "./engine";
+import { farmViewport, cameraInclination } from "./camera";
 import { buildings, constructionSlots, type Model } from "./catalog";
 interface Props {
   farm: Farm;
@@ -59,8 +60,8 @@ export function FarmScene({
       controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minPolarAngle = 0.15;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    controls.minPolarAngle = cameraInclination.min;
+    controls.maxPolarAngle = cameraInclination.max;
     controls.rotateSpeed = 0.5;
     controls.minZoom = 0.7;
     controls.maxZoom = 2;
@@ -77,7 +78,7 @@ export function FarmScene({
       controls.update();
       camera.up.set(0, 1, 0);
       controls.target.set(targetX, 0, targetZ);
-      camera.position.set(targetX + 1.2, 12, targetZ + 13.8);
+      camera.position.set(targetX + 12, 14, targetZ + 12);
       camera.zoom = state.current.zoom;
       camera.updateProjectionMatrix();
       controls.update();
@@ -638,25 +639,23 @@ export function FarmScene({
       const w = container.clientWidth,
         h = container.clientHeight;
       if (!w || !h) return;
-      renderer.setSize(w, h);
-      const available = w >= 900 && state.current.editorOpen ? 0.57 : 0.88;
-      const extent = Math.max(
-        3.1,
-        (((maxX - minX + 1) * STEP + 1) * h) / (2 * w * available),
-        ((maxY - minY + 1) * STEP + 1) * 0.65,
-      );
-      camera.left = (-extent * w) / h;
-      camera.right = (extent * w) / h;
-      camera.top = extent;
-      camera.bottom = -extent;
-      camera.setViewOffset(
+      renderer.setSize(w, h, false);
+      const view = farmViewport(
         w,
         h,
-        w >= 900 && state.current.editorOpen ? w * 0.15 : 0,
-        w < 700 ? -h * 0.045 : 0,
-        w,
-        h,
+        (maxX - minX + 1) * STEP,
+        (maxY - minY + 1) * STEP,
+        state.current.editorOpen,
       );
+      camera.left = view.left;
+      camera.right = view.right;
+      camera.top = view.top;
+      camera.bottom = view.bottom;
+      camera.setViewOffset(w, h, view.offsetX, view.offsetY, w, h);
+      container.dataset.projectionAspect = String(
+        (camera.right - camera.left) / (camera.top - camera.bottom),
+      );
+      container.dataset.viewportAspect = String(w / h);
       camera.updateProjectionMatrix();
     };
     const observer = new ResizeObserver(resize);

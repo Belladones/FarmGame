@@ -9,367 +9,12 @@ import {
 import { formatCost, type Item } from "./catalog";
 import { Icon, ResourceIcon } from "./Icons";
 import { robotTrees } from "./robotTrees";
-type Branch = string;
-type Art = "wheat" | "wood" | "carrot" | "water";
-interface Node {
-  id: string;
-  title: string;
-  symbol?: string;
-  art?: Art;
-  x: number;
-  y: number;
-  parents: string[];
-  research?: string;
-  base?: boolean;
-  detail: string;
-  cost?: string;
-  prerequisite?: string;
-}
-interface Tree {
-  name: Branch;
-  caption: string;
-  nodes: Node[];
-}
-// Roadmap entries remain informational: they cannot consume resources or grant abilities.
-const baseTrees: Tree[] = [
-  {
-    name: "Agriculture",
-    caption: "De la première graine à une exploitation florissante.",
-    nodes: [
-      {
-        id: "wheat-base",
-        title: "Blé · niveau 1",
-        art: "wheat",
-        x: 315,
-        y: 25,
-        parents: [],
-        base: true,
-        detail:
-          "La première culture de votre ferme. Plantation gratuite, pousse en 5 secondes, rendement de 1 blé.",
-      },
-      {
-        id: "wheat",
-        title: "Blé · niveau 2",
-        art: "wheat",
-        x: 180,
-        y: 190,
-        parents: ["wheat-base"],
-        research: "wheat",
-        detail:
-          "Les nouvelles plantations produisent 5 blés. Les cultures déjà plantées conservent leur rendement.",
-      },
-      {
-        id: "extension",
-        title: "Trois parcelles",
-        symbol: "3 × 1",
-        x: 455,
-        y: 190,
-        parents: ["wheat-base"],
-        research: "extension",
-        detail:
-          "Ajoute deux cases carrées à droite de la première. Vos cultures et leurs coordonnées sont conservées.",
-      },
-      {
-        id: "bush",
-        title: "Buisson",
-        art: "wood",
-        x: 180,
-        y: 355,
-        parents: ["wheat"],
-        cost: "40 blés",
-        prerequisite: "Blé · niveau 2",
-        detail:
-          "Culture gratuite produisant du bois, sans contrainte d’espacement. Cette culture n’est pas encore implémentée.",
-      },
-      {
-        id: "extension3",
-        title: "Neuf parcelles",
-        symbol: "3 × 3",
-        x: 455,
-        y: 355,
-        parents: ["extension"],
-        cost: "150 blés + 50 bois",
-        prerequisite: "Trois parcelles",
-        detail:
-          "Étend la ferme à un carré de neuf parcelles. Cette extension sera disponible avec la production de bois.",
-      },
-      {
-        id: "carrot",
-        title: "Carotte",
-        art: "carrot",
-        x: 45,
-        y: 520,
-        parents: ["bush"],
-        cost: "60 blés + 30 bois",
-        prerequisite: "Buisson + Labourage (Technologie)",
-        detail:
-          "Culture sur terre labourée. Une plantation coûte 2 blés et 1 bois, prélevés dans la soute du robot.",
-      },
-      {
-        id: "tree",
-        title: "Arbre",
-        art: "wood",
-        x: 315,
-        y: 520,
-        parents: ["bush"],
-        cost: "80 blés + 40 bois",
-        prerequisite: "Buisson",
-        detail:
-          "Produit du bois. Les arbres voisins ralentiront sa croissance : apprenez à organiser vos plantations.",
-      },
-      {
-        id: "pumpkin",
-        title: "Citrouille",
-        symbol: "◈",
-        x: 45,
-        y: 685,
-        parents: ["carrot"],
-        cost: "1 000 blés + 500 bois + 300 carottes",
-        prerequisite: "Carotte · niveau 2",
-        detail: "Culture avancée avec un futur bonus de récolte groupée.",
-      },
-    ],
-  },
-  {
-    name: "Programmation",
-    caption: "Apprenez à penser en code, une notion à la fois.",
-    nodes: [
-      {
-        id: "bases",
-        title: "Les bases",
-        symbol: "while",
-        x: 315,
-        y: 25,
-        parents: [],
-        base: true,
-        detail:
-          "Appels aux commandes, constantes du jeu et boucles while : tout le nécessaire pour votre première routine.",
-      },
-      {
-        id: "conditions",
-        title: "Conditions",
-        symbol: "if / else",
-        x: 110,
-        y: 190,
-        parents: ["bases"],
-        research: "conditions",
-        detail:
-          "Exécutez une action seulement quand une condition est vraie. Associez if au capteur de maturité pour récolter au bon moment.",
-      },
-      {
-        id: "print",
-        title: "Affichage",
-        symbol: "print()",
-        x: 315,
-        y: 190,
-        parents: ["bases"],
-        research: "print",
-        detail:
-          "Écrivez vos propres messages dans le journal du robot pour comprendre ce que fait votre programme.",
-      },
-      {
-        id: "variables",
-        title: "Variables et types",
-        symbol: "const : number",
-        x: 520,
-        y: 190,
-        parents: ["bases"],
-        cost: "25 blés",
-        prerequisite: "Les bases",
-        detail:
-          "Mémorisez une valeur et découvrez number, boolean et string. La recherche de progression est à venir ; ces syntaxes restent libres dans le prototype.",
-      },
-      {
-        id: "loops",
-        title: "Boucles comptées",
-        symbol: "for (...)",
-        x: 110,
-        y: 385,
-        parents: ["conditions", "variables"],
-        cost: "75 blés + 20 bois",
-        prerequisite: "Variables et types + Conditions",
-        detail:
-          "Parcourez des cases avec un compteur. Le déblocage pédagogique est à venir ; for est déjà utilisable librement.",
-      },
-      {
-        id: "functions",
-        title: "Fonctions",
-        symbol: "function f()",
-        x: 520,
-        y: 385,
-        parents: ["conditions", "variables"],
-        cost: "150 blés + 50 bois",
-        prerequisite: "Variables et types + Conditions",
-        detail:
-          "Organisez vos routines en fonctions nommées. La recherche est prévue ; les fonctions nommées sont déjà utilisables dans ce prototype.",
-      },
-      {
-        id: "lists",
-        title: "Listes",
-        symbol: "[1, 2, 3]",
-        x: 315,
-        y: 575,
-        parents: ["loops", "functions"],
-        cost: "600 blés + 200 bois + 100 carottes",
-        prerequisite: "Fonctions + Boucles comptées + Mesure",
-        detail:
-          "Créez et parcourez des tableaux typés. La progression de cette branche sera ajoutée ultérieurement.",
-      },
-      {
-        id: "objects",
-        title: "Objets",
-        symbol: "{ x: 1 }",
-        x: 520,
-        y: 575,
-        parents: ["functions"],
-        cost: "1 000 blés + 400 bois + 200 carottes",
-        prerequisite: "Fonctions",
-        detail:
-          "Organisez vos données avec des objets et des propriétés. Cette recherche de progression est à venir.",
-      },
-      {
-        id: "modeling",
-        title: "Modélisation",
-        symbol: "interface",
-        x: 520,
-        y: 740,
-        parents: ["objects"],
-        cost: "2 000 blés + 800 bois + 400 carottes",
-        prerequisite: "Objets",
-        detail:
-          "Décrivez vos données avec des types, interfaces et unions. Cette recherche et sa branche Objets restent à venir.",
-      },
-    ],
-  },
-  {
-    name: "Technologie",
-    caption: "Donnez à votre robot les moyens de vos ambitions.",
-    nodes: [
-      {
-        id: "robot",
-        title: "Robot fermier",
-        symbol: "f1",
-        x: 315,
-        y: 25,
-        parents: [],
-        base: true,
-        detail:
-          "Votre premier robot est gratuit. Sa soute contient 10 unités. Le dépôt adjacent stocke jusqu’à 200 unités.",
-      },
-      {
-        id: "sensor",
-        title: "Capteur de maturité",
-        symbol: "can_harvest()",
-        x: 150,
-        y: 190,
-        parents: ["robot"],
-        research: "sensor",
-        detail:
-          "Détectez les cultures mûres avec can_harvest(). Le capteur ne consomme aucune ressource.",
-      },
-      {
-        id: "position",
-        title: "Positionnement",
-        symbol: "(x, y)",
-        x: 480,
-        y: 190,
-        parents: ["robot"],
-        research: "position",
-        prerequisite: "Trois parcelles (Agriculture)",
-        detail:
-          "Lisez les coordonnées du robot et les dimensions du terrain avec get_pos_x(), get_pos_y() et get_world_size().",
-      },
-      {
-        id: "analysis",
-        title: "Analyse de la parcelle",
-        symbol: "get_entity_type()",
-        x: 150,
-        y: 365,
-        parents: ["sensor"],
-        cost: "40 blés + 15 bois",
-        prerequisite: "Capteur de maturité",
-        detail:
-          "Identifiez une culture et le type de sol. Ce capteur n’est pas encore implémenté.",
-      },
-      {
-        id: "construction",
-        title: "Construction",
-        symbol: "⌂",
-        x: 480,
-        y: 365,
-        parents: ["robot"],
-        cost: "80 blés + 40 bois",
-        prerequisite: "Buisson (Agriculture)",
-        detail:
-          "Débloquera des bâtiments supplémentaires à acheter avec de l’or.",
-      },
-      {
-        id: "humidity",
-        title: "Capteur d’humidité",
-        art: "water",
-        x: 150,
-        y: 540,
-        parents: ["analysis"],
-        cost: "100 blés + 40 bois",
-        prerequisite: "Analyse de la parcelle",
-        detail:
-          "Mesurera l’humidité du sol avec get_water() pour adapter vos arrosages.",
-      },
-      {
-        id: "tank",
-        title: "Réservoir embarqué",
-        art: "water",
-        x: 480,
-        y: 540,
-        parents: ["construction"],
-        cost: "150 blés + 100 bois",
-        prerequisite: "Construction",
-        detail:
-          "Permettra de transporter dix unités d’eau et de remplir le réservoir au puits.",
-      },
-    ],
-  },
-];
-const trees: Tree[] = baseTrees.map((tree) => {
-  const nodes = tree.nodes.map((n) => {
-    const r = research.find((r) => r.id === (n.research ?? n.id));
-    return r
-      ? {
-          ...n,
-          research: r.id,
-          detail: r.detail,
-          cost: formatCost(r.materials),
-          prerequisite:
-            r.prerequisites
-              .map((p) => research.find((r) => r.id === p)?.name ?? p)
-              .join(" + ") || undefined,
-        }
-      : n;
-  });
-  const extra = research.filter(
-    (r) => r.category === tree.name && !nodes.some((n) => n.id === r.id),
-  );
-  const start = Math.max(...nodes.map((n) => n.y)) + 180;
-  extra.forEach((r, i) =>
-    nodes.push({
-      id: r.id,
-      title: r.name,
-      symbol: r.id.startsWith("extension") ? r.name.split("·")[1] : "⬡",
-      x: 45 + (i % 3) * 220,
-      y: start + Math.floor(i / 3) * 180,
-      parents: r.prerequisites.filter((p) =>
-        research.some((t) => t.id === p && t.category === tree.name),
-      ),
-      research: r.id,
-      detail: r.detail,
-      cost: formatCost(r.materials),
-      prerequisite: r.prerequisites
-        .map((p) => research.find((r) => r.id === p)?.name ?? p)
-        .join(" + "),
-    }),
-  );
-  return { ...tree, nodes };
-});
+import {
+  researchTrees as trees,
+  type ResearchNode as Node,
+  type ResearchTree as Tree,
+} from "./researchTrees";
+import { sum } from "./catalog";
 function isAcquired(node: Node, farm: Farm) {
   return (
     !!node.base || (!!node.research && farm.unlocks.includes(node.research))
@@ -399,6 +44,14 @@ export function SkillTree({
   const pages: Tree[] = focus === "robots" ? robotTrees : trees;
   const tree = pages[page],
     node = tree.nodes.find((n) => n.id === selected) ?? tree.nodes[0];
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el)
+      el.scrollTo({
+        left: Math.max(0, node.x - (el.clientWidth - 114) / 2),
+        top: Math.max(0, node.y - (el.clientHeight - 114) / 2),
+      });
+  }, [page, selected]);
   const researchItem = research.find((r) => r.id === node.research);
   const acquired = isAcquired(node, farm),
     future = !node.base && !node.research;
@@ -409,6 +62,15 @@ export function SkillTree({
     Object.entries(researchItem.materials).every(
       ([i, n]) => getStock(farm, i as Item) >= n,
     );
+  const visitResearch = (id: string) => {
+    const pageIndex = pages.findIndex((p) =>
+      p.nodes.some((n) => n.research === id),
+    );
+    if (pageIndex >= 0) {
+      setPage(pageIndex);
+      setSelected(id);
+    }
+  };
   const changePage = (index: number) => {
     setPage(index);
     setSelected(pages[index].nodes[0].id);
@@ -500,7 +162,15 @@ export function SkillTree({
               {tree.nodes.map((n) => {
                 const owned = isAcquired(n, farm),
                   r = research.find((r) => r.id === n.research),
-                  planned = !n.base && !n.research;
+                  planned = !n.base && !n.research,
+                  locked =
+                    !owned &&
+                    !!r &&
+                    r.prerequisites.some(
+                      (id) =>
+                        !farm.unlocks.includes(id) &&
+                        !(id === "extension" && farm.width >= 3),
+                    );
                 return (
                   <button
                     key={n.id}
@@ -511,7 +181,9 @@ export function SkillTree({
                         ? "acquired "
                         : planned
                           ? "planned "
-                          : "available ") +
+                          : locked
+                            ? "locked "
+                            : "available ") +
                       (n.id === node.id ? "chosen" : "")
                     }
                     style={{ left: n.x, top: n.y }}
@@ -525,7 +197,7 @@ export function SkillTree({
                       ) : (
                         <code>{n.symbol}</code>
                       )}
-                      {planned && (
+                      {(planned || locked) && (
                         <svg
                           className="node-lock"
                           width="12"
@@ -570,7 +242,7 @@ export function SkillTree({
           </div>
           <h3>{node.title}</h3>
           <p>{node.detail}</p>
-          {node.prerequisite && (
+          {node.prerequisite && !researchItem && (
             <div
               className={
                 "skill-prerequisite " + (prerequisiteMissing ? "missing" : "")
@@ -578,6 +250,46 @@ export function SkillTree({
             >
               <span>PRÉREQUIS</span>
               {node.prerequisite}
+            </div>
+          )}
+          {researchItem && (
+            <div className="research-requirements">
+              <span>PRÉREQUIS RÉELS</span>
+              {researchItem.prerequisites.length ? (
+                researchItem.prerequisites.map((id) => {
+                  const requirement = research.find((r) => r.id === id)!;
+                  const known =
+                    farm.unlocks.includes(id) ||
+                    (id === "extension" && farm.width >= 3);
+                  const available = pages.some((p) =>
+                    p.nodes.some((n) => n.research === id),
+                  );
+                  return (
+                    <button
+                      key={id}
+                      aria-label={`Voir le prérequis ${requirement.name}`}
+                      disabled={!available}
+                      onClick={() => visitResearch(id)}
+                      className={known ? "met" : "missing"}
+                    >
+                      {known ? "✓" : "◇"} {requirement.name}{" "}
+                      <small>{requirement.category}</small>
+                    </button>
+                  );
+                })
+              ) : (
+                <small>Aucune recherche préalable.</small>
+              )}
+              <p
+                className={
+                  sum(researchItem.materials) > stockCapacity(farm)
+                    ? "capacity-warning"
+                    : ""
+                }
+              >
+                Coût total : {sum(researchItem.materials)} unités · Capacité
+                actuelle : {stockCapacity(farm)}
+              </p>
             </div>
           )}
           <div className="skill-price">
@@ -592,7 +304,7 @@ export function SkillTree({
           </div>
           <button
             className="purchase-skill"
-            disabled={acquired || future || prerequisiteMissing || !affordable}
+            disabled={acquired || future || !!blocker || !affordable}
             onClick={() => node.research && onBuy(node.research)}
           >
             {acquired
@@ -608,6 +320,11 @@ export function SkillTree({
                     : "Rechercher · " +
                       (researchItem ? formatCost(researchItem.materials) : "")}
           </button>
+          {blocker?.startsWith("Capacité") && (
+            <p className="capacity-warning" role="status">
+              {blocker}
+            </p>
+          )}
           {future && (
             <small className="planned-note">
               Aucun achat possible pour cette branche pour le moment.

@@ -326,6 +326,9 @@ export function researchBlocker(s: Farm, id: string): string | null {
       "Requis : " +
       missing.map((p) => research.find((r) => r.id === p)?.name ?? p).join(", ")
     );
+  const required = sum(r.materials);
+  if (required > stockCapacity(s))
+    return `Capacité insuffisante : ${required} unités nécessaires, ${stockCapacity(s)} disponibles. Améliorez le stockage ou construisez des dépôts supplémentaires.`;
   if (Object.entries(r.materials).some(([i, n]) => getStock(s, i as Item) < n))
     return "Matériaux insuffisants : " + formatCost(r.materials);
   return null;

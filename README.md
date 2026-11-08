@@ -31,7 +31,7 @@ npm run build
 
 `test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
 
-Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les sept parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les huit parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
@@ -243,3 +243,32 @@ s’ouvre dans une fenêtre de documentation dédiée ; le Magasin utilise son p
 espace et ses rayons de vente, robots, bâtiments et consommables. Ces fenêtres
 n’affichent pas les onglets de progression. La gestion du compte et des
 sauvegardes s’ouvre exclusivement depuis le bouton du compte sur la ferme.
+
+
+### Progression des recherches et vue de la ferme
+
+Les arbres Agriculture, Programmation et Technologie sont générés depuis le
+catalogue réel, dans l’ordre des dépendances. Les anciens nœuds de feuille de
+route non implémentés ne sont plus proposés. Les liens internes correspondent
+aux prérequis ; le détail permet de consulter les prérequis d’autres catégories
+et affiche le coût total et la capacité actuelle des dépôts.
+
+Les prix sont conservés. Chaque recherche nécessite désormais le déblocage de
+la production des ressources qu’elle consomme, ainsi qu’un palier de stockage
+compatible avec son coût total : 200, 500, 2 500 ou 10 000 unités par dépôt.
+Au-delà de 10 000 unités, les emplacements constructibles nécessaires sont aussi
+prérequis. Les bâtiments demandent un emplacement supplémentaire ; la flotte
+demande la première extension. Les achats vérifient la capacité réelle des dépôts
+construits, pas seulement les recherches acquises. Par exemple, Blé niveau 3
+coûte 350 unités et demande Stockage niveau 2 ; Blé niveau 5 coûte 22 000 unités
+et demande au moins trois dépôts de 10 000 unités. Les recherches déjà acquises
+restent actives, sans retrait de ressources ni réinitialisation de sauvegarde.
+La mission Construction précède désormais les améliorations exigeant ce stockage.
+
+Le fond étoilé est un SVG local statique. La caméra orthographique conserve le
+rapport largeur/hauteur réel du canvas et cadre une sphère englobant le terrain,
+indépendante de la rotation. La vue initiale est isométrique et l’inclinaison est
+bornée pour éviter les angles rasants ; les cases restent des carrés dans le
+monde 3D. Leur projection à l’écran varie naturellement avec l’angle de vue.
+`npm run test:progression` vérifie les liens entre arbres, les anciennes recherches,
+les proportions de la caméra et la rotation sur ordinateur et mobile.
