@@ -94,6 +94,8 @@ monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   target: monaco.languages.typescript.ScriptTarget.ES2020,
   strict: true,
+  // Separate scripts may reuse variable names without sharing a TypeScript scope.
+  moduleDetection: 3,
   noEmit: true,
 });
 monaco.languages.typescript.typescriptDefaults.addExtraLib(
@@ -212,7 +214,7 @@ function App() {
     () => activeRobot(farm.current).code || starter,
   );
   const [panel, setPanel] = useState<string | null>(null);
-  const [editorOpen, setEditorOpen] = useState(() => window.innerWidth >= 900);
+  const [garageEditorId, setGarageEditorId] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
     null,
   );
@@ -225,7 +227,27 @@ function App() {
     const timer = setTimeout(() => setNotice(null), 6000);
     return () => clearTimeout(timer);
   }, [notice]);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [minimized, setMinimized] = useState<Record<string, boolean>>({});
+  const [initialMinimized] = useState(() => window.innerWidth < 900);
+  const isMinimized = (id: string) => minimized[id] ?? initialMinimized;
+  const programRobots = s.robots.filter(
+    (r) => !r.destroyed && (r.deployed || r.id === garageEditorId),
+  );
+  const editorOpen = programRobots.some((r) => !isMinimized(r.id));
+  const setEditorOpen = (open: boolean) => {
+    if (open) {
+      const r = activeRobot(farm.current);
+      if (!r.deployed) setGarageEditorId(r.id);
+      setMinimized((m) => ({ ...m, [r.id]: false }));
+    } else {
+      setMinimized((m) => ({
+        ...m,
+        ...Object.fromEntries(programRobots.map((r) => [r.id, true])),
+      }));
+      setExpanded(null);
+    }
+  };
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(1);
@@ -241,7 +263,6 @@ function App() {
   });
   const dialogRef = useRef<HTMLElement>(null);
   const menuOpener = useRef<HTMLElement | null>(null);
-  const logRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!panel) return;
     const previous =
@@ -286,9 +307,11 @@ function App() {
   const [logs, setLogs] = useState<string[]>([
     "Bienvenue ! Lancez votre premier programme.",
   ]);
+  const logElements = useRef(new Map<string, HTMLDivElement>());
   useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [logs]);
+    for (const el of logElements.current.values())
+      el.scrollTop = el.scrollHeight;
+  }, [logs, minimized]);
   const log = (text: string) => setLogs((a) => [...a.slice(-49), text]);
   const refresh = () => {
     setS(structuredClone(farm.current));
@@ -409,25 +432,24 @@ function App() {
       runtimes.current.clear();
     };
   }, []);
-  async function run() {
+  async function run(id = farm.current.activeRobotId) {
     if (!syncReady.current) return;
-    const id = farm.current.activeRobotId;
     stop(id);
     const generation = generations.current.get(id),
       rt: Runtime = { queue: [] };
     runtimes.current.set(id, rt);
-    setRunning(true);
-    const source = code;
+    if (id === farm.current.activeRobotId) setRunning(true);
     const r = farm.current.robots.find((r) => r.id === id);
     if (!r || r.destroyed || !r.deployed) {
       stop(id);
       return;
     }
+    const source = r.code;
     delete r.lastError;
-    r.code = source;
-    const model = monaco.editor
-      .getModels()
-      .find((m) => m.getLanguageId() === "typescript");
+    const uri = monaco.Uri.parse(`file:///robots/${encodeURIComponent(id)}.ts`);
+    const model =
+      monaco.editor.getModel(uri) ??
+      monaco.editor.createModel(source, "typescript", uri);
     if (model) {
       try {
         const getClient =
@@ -438,6 +460,10 @@ function App() {
           ...(await client.getSemanticDiagnostics(model.uri.toString())),
         ];
         if (generations.current.get(id) !== generation) return;
+        if (r.code !== source) {
+          stop(id);
+          return;
+        }
         if (diagnostics.length) {
           const d = diagnostics[0],
             pos = model.getPositionAt(d.start ?? 0),
@@ -446,15 +472,15 @@ function App() {
                 ? d.messageText
                 : d.messageText.messageText;
           r.lastError = `Erreur TypeScript, ligne ${pos.lineNumber} : ${message}`;
-          log(r.lastError);
-          notify(r.lastError, true);
+          log(`[${id}] ${r.lastError}`);
+          notify(`[${id}] ${r.lastError}`, true);
           stop(id);
           return;
         }
       } catch {
         if (generations.current.get(id) === generation) {
           log(
-            "Le service TypeScript n’est pas prêt. Réessayez dans un instant.",
+            `[${id}] Le service TypeScript n’est pas prêt. Réessayez dans un instant.`,
           );
           stop(id);
         }
@@ -462,6 +488,10 @@ function App() {
       }
     }
     if (generations.current.get(id) !== generation) return;
+    if (r.code !== source) {
+      stop(id);
+      return;
+    }
     const w = new Worker(new URL("./runner.worker.ts", import.meta.url), {
       type: "module",
     });
@@ -499,6 +529,7 @@ function App() {
   }
   const chooseRobot = (id: string) => {
     if (selectRobot(farm.current, id)) {
+      if (!activeRobot(farm.current).deployed) setGarageEditorId(id);
       setCode(activeRobot(farm.current).code || starter);
       setRunning(runtimes.current.has(id));
       refresh();
@@ -1058,132 +1089,190 @@ function App() {
           </div>
         )}
       </div>
-      <section
-        className={
-          "workspace floating-window " +
-          (!editorOpen ? "window-hidden " : "") +
-          (expanded ? "expanded" : "")
-        }
-        inert={!!panel}
-        aria-label="Éditeur TypeScript"
-        aria-hidden={!editorOpen || !!panel}
-      >
-        <div className="window-titlebar">
-          <span className="file-icon">TS</span>
-          <strong>{s.activeRobotId}</strong>
-          <select
-            className="robot-picker"
-            aria-label="Robot à programmer"
-            value={s.activeRobotId}
-            onChange={(e) => chooseRobot(e.target.value)}
+      <div className="program-desktop" inert={!!panel} aria-hidden={!!panel}>
+        {programRobots.map((robot) => (
+          <section
+            key={robot.id}
+            data-robot-id={robot.id}
+            className={
+              "workspace floating-window " +
+              (isMinimized(robot.id) ? "program-minimized " : "") +
+              (expanded === robot.id ? "expanded " : "") +
+              (s.activeRobotId === robot.id ? "active" : "")
+            }
+            inert={!!panel}
+            aria-label={`Programme ${robot.id}`}
+            aria-hidden={!!panel}
           >
-            {s.robots
-              .filter((r) => !r.destroyed)
-              .map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.id} · {models[r.model].name}
-                  {!r.deployed
-                    ? " · Garage"
-                    : runtimes.current.has(r.id)
-                      ? " · ▶"
-                      : ""}
-                </option>
-              ))}
-          </select>
-          <div className="window-actions">
-            <button
-              title="Réduire l’éditeur"
-              aria-label="Réduire l’éditeur"
-              onClick={() => setEditorOpen(false)}
-            >
-              <Icon name="minimize" size={16} />
-            </button>
-            <button
-              title={expanded ? "Restaurer" : "Agrandir"}
-              aria-label="Agrandir l’éditeur"
-              onClick={() => setExpanded(!expanded)}
-            >
-              <Icon name="expand" size={14} />
-            </button>
-          </div>
-        </div>
-        <div className="toolbar">
-          <select
-            aria-label="Charger un exemple"
-            defaultValue=""
-            disabled={running}
-            onChange={(e) => {
-              if (e.target.value) {
-                setCode(examples[e.target.value]);
-                activeRobot(farm.current).code = examples[e.target.value];
-                localStorage.setItem(
-                  "farmscript-code",
-                  examples[e.target.value],
-                );
-                refresh();
-              }
-            }}
-          >
-            <option value="" disabled>
-              Exemples de programmes
-            </option>
-            {Object.keys(examples).map((k) => (
-              <option key={k}>{k}</option>
-            ))}
-          </select>
-          <span>TypeScript</span>
-        </div>
-        <div className="editor">
-          <Editor
-            path="file:///robot.ts"
-            height="100%"
-            language="typescript"
-            theme="farmscript-command"
-            value={code}
-            onChange={(v) => {
-              setCode(v || "");
-              activeRobot(farm.current).code = v || "";
-              localStorage.setItem("farmscript-code", v || "");
-              refresh();
-            }}
-            options={{
-              fontSize: 13,
-              minimap: { enabled: false },
-              padding: { top: 18 },
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-              tabSize: 2,
-              fontFamily: '"SFMono-Regular", Consolas, monospace',
-              readOnly: running,
-              lineNumbersMinChars: 3,
-              overviewRulerLanes: 0,
-              renderLineHighlight: "none",
-              wordWrap: "on",
-            }}
-          />
-        </div>
-        <div className="console">
-          <div className="console-heading">
-            <span>
-              <span className="status-light on" /> JOURNAL DU ROBOT
-            </span>
-            <button onClick={() => setLogs([])}>Effacer</button>
-          </div>
-          <div className="log-lines" role="log" ref={logRef}>
-            {logs.map((line, i) => (
-              <div key={i}>
-                <span>›</span> {line}
+            <div className="window-titlebar">
+              <span className="file-icon">TS</span>
+              <button
+                className="program-robot"
+                onClick={() => chooseRobot(robot.id)}
+              >
+                {robot.id} · {models[robot.model].name}
+              </button>
+              <span className="program-state">
+                {runtimes.current.has(robot.id)
+                  ? paused
+                    ? "Pause"
+                    : "En cours"
+                  : "Arrêté"}
+              </span>
+              <div className="window-actions">
+                <button
+                  aria-label={`Exécuter ${robot.id}`}
+                  disabled={
+                    runtimes.current.has(robot.id) ||
+                    !robot.deployed ||
+                    !sessionReady
+                  }
+                  onClick={() => {
+                    chooseRobot(robot.id);
+                    void run(robot.id);
+                  }}
+                >
+                  ▶
+                </button>
+                <button
+                  aria-label={`Arrêter ${robot.id}`}
+                  disabled={!runtimes.current.has(robot.id)}
+                  onClick={() => stop(robot.id)}
+                >
+                  ■
+                </button>
+                <button
+                  title={
+                    isMinimized(robot.id)
+                      ? "Restaurer l’éditeur"
+                      : "Réduire l’éditeur"
+                  }
+                  aria-label={
+                    isMinimized(robot.id)
+                      ? "Restaurer l’éditeur"
+                      : "Réduire l’éditeur"
+                  }
+                  onClick={() => {
+                    setMinimized((m) => ({
+                      ...m,
+                      [robot.id]: !isMinimized(robot.id),
+                    }));
+                    setExpanded((id) => (id === robot.id ? null : id));
+                  }}
+                >
+                  <Icon name="minimize" size={16} />
+                </button>
+                <button
+                  title={expanded === robot.id ? "Restaurer" : "Agrandir"}
+                  aria-label="Agrandir l’éditeur"
+                  onClick={() => {
+                    setExpanded(expanded === robot.id ? null : robot.id);
+                    setMinimized((m) => ({ ...m, [robot.id]: false }));
+                  }}
+                >
+                  <Icon name="expand" size={14} />
+                </button>
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="editor-status">
-          <span>● Sauvegardé sur cet appareil</span>
-          <span>
-            UTF-8 <b>TS</b>
-          </span>
-        </div>
-      </section>
+            </div>
+            <div className="toolbar">
+              <select
+                aria-label="Charger un exemple"
+                defaultValue=""
+                disabled={runtimes.current.has(robot.id)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    if (robot.id === s.activeRobotId)
+                      setCode(examples[e.target.value]);
+                    farm.current.robots.find((r) => r.id === robot.id)!.code =
+                      examples[e.target.value];
+                    localStorage.setItem(
+                      "farmscript-code",
+                      examples[e.target.value],
+                    );
+                    refresh();
+                  }
+                }}
+              >
+                <option value="" disabled>
+                  Exemples de programmes
+                </option>
+                {Object.keys(examples).map((k) => (
+                  <option key={k}>{k}</option>
+                ))}
+              </select>
+              <span>TypeScript</span>
+            </div>
+            <div className="editor">
+              <Editor
+                path={`file:///robots/${encodeURIComponent(robot.id)}.ts`}
+                height="100%"
+                language="typescript"
+                theme="farmscript-command"
+                value={robot.code}
+                onChange={(v) => {
+                  if (robot.id === s.activeRobotId) setCode(v || "");
+                  farm.current.robots.find((r) => r.id === robot.id)!.code =
+                    v || "";
+                  localStorage.setItem("farmscript-code", v || "");
+                  refresh();
+                }}
+                options={{
+                  fontSize: 13,
+                  minimap: { enabled: false },
+                  padding: { top: 18 },
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  fontFamily: '"SFMono-Regular", Consolas, monospace',
+                  readOnly: runtimes.current.has(robot.id),
+                  lineNumbersMinChars: 3,
+                  overviewRulerLanes: 0,
+                  renderLineHighlight: "none",
+                  wordWrap: "on",
+                }}
+              />
+            </div>
+            <div className="console">
+              <div className="console-heading">
+                <span>
+                  <span className="status-light on" /> JOURNAL DU ROBOT
+                </span>
+                <button
+                  onClick={() =>
+                    setLogs((lines) =>
+                      lines.filter((line) => !line.startsWith(`[${robot.id}]`)),
+                    )
+                  }
+                >
+                  Effacer
+                </button>
+              </div>
+              <div
+                className="log-lines"
+                role="log"
+                ref={(el) => {
+                  if (el) logElements.current.set(robot.id, el);
+                  else logElements.current.delete(robot.id);
+                }}
+              >
+                {logs
+                  .filter((line) => line.startsWith(`[${robot.id}]`))
+                  .map((line, i) => (
+                    <div key={i}>
+                      <span>›</span> {line}
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div className="editor-status">
+              <span>● Sauvegardé sur cet appareil</span>
+              <span>
+                UTF-8 <b>TS</b>
+              </span>
+            </div>
+          </section>
+        ))}
+      </div>
       <aside
         className="robot-telemetry"
         aria-label="Statistiques du robot sélectionné"
@@ -1253,7 +1342,7 @@ function App() {
                     ? "Exécuter le programme"
                     : "Déployez ce robot depuis la flotte"
                 }
-                onClick={run}
+                onClick={() => void run()}
               >
                 <Icon name="play" size={26} />
               </button>

@@ -65,7 +65,7 @@ const assert = require("node:assert/strict");
     );
 
     await p.setViewportSize({ width: 390, height: 844 });
-    if (await p.locator(".workspace").isVisible())
+    if (await p.locator(".workspace .editor").isVisible())
       await p
         .getByRole("button", { name: "Afficher le code", exact: true })
         .click();

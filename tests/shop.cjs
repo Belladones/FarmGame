@@ -107,8 +107,10 @@ const { research, constructionSlots } = require("../src/catalog.ts");
     await p
       .getByRole("button", { name: "Programmer " + farmer.id, exact: true })
       .click();
-    await p.locator(".monaco-editor").waitFor();
-    await p.locator(".monaco-editor").click({ position: { x: 100, y: 60 } });
+    await p.locator(".workspace.active .monaco-editor").waitFor();
+    await p
+      .locator(".workspace.active .monaco-editor")
+      .click({ position: { x: 100, y: 60 } });
     await p.keyboard.press("ControlOrMeta+A");
     await p.keyboard.insertText(
       "while (true) { harvest(); plant(Entities.Bush); }",
@@ -116,12 +118,10 @@ const { research, constructionSlots } = require("../src/catalog.ts");
     await p.getByRole("button", { name: "▶ Exécuter", exact: true }).click();
     await p.waitForFunction(() =>
       document
-        .querySelector(".log-lines")
+        .querySelector(".workspace.active .log-lines")
         .textContent.includes("Programme lancé."),
     );
-    await p
-      .getByRole("combobox", { name: "Robot à programmer" })
-      .selectOption("f1");
+    await p.locator('[data-robot-id="f1"] .program-robot').click();
     await p.getByRole("button", { name: "▶ Exécuter", exact: true }).click();
     await p.waitForFunction(
       (id) => {
@@ -146,9 +146,7 @@ const { research, constructionSlots } = require("../src/catalog.ts");
       before,
     );
     await p.getByRole("button", { name: "Arrêter le programme" }).click();
-    await p
-      .getByRole("combobox", { name: "Robot à programmer" })
-      .selectOption(farmer.id);
+    await p.locator(`[data-robot-id="${farmer.id}"] .program-robot`).click();
     await p.getByRole("button", { name: "Arrêter le programme" }).click();
     await p
       .getByRole("button", { name: "Afficher le code", exact: true })

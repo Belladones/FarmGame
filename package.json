@@ -7,7 +7,7 @@
     "dev": "concurrently --kill-others-on-fail -n api,web \"npm:dev:api\" \"npm:dev:web\"",
     "build": "tsc -b && vite build && npm run build:server",
     "test": "tsx --test src/*.test.ts",
-    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs && node tests/fleet.cjs && node tests/missions.cjs && node tests/ux.cjs && node tests/sidebar.cjs && node tests/progression.cjs && node tests/inventory.cjs",
+    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs && node tests/fleet.cjs && node tests/missions.cjs && node tests/ux.cjs && node tests/sidebar.cjs && node tests/progression.cjs && node tests/inventory.cjs && npm run test:programs",
     "dev:web": "vite --host 0.0.0.0",
     "dev:api": "tsx watch server/index.ts",
     "db:migrate": "tsx server/migrate.ts",
@@ -20,7 +20,8 @@
     "test:ux": "node tests/ux.cjs",
     "test:sidebar": "node tests/sidebar.cjs",
     "test:progression": "node tests/progression.cjs",
-    "test:inventory": "node tests/inventory.cjs"
+    "test:inventory": "node tests/inventory.cjs",
+    "test:programs": "node tests/programs.cjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

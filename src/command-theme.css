@@ -1646,3 +1646,106 @@
   color: #dceaf3;
   font-size: 10px;
 }
+
+/* Every deployed robot owns an independent program window. */
+.game .program-desktop {
+  position: absolute;
+  right: 36px;
+  top: 173px;
+  bottom: 160px;
+  width: 410px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  z-index: 3;
+  padding: 2px;
+}
+.game .program-desktop .workspace {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 520px;
+  min-height: 360px;
+  flex: 0 0 auto;
+}
+.game .program-desktop .workspace.program-minimized {
+  height: 46px;
+  min-height: 46px;
+  overflow: hidden;
+}
+.game .program-minimized > :not(.window-titlebar) {
+  display: none;
+}
+.game .program-desktop .workspace.expanded {
+  position: fixed;
+  inset: 28px 28px 160px;
+  width: auto;
+  height: auto;
+  z-index: 35;
+}
+.game .program-robot {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.game .program-state {
+  font-size: 10px;
+  color: #a8bcc9;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.game .program-desktop .window-titlebar {
+  gap: 6px;
+  flex-shrink: 0;
+}
+.game .program-desktop .window-actions {
+  margin-left: 0;
+}
+.game .program-desktop:has(.workspace:nth-child(2)) ~ .robot-telemetry {
+  display: none;
+}
+@media (max-width: 900px) {
+  .game .program-desktop {
+    left: 15px;
+    right: 15px;
+    top: 170px;
+    bottom: 235px;
+    width: auto;
+  }
+  .game .program-desktop .workspace.expanded {
+    inset: 15px 15px 235px;
+  }
+}
+.game
+  .program-desktop:has(.workspace:nth-child(2))
+  .workspace:not(.expanded):not(.program-minimized) {
+  height: 320px;
+  min-height: 320px;
+}
+.game .program-desktop .window-titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #1c303d;
+}
+.game .program-desktop .workspace.active {
+  border-color: #ff8a38;
+}
+.game .program-desktop {
+  pointer-events: none;
+}
+.game .program-desktop .workspace {
+  pointer-events: auto;
+}
+@media (max-width: 900px) {
+  .game .program-desktop {
+    top: 200px;
+  }
+  .game:has(.start-hint) .program-desktop {
+    top: 292px;
+  }
+}

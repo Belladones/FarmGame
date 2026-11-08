@@ -11,7 +11,7 @@ const { chromium } = require("playwright");
     });
     const openEditor = async () => {
       await page.locator(".workspace").waitFor({ state: "attached" });
-      if (!(await page.locator(".workspace").isVisible()))
+      if (!(await page.locator(".workspace .editor").isVisible()))
         await page
           .getByRole("button", { name: "Afficher le code", exact: true })
           .click();

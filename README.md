@@ -74,7 +74,7 @@ Le blé pousse en 5 secondes de simulation. Les appels agricoles et transferts p
 - Glisser sur le champ pour tourner autour à 360° et changer son inclinaison. Molette ou pincement pour zoomer ; maison pour recentrer.
 - Le plateau affiche uniquement les parcelles débloquées : 1 × 1, puis 3 × 1, 3 × 3, jusqu’à 7 × 7. Les cellules sont carrées dans le modèle 3D ; leur projection dépend de l’angle de vue. Les coordonnées et cultures existantes sont conservées lors des extensions.
 - Les emplacements constructibles sont débloqués séparément et ont un bloc de béton, distinct de la zone agricole.
-- Le bouton + affiche l’éditeur, masqué initialement sur mobile. Choisir un robot dans l’éditeur pour modifier son programme. Chaque robot exécute son propre programme ; les autres continuent pendant le changement de sélection.
+- Chaque robot déployé possède sa propre fenêtre TypeScript, son code et son journal. Les boutons Exécuter/Arrêter concernent uniquement ce robot. Le bouton − réduit la fenêtre à son en-tête sans arrêter le programme ; il permet ensuite de la restaurer. Les fenêtres sont réduites initialement sur mobile. Le bouton Code restaure le programme du robot sélectionné. Les programmes sauvegardés ne redémarrent pas automatiquement.
 - La barre du programme lance, suspend ou arrête son exécution. ×1 / ×2 / ×5 règle le temps de simulation. La pause s’applique à toute la ferme ; le magasin permet aussi de suspendre la simulation sans lancer un robot.
 - Le bouton i ouvre le guide et l’API ; les chevrons ouvrent les trois pages de recherches ; le panier ouvre le magasin ; la carte de mission ouvre les objectifs.
 
