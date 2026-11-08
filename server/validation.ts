@@ -39,7 +39,8 @@ export function validFarm(value: unknown): value is RecordValue {
     !f.robots.length ||
     f.robots.length > 256 ||
     !Array.isArray(f.buildings) ||
-    !f.buildings.length ||
+    (!f.buildings.length &&
+      (!Array.isArray(f.storedBuildings) || !f.storedBuildings.length)) ||
     f.buildings.length > 16
   )
     return false;
@@ -106,8 +107,35 @@ export function validFarm(value: unknown): value is RecordValue {
     !f.robots.some((r) => record(r) && r.id === f.activeRobotId && !r.destroyed)
   )
     return false;
+  if (
+    f.storedBuildings !== undefined &&
+    (!Array.isArray(f.storedBuildings) ||
+      f.storedBuildings.length + f.buildings.length > 256)
+  )
+    return false;
+  if (f.sites !== undefined) {
+    if (!Array.isArray(f.sites) || f.sites.length > 16) return false;
+    const cells = new Set<string>();
+    for (const p of f.sites) {
+      if (
+        !record(p) ||
+        !integer(p.x, -1, 7) ||
+        !integer(p.y, -1, 7) ||
+        !(p.x === -1 || p.x === 7 || p.y === -1 || p.y === 7)
+      )
+        return false;
+      const key = `${p.x},${p.y}`;
+      if (cells.has(key)) return false;
+      cells.add(key);
+    }
+    if (f.buildings.some((b) => !record(b) || !cells.has(`${b.x},${b.y}`)))
+      return false;
+  }
   const buildingIds = new Set<string>();
-  for (const b of f.buildings) {
+  for (const b of [
+    ...f.buildings,
+    ...(Array.isArray(f.storedBuildings) ? f.storedBuildings : []),
+  ]) {
     if (
       !record(b) ||
       typeof b.id !== "string" ||

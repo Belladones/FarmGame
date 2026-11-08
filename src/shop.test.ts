@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   fresh,
   buy,
+  configureSite,
   purchase,
   sellStock,
   command,
@@ -21,12 +22,13 @@ import {
   at,
   releaseReservation,
 } from "./engine";
-import { research, buildings, models, sum } from "./catalog";
+import { research, buildings, models, sum, constructionSlots } from "./catalog";
 function prepared() {
   const s = fresh();
   s.stock = 100;
   buy(s, "extension");
   s.unlocks = research.map((r) => r.id);
+  s.sites = structuredClone(constructionSlots);
   s.gold = 5000;
   s.stock = 100;
   s.resources = { Wood: 50, Carrot: 20 };
@@ -66,6 +68,7 @@ test("research consumes materials once; buildings consume gold only and require 
   s.gold = 200;
   assert.equal(purchase(s, "Depot"), false);
   s.unlocks.push("land");
+  assert.equal(configureSite(s, { x: 0, y: -1 }, false, true), true);
   assert.equal(purchase(s, "Depot", 1, { x: 0, y: -1 }), true);
   assert.equal(s.gold, 100);
   assert.equal(s.stock, 20);
@@ -186,6 +189,7 @@ test("mill inputs are consumed at cycle start; output must be collected and depo
   s.stock = 20;
   s.gold = 500;
   s.unlocks = ["construction", "milling", "land"];
+  configureSite(s, { x: 0, y: -1 }, false, true);
   assert.equal(purchase(s, "Mill", 1, { x: 0, y: -1 }), true);
   assert.equal(command(s, "load", ["Wheat", 5]), 5);
   assert.equal(command(s, "deliver", ["South", "Wheat", 5]), 5);

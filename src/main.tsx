@@ -22,6 +22,15 @@ import {
   totalStock,
   selectRobot,
   purchase,
+  purchaseForInventory,
+  configureSite,
+  siteBlocker,
+  storeBuilding,
+  storeBuildingBlocker,
+  placeBuilding,
+  buildingPlacementBlocker,
+  robotPlacementBlocker,
+  recallBlocker,
   sellStock,
   fulfillOrder,
   resellAsset,
@@ -35,6 +44,7 @@ import {
 } from "./engine";
 import { WorkspaceNav } from "./WorkspaceNav";
 import { HelpPanel } from "./HelpPanel";
+import { InventoryPanel, type InventoryAction } from "./InventoryPanel";
 import { MissionPanel } from "./MissionPanel";
 import {
   currentMission,
@@ -498,12 +508,10 @@ function App() {
     try {
       let result = false;
       if (action.type === "buy")
-        result = purchase(
-          farm.current,
-          action.kind,
-          action.quantity,
-          action.site,
-        );
+        result =
+          action.store && action.kind !== "Fertilizer"
+            ? purchaseForInventory(farm.current, action.kind)
+            : purchase(farm.current, action.kind, action.quantity, action.site);
       else if (action.type === "sell")
         result = sellStock(farm.current, action.item, action.quantity) > 0;
       else if (action.type === "order")
@@ -583,6 +591,59 @@ function App() {
       !result,
     );
     return result;
+  };
+  const inventoryAction = (
+    action: InventoryAction,
+  ): { ok: boolean; message: string } => {
+    const farmState = farm.current;
+    if (action.type === "pause") {
+      pausedRef.current = true;
+      setPaused(true);
+      return {
+        ok: true,
+        message: "Simulation en pause. Choisissez vos emplacements.",
+      };
+    }
+    if (!pausedRef.current)
+      return {
+        ok: false,
+        message: "Mettez la simulation en pause pour aménager la ferme.",
+      };
+    let result = false,
+      blocker: string | null = null;
+    if (action.type === "site-add" || action.type === "site-remove") {
+      blocker = siteBlocker(
+        farmState,
+        action.site,
+        action.type === "site-remove",
+      );
+      result = configureSite(
+        farmState,
+        action.site,
+        action.type === "site-remove",
+        true,
+      );
+    } else if (action.type === "store-building") {
+      blocker = storeBuildingBlocker(farmState, action.id);
+      result = storeBuilding(farmState, action.id, true);
+    } else if (action.type === "place-building") {
+      blocker = buildingPlacementBlocker(farmState, action.id, action.site);
+      result = placeBuilding(farmState, action.id, action.site, true);
+    } else if (action.type === "store-robot") {
+      blocker = recallBlocker(farmState, action.id);
+      result = recallRobot(farmState, action.id);
+      if (result) stop(action.id, false);
+    } else if (action.type === "place-robot") {
+      blocker = robotPlacementBlocker(farmState, action.id, action.site);
+      if (!blocker) result = deployRobot(farmState, action.id, action.site);
+    }
+    refresh();
+    return {
+      ok: result,
+      message: result
+        ? "Aménagement enregistré. Les équipements restent votre propriété."
+        : (blocker ?? "Action impossible."),
+    };
   };
   const sessionAction = async (action: SessionAction) => {
     const client = cloud.current;
@@ -837,6 +898,17 @@ function App() {
             </aside>
           )}
           <nav className="dock" aria-label="Outils de la ferme">
+            <button
+              className={
+                "dock-button " + (panel === "Inventaire" ? "selected" : "")
+              }
+              aria-label="Inventaire"
+              title="Inventaire"
+              onClick={() => togglePanel("Inventaire")}
+            >
+              <Icon name="inventory" size={29} />
+              <span>Inventaire</span>
+            </button>
             <button
               className={"dock-button " + (editorOpen ? "selected" : "")}
               aria-label="Afficher le code"
@@ -1258,6 +1330,7 @@ function App() {
             "panel-backdrop " +
             (panel === "Recherches" ||
             panel === "Magasin" ||
+            panel === "Inventaire" ||
             panel === "Robots" ||
             panel === "Missions" ||
             panel === "API & aide" ||
@@ -1279,9 +1352,12 @@ function App() {
                   ? "menu-market "
                   : panel === "Session et sauvegarde"
                     ? "menu-account "
-                    : "menu-progression ") +
+                    : panel === "Inventaire"
+                      ? "menu-inventory "
+                      : "menu-progression ") +
               (panel === "Recherches" ||
               panel === "Magasin" ||
+              panel === "Inventaire" ||
               panel === "Robots" ||
               panel === "Missions" ||
               panel === "API & aide" ||
@@ -1299,15 +1375,17 @@ function App() {
             <div className="window-titlebar">
               <Icon
                 name={
-                  panel === "Missions"
-                    ? "flag"
-                    : panel === "Recherches"
-                      ? "research"
-                      : panel === "Robots"
-                        ? "robots"
-                        : panel === "Magasin"
-                          ? "shop"
-                          : "info"
+                  panel === "Inventaire"
+                    ? "inventory"
+                    : panel === "Missions"
+                      ? "flag"
+                      : panel === "Recherches"
+                        ? "research"
+                        : panel === "Robots"
+                          ? "robots"
+                          : panel === "Magasin"
+                            ? "shop"
+                            : "info"
                 }
                 size={19}
               />
@@ -1322,6 +1400,15 @@ function App() {
             </div>
             <WorkspaceNav current={panel} onNavigate={setPanel} />
             <div className="panel-content">
+              {panel === "Inventaire" && (
+                <InventoryPanel
+                  farm={s}
+                  paused={paused}
+                  onPause={pause}
+                  onAction={inventoryAction}
+                  onShop={() => setPanel("Magasin")}
+                />
+              )}
               {panel === "Session et sauvegarde" && (
                 <SessionPanel status={syncStatus} onAction={sessionAction} />
               )}
@@ -1348,6 +1435,7 @@ function App() {
               )}
               {panel === "Magasin" && (
                 <Shop
+                  onInventory={() => setPanel("Inventaire")}
                   farm={s}
                   paused={paused}
                   onPause={pause}

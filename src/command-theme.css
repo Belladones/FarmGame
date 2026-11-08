@@ -1356,3 +1356,293 @@
   opacity: 1;
   border-color: #ff944c;
 }
+.game .inventory-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 1320px;
+  margin: auto;
+  padding-top: 20px;
+  color: #dce8f1;
+  min-height: 0;
+}
+.inventory-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  padding-bottom: 20px;
+}
+.inventory-heading h2 {
+  font-size: 26px;
+  font-weight: 400;
+  margin: 10px 0;
+}
+.inventory-heading p,
+.inventory-intro {
+  color: #a6bdcd;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.inventory-heading > div:last-child {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 440px;
+}
+.game .inventory-panel button:not(.construction-cell),
+.game .inventory-panel select,
+.game .delivery-choice select {
+  background: #243d4d;
+  border: 1px solid #8faebc44;
+  color: #deebf4;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 11px;
+  border-radius: 1px;
+}
+.game .inventory-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+.game .inventory-tabs button.selected {
+  border-color: #f79250;
+  color: #ffb079;
+  background: #ff7a1a22;
+}
+.inventory-tabs small {
+  padding-left: 12px;
+  color: #9fb5c5;
+}
+.inventory-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 2px;
+}
+.inventory-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.inventory-cards article {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 20px;
+  background: #809aaf12;
+  border: 1px solid var(--line);
+}
+.inventory-cards .product-art {
+  width: 110px;
+  flex-shrink: 0;
+}
+.inventory-cards h3 {
+  font-size: 19px;
+  font-weight: 400;
+  margin: 9px 0;
+}
+.inventory-cards p {
+  font-size: 12px;
+  color: #a6bdcd;
+  line-height: 1.8;
+}
+.inventory-empty {
+  padding: 40px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  margin-top: 20px;
+}
+.inventory-empty h3 {
+  font-size: 20px;
+  font-weight: 400;
+}
+.inventory-empty p {
+  color: #9eb6c8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.inventory-footer {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+  color: #bccfdb;
+  font-size: 11px;
+  line-height: 1.8;
+  min-height: 48px;
+}
+.construction-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px;
+  background: #708fa31a;
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+.construction-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 22px;
+}
+.construction-scroll {
+  overflow: auto;
+  min-width: 0;
+  padding: 4px;
+}
+.construction-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 64px);
+  gap: 4px;
+  width: max-content;
+  margin: auto;
+}
+.game .construction-cell {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid #8fa8b82b;
+  background: #17232c;
+  color: #9bb5c7;
+  padding: 3px;
+}
+.construction-cell span {
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+.construction-cell small {
+  font-size: 8px;
+  opacity: 0.65;
+}
+.game .construction-cell.agriculture {
+  background: #334828;
+  color: #d5e3c1;
+  border-color: #83965977;
+}
+.game .construction-cell.concrete {
+  background: linear-gradient(135deg, #a3afb5, #606f78);
+  color: #fff;
+  border-color: #d6e0e56b;
+  box-shadow: inset 0 -5px 0 #3d4c55;
+}
+.game .construction-cell.candidate {
+  border-style: dashed;
+}
+.game .construction-cell.future {
+  opacity: 0.22;
+}
+.game .construction-cell.selected {
+  outline: 2px solid #ff8a36;
+  outline-offset: 1px;
+}
+.construction-detail {
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: #1e34416b;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.construction-detail h3 {
+  font-size: 22px;
+  font-weight: 400;
+  margin: 0;
+}
+.construction-detail p,
+.construction-detail small {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #adc2d1;
+}
+.construction-detail label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 11px;
+}
+.construction-detail select {
+  width: 100%;
+}
+.construction-detail .construction-blocker {
+  color: #eab086;
+}
+.delivery-choice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  color: #cadbe5;
+  font-size: 11px;
+}
+.delivery-choice small {
+  color: #9bb3c5;
+}
+.game .placement-picker[hidden] {
+  display: none;
+}
+@media (max-width: 750px) {
+  .inventory-heading {
+    display: block;
+  }
+  .inventory-heading h2 {
+    font-size: 22px;
+  }
+  .inventory-heading > div:last-child {
+    justify-content: flex-start;
+    margin-top: 15px;
+    max-width: none;
+  }
+  .inventory-cards {
+    grid-template-columns: 1fr;
+  }
+  .inventory-cards article {
+    padding: 14px;
+    gap: 10px;
+  }
+  .inventory-cards .product-art {
+    width: 80px;
+  }
+  .construction-layout {
+    grid-template-columns: 1fr;
+  }
+  .construction-summary {
+    display: block;
+    font-size: 10px;
+    line-height: 1.8;
+  }
+  .construction-summary span {
+    display: block;
+  }
+  .construction-detail {
+    max-width: none;
+  }
+  .delivery-choice {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .delivery-choice select {
+    max-width: 100%;
+  }
+  .inventory-empty {
+    padding: 22px 14px;
+  }
+}
+.game .inventory-panel button:not(.construction-cell),
+.game .shop-wallet > button {
+  box-shadow: none;
+}
+.game .shop-wallet > button {
+  background: #253c4c;
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  color: #dceaf3;
+  font-size: 10px;
+}

@@ -47,11 +47,13 @@ export function WorkspaceNav({
         </div>
       ) : (
         <span className="menu-section-label">
-          {current === "Magasin"
-            ? "COMMERCE & ÉQUIPEMENT"
-            : current === "API & aide"
-              ? "DOCUMENTATION & APPRENTISSAGE"
-              : "COMPTE & SAUVEGARDE"}
+          {current === "Inventaire"
+            ? "INVENTAIRE & CONSTRUCTION"
+            : current === "Magasin"
+              ? "COMMERCE & ÉQUIPEMENT"
+              : current === "API & aide"
+                ? "DOCUMENTATION & APPRENTISSAGE"
+                : "COMPTE & SAUVEGARDE"}
         </span>
       )}
     </nav>

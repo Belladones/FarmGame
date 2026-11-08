@@ -92,6 +92,8 @@ export interface Farm {
   activeRobotId: string;
   nextId: number;
   orderPeriods: Record<string, number>;
+  sites: { x: number; y: number }[];
+  storedBuildings: Building[];
 }
 const tile = (): Tile => ({
   planted: null,
@@ -162,6 +164,8 @@ export const fresh = (): Farm => ({
   activeRobotId: "f1",
   nextId: 2,
   orderPeriods: {},
+  sites: [{ x: -1, y: 0 }],
+  storedBuildings: [],
 });
 export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
   if (!raw || typeof raw !== "object") return fresh();
@@ -180,6 +184,7 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
     height: v.height ?? 1,
     resources: v.resources ?? {},
     produced: v.produced ?? {},
+    storedBuildings: v.storedBuildings ?? [],
     orderPeriods: v.orderPeriods ?? {},
     tiles: v.tiles.map((t) => ({
       ...tile(),
@@ -192,10 +197,15 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
     s.robots[0].inventory.Wheat = s.cargo;
     s.robots[0].code = legacyCode || DEFAULT_PROGRAM;
   }
-  if (!Array.isArray(v.buildings) || !v.buildings.length) {
+  if (
+    !Array.isArray(v.buildings) ||
+    (!v.buildings.length && !v.storedBuildings?.length)
+  ) {
     s.buildings = [building("b1", "Depot", -1, 0)];
     s.buildings[0].inventory = { ...s.resources, Wheat: s.stock };
   }
+  s.sites =
+    v.sites ?? constructionSlots.slice(0, slotCount(s)).map((p) => ({ ...p }));
   s.robots = s.robots.map((r) => {
     const next = { ...r, deployed: !r.destroyed && (r.deployed ?? true) };
     if (!next.deployed) {
@@ -401,10 +411,7 @@ export const cropProgress = (s: Farm, t: Tile | undefined) =>
           (s.time - t.planted) / cropData[t.entity ?? "Wheat"].seconds,
       );
 function allowed(s: Farm, x: number, y: number) {
-  return (
-    !!at(s, x, y) ||
-    constructionSlots.slice(0, slotCount(s)).some((p) => p.x === x && p.y === y)
-  );
+  return !!at(s, x, y) || placedSites(s).some((p) => p.x === x && p.y === y);
 }
 function walkable(s: Farm, x: number, y: number) {
   return allowed(s, x, y) && !s.buildings.some((b) => b.x === x && b.y === y);
@@ -416,7 +423,7 @@ function spawn(s: Farm, model: Model, ignore?: string) {
       x: i % s.width,
       y: Math.floor(i / s.width),
     })),
-    ...constructionSlots.slice(0, slotCount(s)),
+    ...placedSites(s),
   ];
   return candidates.find(
     (p) =>
@@ -458,7 +465,7 @@ export function deploymentPosition(
       x: i % s.width,
       y: Math.floor(i / s.width),
     })),
-    ...constructionSlots.slice(0, slotCount(s)),
+    ...placedSites(s),
   ];
   return candidates.find((p) => walkable(s, p.x, p.y) && !occupied(p.x, p.y));
 }
@@ -481,11 +488,33 @@ export function recallRobot(s: Farm, id: string): boolean {
   sync(s);
   return true;
 }
-export function deployRobot(s: Farm, id: string): boolean {
+export function deployRobot(
+  s: Farm,
+  id: string,
+  site?: { x: number; y: number },
+): boolean {
   syncBefore(s);
   const r = s.robots.find((r) => r.id === id && !r.destroyed && !r.deployed),
-    p = deploymentPosition(s, id);
-  if (!r || !p) return false;
+    p = site ?? deploymentPosition(s, id);
+  if (!r || !p || !walkable(s, p.x, p.y) || robotSiteOccupied(s, r, p))
+    return false;
+  const loan = s.robots.find(
+    (other) =>
+      other.loan && !other.destroyed && r.model === "Farmer" && !r.loan,
+  );
+  if (
+    loan &&
+    (loan.moving || loan.readyAt > s.time || loan.water + r.water > 10)
+  )
+    return false;
+  if (loan) {
+    for (const [item, n] of Object.entries(loan.inventory))
+      r.inventory[item as Item] = (r.inventory[item as Item] ?? 0) + (n ?? 0);
+    r.water += loan.water;
+    if (r.code === DEFAULT_PROGRAM) r.code = loan.code;
+    s.robots = s.robots.filter((other) => other.id !== loan.id);
+    if (s.activeRobotId === loan.id) s.activeRobotId = r.id;
+  }
   r.x = p.x;
   r.y = p.y;
   r.deployed = true;
@@ -500,15 +529,9 @@ export function deployRobot(s: Farm, id: string): boolean {
   return true;
 }
 export function freeSlots(s: Farm) {
-  return constructionSlots
-    .slice(0, slotCount(s))
-    .filter(
-      (p) =>
-        !s.buildings.some((b) => b.x === p.x && b.y === p.y) &&
-        !s.robots.some(
-          (r) => !r.destroyed && r.deployed && r.x === p.x && r.y === p.y,
-        ),
-    );
+  return placedSites(s).filter(
+    (p) => !s.buildings.some((b) => sameCell(b, p)) && !siteOccupied(s, p),
+  );
 }
 export function shopBlocker(
   s: Farm,
@@ -544,7 +567,8 @@ export function shopBlocker(
   }
   if (kind in buildings) {
     const slots = freeSlots(s);
-    if (!slots.length) return "Débloquez un emplacement constructible libre";
+    if (!slots.length)
+      return "Aménagez un bloc de béton libre depuis l’inventaire";
     if (site && !slots.some((p) => p.x === site.x && p.y === site.y))
       return "Emplacement inaccessible ou occupé";
   }
@@ -1343,4 +1367,219 @@ export function claim(s: Farm, id: string): boolean {
   s.gold += m.gold;
   s.claimed.push(id);
   return true;
+}
+
+export type Site = { x: number; y: number };
+const sameCell = (a: Site, b: Site) => a.x === b.x && a.y === b.y;
+export function placedSites(s: Farm): Site[] {
+  return s.sites ?? constructionSlots.slice(0, slotCount(s));
+}
+export const siteCandidates: Site[] = Array.from({ length: 9 * 9 }, (_, i) => ({
+  x: (i % 9) - 1,
+  y: Math.floor(i / 9) - 1,
+})).filter((p) => p.x === -1 || p.x === 7 || p.y === -1 || p.y === 7);
+function siteOccupied(s: Farm, p: Site) {
+  return s.robots.some(
+    (r) =>
+      !r.destroyed &&
+      r.deployed &&
+      (sameCell(r, p) ||
+        (r.moving && sameCell(r.moving, p)) ||
+        (r.reservation &&
+          r.reservation.expires > s.time &&
+          sameCell(r.reservation, p))),
+  );
+}
+function robotSiteOccupied(s: Farm, r: Robot, p: Site) {
+  return s.robots.some(
+    (other) =>
+      other.id !== r.id &&
+      !other.destroyed &&
+      other.deployed &&
+      models[r.model].medium === models[other.model].medium &&
+      (sameCell(other, p) ||
+        (other.moving && sameCell(other.moving, p)) ||
+        (other.reservation &&
+          other.reservation.expires > s.time &&
+          sameCell(other.reservation, p))),
+  );
+}
+function connectedSites(s: Farm, sites: Site[]) {
+  const reached = new Set<string>(),
+    key = (p: Site) => `${p.x},${p.y}`;
+  let added = true;
+  while (added) {
+    added = false;
+    for (const p of sites)
+      if (
+        !reached.has(key(p)) &&
+        [
+          { x: p.x + 1, y: p.y },
+          { x: p.x - 1, y: p.y },
+          { x: p.x, y: p.y + 1 },
+          { x: p.x, y: p.y - 1 },
+        ].some((n) => !!at(s, n.x, n.y) || reached.has(key(n)))
+      ) {
+        reached.add(key(p));
+        added = true;
+      }
+  }
+  return reached.size === sites.length;
+}
+export function siteBlocker(s: Farm, p: Site, remove = false): string | null {
+  if (
+    !Number.isInteger(p.x) ||
+    !Number.isInteger(p.y) ||
+    !siteCandidates.some((c) => sameCell(c, p))
+  )
+    return "Choisissez une case du pourtour, hors des futures parcelles agricoles.";
+  const sites = placedSites(s),
+    exists = sites.some((c) => sameCell(c, p));
+  if (siteOccupied(s, p))
+    return "La case est occupée ou réservée par un robot. Attendez la fin de son déplacement.";
+  if (remove) {
+    if (!exists) return "Aucun terrain à retirer ici.";
+    if (s.buildings.some((b) => sameCell(b, p)))
+      return "Rangez d’abord le bâtiment dans l’inventaire.";
+    if (
+      !connectedSites(
+        s,
+        sites.filter((c) => !sameCell(c, p)),
+      )
+    )
+      return "Ce bloc relie d’autres terrains. Retirez d’abord les blocs qui en dépendent.";
+  } else {
+    if (exists) return "Un bloc de béton existe déjà ici.";
+    if (sites.length >= slotCount(s))
+      return "Tous vos terrains sont posés. Retirez un bloc libre ou débloquez un emplacement supplémentaire.";
+    if (!connectedSites(s, [...sites, p]))
+      return "Le nouveau bloc doit toucher votre ferme ou un terrain déjà posé.";
+  }
+  return null;
+}
+export function configureSite(
+  s: Farm,
+  p: Site,
+  remove: boolean,
+  paused: boolean,
+): boolean {
+  if (!paused || siteBlocker(s, p, remove)) return false;
+  s.sites = remove
+    ? placedSites(s).filter((c) => !sameCell(c, p))
+    : [...placedSites(s), { ...p }];
+  return true;
+}
+export function storeBuildingBlocker(s: Farm, id: string): string | null {
+  const b = s.buildings.find((b) => b.id === id);
+  if (!b) return "Bâtiment introuvable ou déjà rangé.";
+  if (sum(b.inventory) || sum(b.input) || sum(b.output) || b.water || b.cycle)
+    return "Videz les ressources, l’eau et les tampons, puis terminez le cycle avant de ranger ce bâtiment.";
+  if (siteOccupied(s, b)) return "Un robot se déplace sur cette case.";
+  return null;
+}
+export function storeBuilding(s: Farm, id: string, paused: boolean): boolean {
+  syncBefore(s);
+  if (!paused || storeBuildingBlocker(s, id)) return false;
+  const b = s.buildings.find((b) => b.id === id)!;
+  s.buildings = s.buildings.filter((b) => b.id !== id);
+  s.storedBuildings.push(b);
+  sync(s);
+  return true;
+}
+export function buildingPlacementBlocker(
+  s: Farm,
+  id: string,
+  p: Site,
+): string | null {
+  if (!s.storedBuildings.some((b) => b.id === id))
+    return "Ce bâtiment n’est pas dans votre inventaire.";
+  if (!freeSlots(s).some((c) => sameCell(c, p)))
+    return "Choisissez un bloc de béton libre, sans robot ni réservation.";
+  return null;
+}
+export function placeBuilding(
+  s: Farm,
+  id: string,
+  p: Site,
+  paused: boolean,
+): boolean {
+  syncBefore(s);
+  if (!paused || buildingPlacementBlocker(s, id, p)) return false;
+  const b = s.storedBuildings.find((b) => b.id === id)!;
+  b.x = p.x;
+  b.y = p.y;
+  s.storedBuildings = s.storedBuildings.filter((b) => b.id !== id);
+  s.buildings.push(b);
+  sync(s);
+  return true;
+}
+export function inventoryPurchaseBlocker(
+  s: Farm,
+  kind: Model | BuildingKind,
+): string | null {
+  const spec =
+    kind in models ? models[kind as Model] : buildings[kind as BuildingKind];
+  if (!spec) return "Article inconnu.";
+  if (!s.unlocks.includes(spec.research))
+    return `Recherche requise : ${research.find((r) => r.id === spec.research)?.name ?? spec.research}`;
+  if (s.gold < spec.price) return "Or insuffisant.";
+  if (
+    kind in models
+      ? s.robots.length >= 256
+      : s.buildings.length + s.storedBuildings.length >= 256
+  )
+    return "Inventaire complet.";
+  return null;
+}
+export function purchaseForInventory(
+  s: Farm,
+  kind: Model | BuildingKind,
+): boolean {
+  syncBefore(s);
+  if (inventoryPurchaseBlocker(s, kind)) return false;
+  if (kind in models) {
+    const r = robot(
+      ids(s, "f"),
+      kind as Model,
+      0,
+      0,
+      models[kind as Model].price,
+    );
+    r.deployed = false;
+    s.robots.push(r);
+    s.gold -= r.paid;
+  } else {
+    const b = building(
+      ids(s, "b"),
+      kind as BuildingKind,
+      0,
+      0,
+      buildings[kind as BuildingKind].price,
+    );
+    s.storedBuildings.push(b);
+    s.gold -= b.paid;
+  }
+  sync(s);
+  return true;
+}
+
+export function robotPlacementBlocker(
+  s: Farm,
+  id: string,
+  p: Site,
+): string | null {
+  const r = s.robots.find((r) => r.id === id && !r.destroyed && !r.deployed);
+  if (!r) return "Ce robot n’est pas disponible dans l’inventaire.";
+  if (!walkable(s, p.x, p.y) || robotSiteOccupied(s, r, p))
+    return "Choisissez une case accessible et libre pour ce robot.";
+  const loan = s.robots.find(
+    (other) =>
+      other.loan && !other.destroyed && r.model === "Farmer" && !r.loan,
+  );
+  if (
+    loan &&
+    (loan.moving || loan.readyAt > s.time || loan.water + r.water > 10)
+  )
+    return "Terminez l’action du fermier de secours et videz son réservoir si nécessaire.";
+  return null;
 }

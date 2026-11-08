@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 export type IconName =
+  | "inventory"
   | "robots"
   | "shop"
   | "code"
@@ -17,6 +18,7 @@ export type IconName =
   | "arrow"
   | "reset";
 const paths: Record<IconName, string> = {
+  inventory: "m3 7 9-4 9 4v12l-9 4-9-4Zm0 0 9 4 9-4M12 11v12M7 5l10 4",
   robots:
     "M8 8h8v8H8ZM12 5V3M4 12H2M22 12h-2M5 20h14M7 16v4M17 16v4M10 11h.1M14 11h.1",
   shop: "M3 8h18l-2 12H5ZM7 8l5-6 5 6M9 12v5M15 12v5",

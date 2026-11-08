@@ -2,7 +2,7 @@ require("tsx/cjs");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const { fresh, buy } = require("../src/engine.ts");
-const { research } = require("../src/catalog.ts");
+const { research, constructionSlots } = require("../src/catalog.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -24,6 +24,9 @@ const { research } = require("../src/catalog.ts");
     await p.getByRole("button", { name: "Magasin", exact: true }).click();
     assert.equal(await p.locator(".sale-row").count(), 8);
     await p.getByRole("button", { name: "Robots", exact: true }).click();
+    await p
+      .getByLabel("Livraison des achats", { exact: true })
+      .selectOption("field");
     assert.equal(await p.locator(".robot-products .product-card").count(), 3);
     assert.equal(
       await p
@@ -43,6 +46,7 @@ const { research } = require("../src/catalog.ts");
     fixture.gold = 3000;
     fixture.resources = { Wood: 50, Carrot: 20 };
     fixture.unlocks = research.map((r) => r.id);
+    fixture.sites = structuredClone(constructionSlots);
     await p.addInitScript((fixture) => {
       if (sessionStorage.getItem("shop-fixture")) return;
       localStorage.setItem(
@@ -62,6 +66,9 @@ const { research } = require("../src/catalog.ts");
     assert.equal(saved.gold, 3010);
     assert.equal(saved.stock, 190);
     await p.getByRole("button", { name: "Robots", exact: true }).click();
+    await p
+      .getByLabel("Livraison des achats", { exact: true })
+      .selectOption("field");
     await p
       .getByRole("button", { name: "Acheter Fermier · 250 or", exact: true })
       .click();

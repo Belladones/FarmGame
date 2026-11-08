@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { cropProgress, slotCount, type Farm, type Crop } from "./engine";
+import {
+  cropProgress,
+  placedSites,
+  slotCount,
+  type Farm,
+  type Crop,
+} from "./engine";
 import { farmViewport, cameraInclination } from "./camera";
-import { buildings, constructionSlots, type Model } from "./catalog";
+import { buildings, type Model } from "./catalog";
 interface Props {
   farm: Farm;
   paused: boolean;
@@ -28,7 +34,7 @@ export function FarmScene({
       null,
     ),
     [failed, setFailed] = useState(false);
-  const sceneKey = `${farm.width}:${farm.height}:${slotCount(farm)}:${farm.buildings.map((b) => `${b.id},${b.kind},${b.x},${b.y}`).join(";")}:${farm.robots.map((r) => `${r.id},${r.model},${r.destroyed},${r.deployed}`).join(";")}`;
+  const sceneKey = `${farm.width}:${farm.height}:${JSON.stringify(placedSites(farm))}:${farm.buildings.map((b) => `${b.id},${b.kind},${b.x},${b.y}`).join(";")}:${farm.robots.map((r) => `${r.id},${r.model},${r.destroyed},${r.deployed}`).join(";")}`;
   useEffect(() => {
     const container = host.current!;
     let renderer: THREE.WebGLRenderer;
@@ -66,7 +72,7 @@ export function FarmScene({
     controls.minZoom = 0.7;
     controls.maxZoom = 2;
     controls.zoomSpeed = 0.7;
-    const sites = constructionSlots.slice(0, slotCount(farm));
+    const sites = placedSites(farm);
     const minX = Math.min(0, ...sites.map((p) => p.x)),
       maxX = Math.max(farm.width - 1, ...sites.map((p) => p.x));
     const minY = Math.min(0, ...sites.map((p) => p.y)),
@@ -372,18 +378,45 @@ export function FarmScene({
     container.dataset.cellHeight = String(grounds[0].scale.z);
     container.dataset.starterModel =
       farm.robots.find((r) => r.id === "f1")?.model ?? "Farmer";
-    // Construction sites are bought separately and have wooden floors, never crop cells.
-    for (const p of sites)
+    const concrete = mat(0x8998a0),
+      concreteEdge = mat(0x596971),
+      bolt = mat(0x414e56);
+    container.dataset.siteCount = String(sites.length);
+    container.dataset.siteMaterial = "concrete";
+    for (const p of sites) {
       box(
         island,
-        wood,
-        STEP - 0.06,
-        0.045,
-        STEP - 0.06,
+        concreteEdge,
+        STEP - 0.035,
+        0.24,
+        STEP - 0.035,
         cx(p.x),
-        0.01,
+        -0.12,
         cz(p.y),
       );
+      box(
+        island,
+        concrete,
+        STEP - 0.055,
+        0.055,
+        STEP - 0.055,
+        cx(p.x),
+        0.025,
+        cz(p.y),
+      );
+      for (const dx of [-0.46, 0.46])
+        for (const dz of [-0.46, 0.46])
+          box(
+            island,
+            bolt,
+            0.055,
+            0.018,
+            0.055,
+            cx(p.x) + dx,
+            0.06,
+            cz(p.y) + dz,
+          );
+    }
     const buildingObjects = new Map<
       string,
       { group: THREE.Group; rotor?: THREE.Group; water?: THREE.Mesh }

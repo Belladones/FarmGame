@@ -2,8 +2,13 @@ require("tsx/cjs");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
-const { fresh, buy, purchase } = require("../src/engine.ts");
-const { research } = require("../src/catalog.ts");
+const {
+  fresh,
+  buy,
+  purchase,
+  purchaseForInventory,
+} = require("../src/engine.ts");
+const { research, constructionSlots } = require("../src/catalog.ts");
 const base = process.env.FARM_URL || "http://localhost:5173";
 const headers = { "X-FarmScript-Request": "1" };
 // Autosave can finish (or detect a conflict) while the panel is opening.
@@ -30,17 +35,20 @@ async function requestSave(page) {
       errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     const fixture = fresh();
-    fixture.unlocks = ["construction", "storage2"];
+    fixture.unlocks = ["construction", "storage2", "wheat", "bush"];
     fixture.stock = 300;
     fixture.resources = { Wood: 50 };
     buy(fixture, "extension");
-    buy(fixture, "extension3");
+    assert.equal(buy(fixture, "extension3"), true);
     fixture.unlocks = research.map((r) => r.id);
+    fixture.sites = structuredClone(constructionSlots);
+    fixture.sites[fixture.sites.length - 1] = { x: -1, y: -1 };
     fixture.stock = 100;
     fixture.resources = { Wood: 50, Carrot: 20, Fertilizer: 2 };
     fixture.gold = 3000;
     purchase(fixture, "Farmer");
     purchase(fixture, "Mill", 1, { x: 0, y: -1 });
+    assert.equal(purchaseForInventory(fixture, "Depot"), true);
     fixture.robots[1].code =
       "// programme du deuxième robot\nwhile (true) { harvest(); plant(Entities.Bush); }";
     await page.addInitScript((f) => {
@@ -80,6 +88,8 @@ async function requestSave(page) {
     assert.equal(data.save.farm.robots.length, 2);
     assert.equal(data.save.farm.buildings.length, 2);
     assert.equal(data.save.farm.tiles.length, 9);
+    assert.equal(data.save.farm.storedBuildings.length, 1);
+    assert.deepEqual(data.save.farm.sites, fixture.sites);
     assert.equal(data.save.farm.robots[1].code, fixture.robots[1].code);
     const cookies = await context.cookies();
     const cookie = cookies.find((c) => c.name === "farmscript_session");

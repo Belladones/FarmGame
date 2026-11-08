@@ -6,6 +6,7 @@ import {
   freeSlots,
   getStock,
   shopBlocker,
+  inventoryPurchaseBlocker,
   slotCount,
   stockCapacity,
   totalStock,
@@ -31,6 +32,7 @@ export type ShopAction =
       type: "buy";
       kind: Model | BuildingKind | "Fertilizer";
       quantity: number;
+      store?: boolean;
       site?: { x: number; y: number };
     }
   | { type: "sell"; item: Item; quantity: number }
@@ -222,15 +224,18 @@ export function Shop({
   paused,
   onPause,
   onAction,
+  onInventory,
 }: {
   farm: Farm;
   paused: boolean;
   onPause: () => void;
   onAction: (action: ShopAction) => boolean;
+  onInventory?: () => void;
 }) {
   const [tab, setTab] = useState("Vendre"),
     [amounts, setAmounts] = useState<Record<string, number>>({}),
     [siteIndex, setSiteIndex] = useState(0),
+    [delivery, setDelivery] = useState("inventory"),
     [message, setMessage] = useState("");
   const sites = freeSlots(farm),
     site = sites[siteIndex] ?? sites[0];
@@ -253,6 +258,9 @@ export function Shop({
           <p>Produisez. Vendez. Équipez votre exploitation.</p>
         </div>
         <div className="shop-wallet">
+          {onInventory && (
+            <button onClick={onInventory}>Ouvrir l’inventaire →</button>
+          )}
           <strong>
             ◈ {farm.gold.toLocaleString("fr-FR")} <small>or</small>
           </strong>
@@ -266,6 +274,26 @@ export function Shop({
           </button>
         </div>
       </header>
+      {(tab === "Robots" || tab === "Bâtiments") && (
+        <label className="delivery-choice">
+          Livraison des achats
+          <select
+            aria-label="Livraison des achats"
+            value={delivery}
+            onChange={(e) => setDelivery(e.target.value)}
+          >
+            <option value="inventory">
+              Dans l’inventaire · poser plus tard
+            </option>
+            <option value="field">Installer immédiatement</option>
+          </select>
+          <small>
+            {delivery === "inventory"
+              ? "Les équipements achetés attendront dans Inventaire."
+              : "Un emplacement libre est requis."}
+          </small>
+        </label>
+      )}
       <nav className="shop-tabs" aria-label="Rayons du magasin">
         {[
           "Vendre",
@@ -410,7 +438,10 @@ export function Shop({
             <div className="product-grid robot-products">
               {(Object.keys(models) as Model[]).map((kind) => {
                 const spec = models[kind],
-                  blocker = shopBlocker(farm, kind);
+                  blocker =
+                    delivery === "inventory"
+                      ? inventoryPurchaseBlocker(farm, kind)
+                      : shopBlocker(farm, kind);
                 return (
                   <article
                     className={"product-card " + (blocker ? "locked" : "")}
@@ -448,8 +479,15 @@ export function Shop({
                         title={blocker ?? ""}
                         onClick={() =>
                           act(
-                            { type: "buy", kind, quantity: 1 },
-                            `${spec.name} acheté.`,
+                            {
+                              type: "buy",
+                              kind,
+                              quantity: 1,
+                              store: delivery === "inventory",
+                            },
+                            delivery === "inventory"
+                              ? `${spec.name} ajouté à l’inventaire.`
+                              : `${spec.name} acheté et déployé.`,
                           )
                         }
                       >
@@ -480,7 +518,7 @@ export function Shop({
                 paiement de matériaux.
               </p>
             </div>
-            <div className="placement-picker">
+            <div className="placement-picker" hidden={delivery === "inventory"}>
               <div>
                 <strong>
                   {farm.buildings.length} / {slotCount(farm)} emplacements
@@ -514,7 +552,10 @@ export function Shop({
             <div className="product-grid building-products">
               {(Object.keys(buildings) as BuildingKind[]).map((kind) => {
                 const spec = buildings[kind],
-                  blocker = shopBlocker(farm, kind, 1, site);
+                  blocker =
+                    delivery === "inventory"
+                      ? inventoryPurchaseBlocker(farm, kind)
+                      : shopBlocker(farm, kind, 1, site);
                 return (
                   <article
                     className={"product-card " + (blocker ? "locked" : "")}
@@ -540,8 +581,16 @@ export function Shop({
                         title={blocker ?? ""}
                         onClick={() =>
                           act(
-                            { type: "buy", kind, quantity: 1, site },
-                            `${spec.name} acheté.`,
+                            {
+                              type: "buy",
+                              kind,
+                              quantity: 1,
+                              site,
+                              store: delivery === "inventory",
+                            },
+                            delivery === "inventory"
+                              ? `${spec.name} ajouté à l’inventaire.`
+                              : `${spec.name} acheté et déployé.`,
                           )
                         }
                       >

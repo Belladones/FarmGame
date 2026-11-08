@@ -21,7 +21,7 @@ const assert = require("node:assert/strict");
       true,
     );
     assert.equal(await p.locator(".command-top-nav").count(), 0);
-    assert.equal(await p.locator(".dock-button").count(), 5);
+    assert.equal(await p.locator(".dock-button").count(), 6);
     await p
       .getByRole("button", { name: "Ouvrir les missions", exact: true })
       .click();

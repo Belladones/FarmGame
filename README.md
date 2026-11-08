@@ -31,7 +31,7 @@ npm run build
 
 `test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
 
-Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les huit parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les neuf parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
@@ -73,7 +73,7 @@ Le blé pousse en 5 secondes de simulation. Les appels agricoles et transferts p
 
 - Glisser sur le champ pour tourner autour à 360° et changer son inclinaison. Molette ou pincement pour zoomer ; maison pour recentrer.
 - Le plateau affiche uniquement les parcelles débloquées : 1 × 1, puis 3 × 1, 3 × 3, jusqu’à 7 × 7. Les cellules sont carrées dans le modèle 3D ; leur projection dépend de l’angle de vue. Les coordonnées et cultures existantes sont conservées lors des extensions.
-- Les emplacements constructibles sont débloqués séparément et ont un sol en bois, distinct de la zone agricole.
+- Les emplacements constructibles sont débloqués séparément et ont un bloc de béton, distinct de la zone agricole.
 - Le bouton + affiche l’éditeur, masqué initialement sur mobile. Choisir un robot dans l’éditeur pour modifier son programme. Chaque robot exécute son propre programme ; les autres continuent pendant le changement de sélection.
 - La barre du programme lance, suspend ou arrête son exécution. ×1 / ×2 / ×5 règle le temps de simulation. La pause s’applique à toute la ferme ; le magasin permet aussi de suspendre la simulation sans lancer un robot.
 - Le bouton i ouvre le guide et l’API ; les chevrons ouvrent les trois pages de recherches ; le panier ouvre le magasin ; la carte de mission ouvre les objectifs.
@@ -82,7 +82,7 @@ Les anciennes sauvegardes locales sont migrées automatiquement, puis importable
 
 ## Magasin et économie
 
-Les recherches consomment les matériaux déposés ; les achats du magasin consomment l’or. Un bâtiment n’exige aucun second paiement de matériaux après sa recherche. Le shop est accessible dès le départ, sans bâtiment commercial.
+Les recherches consomment les matériaux déposés ; les achats du magasin consomment l’or. Un bâtiment n’exige aucun second paiement de matériaux après sa recherche. Le magasin est accessible dès le départ, sans bâtiment commercial.
 
 - **Vendre** : blé 1 or, bois 3, carotte 6, citrouille 12, farine 8, pain 25, planche 12 et engrais 18. Seuls les stocks des dépôts sont vendus, jamais les soutes ni les machines. Les marchandises ne sont pas achetables et l’eau n’est pas vendable.
 - **Robots** : fermier 250 or (1 case/s, soute 10), transporteur 600 or (0,75 case/s, soute 100), drone 1 000 or (2 cases/s, soute 10). Les recherches Flotte, Transporteur et Drone débloquent les achats correspondants. Une case de départ libre dans le bon milieu est requise. Seul le fermier peut planter, récolter et labourer ; le drone peut transporter, arroser et appliquer de l’engrais. Le transporteur se limite aux transferts.
@@ -153,8 +153,7 @@ Un rappel attend la fin de l’action en cours, arrête le programme et conserve
 code, la cargaison et l’eau. Le robot au garage ne bloque aucune case et ne peut
 pas exécuter de commandes. Le déploiement cherche une case libre compatible ;
 le programme se relance manuellement. Cet état est sauvegardé localement et dans
-PostgreSQL pour les comptes connectés. Les achats du magasin restent déployés dès
-leur acquisition.
+PostgreSQL pour les comptes connectés. Les achats vont par défaut dans l’inventaire ; la livraison immédiate reste disponible.
 
 L’onglet **Arbre de compétences** comprend cinq pages : Soutes, Motorisation,
 Outils et eau, Capteurs et flotte, Dépôts. Les coûts et prérequis utilisent le
@@ -272,3 +271,35 @@ bornée pour éviter les angles rasants ; les cases restent des carrés dans le
 monde 3D. Leur projection à l’écran varie naturellement avec l’angle de vue.
 `npm run test:progression` vérifie les liens entre arbres, les anciennes recherches,
 les proportions de la caméra et la rotation sur ordinateur et mobile.
+
+
+### Inventaire et construction
+
+**Inventaire** contient deux onglets, **Bâtiments** et **Robots**, pour les objets
+possédés mais non posés. Les achats de robots et bâtiments vont par défaut dans
+cet inventaire ; le sélecteur de livraison du Magasin permet aussi une installation
+immédiate. Un équipement rangé n’agit pas sur la ferme : aucun stockage, cycle de
+production, occupation de case ou programme exécuté. Les robots gardent leur
+code, leur cargaison et leur eau.
+
+**Aménager les terrains** met la simulation en pause et ouvre le plan à coordonnées.
+Les recherches Terrain constructible donnent un nombre d’emplacements ; elles
+ne posent plus automatiquement les nouveaux blocs. Choisissez une case du pourtour,
+connectée à la ferme ou à un bloc existant, puis posez un **bloc de béton**. Les
+positions restent hors des futures parcelles agricoles de 7 × 7 pour préserver
+les agrandissements. Sélectionnez un bloc libre pour installer un bâtiment de
+l’inventaire ; sélectionnez un bâtiment vide pour le ranger ou le déplacer. Un
+bloc libre peut être retiré pour récupérer son emplacement disponible.
+
+Les ressources, l’eau et les cycles doivent être vidés ou terminés avant de ranger
+un bâtiment. Une case occupée, visée ou réservée par un robot ne peut pas être
+modifiée ; les blocs qui soutiennent la connexion d’autres terrains sont également
+protégés. Un bâtiment rangé conserve son identité et son prix d’achat, sans revente
+ni nouvel achat. Le dépôt initial peut être rangé lorsqu’il est vide puis reposé
+gratuitement. Les changements se font en pause ; les programmes des robots rangés
+restent à relancer après déploiement.
+
+Les positions des terrains, les bâtiments rangés et les robots au garage sont
+sauvegardés localement et dans PostgreSQL. Les anciennes parties gardent leurs
+bâtiments et les positions des anciens emplacements. `npm run test:inventory`
+vérifie achats différés, pose/retrait des blocs, rangement, robots et rechargement.
