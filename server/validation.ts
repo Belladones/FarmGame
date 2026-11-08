@@ -86,6 +86,8 @@ export function validFarm(value: unknown): value is RecordValue {
       !inventory(r.inventory) ||
       typeof r.code !== "string" ||
       typeof r.destroyed !== "boolean" ||
+      (r.deployed !== undefined && typeof r.deployed !== "boolean") ||
+      (r.lastError !== undefined && typeof r.lastError !== "string") ||
       typeof r.loan !== "boolean" ||
       typeof r.water !== "number" ||
       r.water < 0 ||

@@ -2819,3 +2819,584 @@ button:active:enabled {
     font-size: 8px;
   }
 }
+.fleet-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: 1320px;
+  margin: auto;
+}
+.fleet-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #c1cbb046;
+  padding: 16px 0 13px;
+  flex-shrink: 0;
+}
+.skill-screen .fleet-nav button {
+  font-size: 11px;
+  background: #617b7e;
+  border: 1px solid #bbc5a72e;
+  box-shadow: none;
+  border-radius: 3px;
+  padding: 11px 18px;
+  color: #dce3d2;
+}
+.skill-screen .fleet-nav .selected {
+  background: #3c493b;
+  border-color: #d7c17c;
+  color: #efdfac;
+}
+.skill-screen .fleet-nav .fleet-shop-link {
+  margin-left: auto;
+  background: transparent;
+  font-size: 10px;
+  color: #e9dca9;
+}
+.fleet-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 23px 0 18px;
+  flex-shrink: 0;
+}
+.fleet-heading .overline {
+  font-size: 8px;
+}
+.fleet-heading h2 {
+  font-size: 27px;
+  font-weight: 500;
+  color: #f2e5b6;
+  letter-spacing: -0.9px;
+  margin: 9px 0;
+}
+.fleet-heading p {
+  font-size: 10px;
+  color: #d2dccb;
+  line-height: 1.7;
+  margin: 0;
+}
+.skill-screen .fleet-global-pause {
+  color: #d6dfbd;
+  background: #5b756355;
+  padding: 9px 12px;
+  font-size: 9px;
+  border: 1px solid #b3c08d44;
+  border-radius: 3px;
+  box-shadow: none;
+  white-space: nowrap;
+}
+.fleet-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid #aab99c44;
+  border-radius: 4px;
+  background: #5c756b44;
+  flex-shrink: 0;
+}
+.fleet-summary > div {
+  padding: 13px 17px;
+  border-right: 1px solid #b7c1a32e;
+}
+.fleet-summary > div:last-child {
+  border: 0;
+}
+.fleet-summary strong {
+  font-size: 24px;
+  letter-spacing: -1px;
+  color: #f0dfa6;
+  font-weight: 500;
+  display: block;
+}
+.fleet-summary span {
+  display: block;
+  font-size: 8px;
+  line-height: 1.6;
+  color: #d2dcc5;
+  margin-top: 6px;
+}
+.fleet-filters {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 19px 0;
+  flex-shrink: 0;
+}
+.fleet-filters label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e1e4cf;
+  font-size: 9px;
+}
+.fleet-filters input,
+.fleet-filters select {
+  font: inherit;
+  font-size: 10px;
+  background: #506a60;
+  color: #f0e9c9;
+  border: 1px solid #b7c5a844;
+  padding: 9px 11px;
+  border-radius: 3px;
+  outline-color: #e7cf86;
+}
+.fleet-filters input {
+  width: 245px;
+}
+.fleet-filters input::placeholder {
+  color: #d0d9bd8c;
+}
+.fleet-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 17px;
+  padding: 0 3px 21px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #aab69b #6d8389;
+  overscroll-behavior: contain;
+}
+.fleet-card {
+  background: #3e4b3e;
+  border: 1px solid #899d6655;
+  border-radius: 5px;
+  padding: 17px;
+  min-width: 0;
+  box-shadow: 2px 4px 0 #415d5d33;
+}
+.fleet-card.current {
+  border-color: #d1bd7488;
+}
+.fleet-card.destroyed {
+  background: #4c4b3f;
+  border-color: #ad9d7144;
+}
+.fleet-card-top {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  position: relative;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #8f9f6944;
+}
+.fleet-card-top > .product-art {
+  width: 94px;
+  height: 78px;
+}
+.fleet-card-top > div {
+  flex: 1;
+  min-width: 0;
+}
+.fleet-card-top .overline {
+  font-size: 6px;
+  color: #afb994;
+  letter-spacing: 1px;
+}
+.fleet-card h3 {
+  font-size: 21px;
+  font-weight: 500;
+  color: #efdfaa;
+  margin: 8px 0;
+}
+.fleet-card h3 > span {
+  font-size: 11px;
+  color: #c7d1b0;
+  margin-left: 9px;
+}
+.robot-state {
+  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #c2d19d;
+}
+.robot-state:before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b3c076;
+}
+.robot-state.working {
+  color: #dce9a6;
+}
+.robot-state.working:before {
+  background: #d2de85;
+  box-shadow: 0 0 6px #c8de5d55;
+}
+.robot-state.error,
+.robot-state.destroyed {
+  color: #edbd8b;
+}
+.robot-state.error:before,
+.robot-state.destroyed:before {
+  background: #db9f6c;
+}
+.robot-state.garage {
+  color: #bdc6b9;
+}
+.robot-state.garage:before {
+  background: #96a99e;
+}
+.robot-state.paused {
+  color: #dfd38e;
+}
+.robot-state.paused:before {
+  background: #d2c176;
+}
+.deployment-tag {
+  font-size: 7px;
+  letter-spacing: 0.4px;
+  padding: 6px 8px;
+  background: #63783b;
+  border: 1px solid #c0cd7f33;
+  border-radius: 3px;
+  white-space: nowrap;
+  color: #e9e8c1;
+  align-self: flex-start;
+  margin-top: 7px;
+}
+.deployment-tag.garage {
+  background: #506a65;
+  color: #d0dbce;
+  border-color: #b7c8bc33;
+}
+.deployment-tag.dead {
+  background: #715d42;
+  border-color: #c5a56d33;
+  color: #efcf9b;
+}
+.fleet-stats {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
+  gap: 12px;
+  padding: 16px 0 12px;
+}
+.fleet-stats > div > span {
+  font-size: 7px;
+  color: #aab99a;
+  display: block;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.fleet-stats strong {
+  font-size: 13px;
+  color: #ece3b4;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.fleet-stats small {
+  font-size: 8px;
+  color: #c4cfaf;
+}
+.cargo-meter {
+  height: 3px;
+  max-width: 100px;
+  background: #65744e;
+  margin-top: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cargo-meter i {
+  display: block;
+  height: 100%;
+  background: #d1bc76;
+  transition: width 0.2s;
+}
+.fleet-position {
+  font-size: 8px;
+  line-height: 1.8;
+  color: #b9c7a6;
+  margin: 2px 0 10px;
+}
+.fleet-inventory {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  min-height: 22px;
+}
+.fleet-inventory > span {
+  background: #56674655;
+  color: #c7d2af;
+  border: 1px solid #91a26d33;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-size: 7px;
+}
+.fleet-inventory > .full-cargo {
+  color: #f2d38b;
+  border-color: #c5a35c66;
+  background: #7c714033;
+}
+.fleet-capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  padding: 13px 0 15px;
+}
+.fleet-capabilities span {
+  font-size: 7px;
+  color: #b9c991;
+  line-height: 1.7;
+}
+.fleet-capabilities .locked {
+  opacity: 0.4;
+}
+.robot-error {
+  font-size: 9px;
+  line-height: 1.8;
+  background: #76523644;
+  border: 1px solid #a9845433;
+  color: #edc599;
+  border-radius: 3px;
+  padding: 9px;
+  overflow-wrap: anywhere;
+  margin: 0 0 13px;
+}
+.fleet-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  border-top: 1px solid #8d9d6733;
+  padding-top: 13px;
+}
+.skill-screen .fleet-card-actions button {
+  font-size: 9px;
+  border-color: #a7b77644;
+  background: #536747;
+  box-shadow: none;
+  color: #e2e8c8;
+  padding: 9px 11px;
+  border-radius: 3px;
+}
+.skill-screen .fleet-card-actions .fleet-primary {
+  background: #718522;
+  border-color: #aeba5f66;
+  color: #f1ecc8;
+}
+.skill-screen .fleet-card-actions button:last-child {
+  margin-left: auto;
+  background: transparent;
+  border-color: #99ab6633;
+  color: #cbd7ae;
+}
+.fleet-card.garage .fleet-card-top > .product-art {
+  opacity: 0.7;
+}
+.fleet-footer {
+  border-top: 1px solid #c2cbb33d;
+  padding: 13px 0 3px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 8px;
+  line-height: 1.8;
+  color: #d1dcc7;
+  flex-shrink: 0;
+}
+.fleet-footer > span:last-child {
+  opacity: 0.6;
+  max-width: 250px;
+}
+.fleet-empty {
+  font-size: 11px;
+  color: #dfdfc7;
+  padding: 20px;
+  grid-column: 1/-1;
+}
+.fleet-skill-view {
+  flex: 1;
+  min-height: 0;
+}
+.robot-skills .skill-tabs {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #9da987 transparent;
+}
+.skill-screen .robot-skills .skill-tabs button {
+  min-width: 155px;
+  flex: 1;
+  white-space: nowrap;
+}
+.robot-skills .skill-header {
+  padding-top: 16px;
+}
+.robot-skills .skill-header h2 {
+  font-size: 22px;
+}
+@media (max-width: 1000px) {
+  .fleet-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .fleet-card-top {
+    gap: 9px;
+  }
+  .fleet-card-top > .product-art {
+    width: 72px;
+    height: 66px;
+  }
+  .fleet-card h3 {
+    font-size: 19px;
+  }
+  .fleet-card h3 > span {
+    display: block;
+    margin: 5px 0;
+    font-size: 10px;
+  }
+  .deployment-tag {
+    font-size: 6px;
+    padding: 5px;
+  }
+  .fleet-card-actions {
+    gap: 6px;
+  }
+  .skill-screen .fleet-card-actions button {
+    font-size: 8px;
+    padding: 8px;
+  }
+}
+@media (max-width: 650px) {
+  .fleet-nav {
+    padding: 12px 0 10px;
+    gap: 6px;
+  }
+  .skill-screen .fleet-nav button {
+    padding: 9px 10px;
+    font-size: 9px;
+  }
+  .skill-screen .fleet-nav .fleet-shop-link {
+    font-size: 7px;
+    padding: 9px 5px;
+  }
+  .fleet-heading {
+    padding: 17px 0 14px;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .fleet-heading .overline {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .fleet-heading h2 {
+    font-size: 22px;
+  }
+  .fleet-heading p {
+    font-size: 8px;
+    line-height: 1.8;
+    max-width: 235px;
+  }
+  .skill-screen .fleet-global-pause {
+    font-size: 7px;
+    max-width: 100px;
+    line-height: 1.7;
+    white-space: normal;
+    padding: 7px;
+  }
+  .fleet-summary > div {
+    padding: 10px 8px;
+  }
+  .fleet-summary strong {
+    font-size: 20px;
+  }
+  .fleet-summary span {
+    font-size: 6px;
+    margin-top: 5px;
+  }
+  .fleet-filters {
+    gap: 10px;
+    padding: 14px 0;
+    align-items: flex-end;
+  }
+  .fleet-filters label {
+    font-size: 7px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .fleet-filters input {
+    width: 185px;
+    max-width: 100%;
+  }
+  .fleet-filters input,
+  .fleet-filters select {
+    font-size: 9px;
+    padding: 8px;
+    min-width: 0;
+  }
+  .fleet-filters label:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .fleet-list {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .fleet-card {
+    padding: 14px;
+  }
+  .fleet-card-top > .product-art {
+    width: 79px;
+    height: 66px;
+  }
+  .fleet-card h3 > span {
+    display: inline-block;
+    margin-left: 7px;
+  }
+  .fleet-card-top .overline {
+    font-size: 6px;
+  }
+  .deployment-tag {
+    font-size: 6px;
+    padding: 6px;
+  }
+  .fleet-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .fleet-stats strong {
+    font-size: 13px;
+  }
+  .fleet-stats > div > span {
+    font-size: 7px;
+  }
+  .fleet-stats small {
+    font-size: 8px;
+  }
+  .fleet-card-actions button {
+    min-height: 34px;
+  }
+  .fleet-footer {
+    font-size: 7px;
+    padding-top: 10px;
+    gap: 10px;
+  }
+  .fleet-footer > span:last-child {
+    display: none;
+  }
+  .skill-screen .robot-skills .skill-tabs button {
+    font-size: 9px;
+    min-width: 130px;
+    flex: none;
+  }
+  .robot-skills .skill-header h2 {
+    font-size: 17px;
+  }
+  .robot-skills .skill-header .overline {
+    font-size: 6px;
+  }
+}
+/* Seven tools remain reachable on small screens without overflowing the page. */
+.dock {
+  gap: 7px;
+}
+.dock-button {
+  min-width: 0;
+}

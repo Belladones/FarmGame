@@ -8,7 +8,8 @@ import {
 } from "./engine";
 import { formatCost, type Item } from "./catalog";
 import { Icon, ResourceIcon } from "./Icons";
-type Branch = "Agriculture" | "Programmation" | "Technologie";
+import { robotTrees } from "./robotTrees";
+type Branch = string;
 type Art = "wheat" | "wood" | "carrot" | "water";
 interface Node {
   id: string;
@@ -378,10 +379,12 @@ export function SkillTree({
   farm,
   onBuy,
   onSell,
+  focus,
 }: {
   farm: Farm;
   onBuy: (id: string) => void;
   onSell: () => void;
+  focus?: "robots";
 }) {
   const [page, setPage] = useState(0),
     [selected, setSelected] = useState("wheat-base");
@@ -393,7 +396,8 @@ export function SkillTree({
       el.scrollTop = 0;
     }
   }, [page]);
-  const tree = trees[page],
+  const pages: Tree[] = focus === "robots" ? robotTrees : trees;
+  const tree = pages[page],
     node = tree.nodes.find((n) => n.id === selected) ?? tree.nodes[0];
   const researchItem = research.find((r) => r.id === node.research);
   const acquired = isAcquired(node, farm),
@@ -407,14 +411,20 @@ export function SkillTree({
     );
   const changePage = (index: number) => {
     setPage(index);
-    setSelected(trees[index].nodes[0].id);
+    setSelected(pages[index].nodes[0].id);
   };
   return (
-    <div className="skill-pages">
+    <div
+      className={"skill-pages " + (focus === "robots" ? "robot-skills" : "")}
+    >
       <header className="skill-header">
         <div>
           <span className="overline">FAITES GRANDIR VOTRE POTENTIEL</span>
-          <h2>Arbres de compétences</h2>
+          <h2>
+            {focus === "robots"
+              ? "Améliorations de la flotte"
+              : "Arbres de compétences"}
+          </h2>
         </div>
         <div className="skill-stock">
           <ResourceIcon kind="wheat" />
@@ -428,7 +438,7 @@ export function SkillTree({
         </div>
       </header>
       <nav className="skill-tabs" aria-label="Arbres de compétences">
-        {trees.map((t, i) => (
+        {pages.map((t, i) => (
           <button
             key={t.name}
             className={i === page ? "selected" : ""}
@@ -603,12 +613,16 @@ export function SkillTree({
               Aucun achat possible pour cette branche pour le moment.
             </small>
           )}
-          <div className="skill-trade">
-            <span>◈ {farm.gold} or</span>
-            <button disabled={farm.stock < 10} onClick={onSell}>
-              Vendre 10 blés · +10 or
-            </button>
-          </div>
+          {!focus && (
+            <>
+              <div className="skill-trade">
+                <span>◈ {farm.gold} or</span>
+                <button disabled={farm.stock < 10} onClick={onSell}>
+                  Vendre 10 blés · +10 or
+                </button>
+              </div>
+            </>
+          )}
         </aside>
       </div>
       <footer className="skill-pagination">
@@ -616,10 +630,10 @@ export function SkillTree({
           ← Page précédente
         </button>
         <span>
-          0{page + 1} <small>/ 03</small>
+          0{page + 1} <small>/ {String(pages.length).padStart(2, "0")}</small>
         </span>
         <button
-          disabled={page === trees.length - 1}
+          disabled={page === pages.length - 1}
           onClick={() => changePage(page + 1)}
         >
           Page suivante →

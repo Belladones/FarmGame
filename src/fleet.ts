@@ -1,0 +1,48 @@
+import { actionDuration, robotSpeed, type Farm, type Robot } from "./engine";
+import { models } from "./catalog";
+export type RobotRuntime = "starting" | "running";
+export function robotStatus(
+  farm: Farm,
+  robot: Robot,
+  runtime: RobotRuntime | undefined,
+  paused: boolean,
+) {
+  if (robot.destroyed) return { label: "Détruit", tone: "destroyed" };
+  if (!robot.deployed) return { label: "Au garage", tone: "garage" };
+  if (paused && (runtime || robot.moving || robot.readyAt > farm.time))
+    return { label: "En pause", tone: "paused" };
+  if (robot.moving) return { label: "En déplacement", tone: "working" };
+  if (robot.lastError) return { label: "Erreur du programme", tone: "error" };
+  if (runtime === "starting")
+    return { label: "Préparation du programme", tone: "working" };
+  if (robot.readyAt > farm.time)
+    return { label: "Action en cours", tone: "working" };
+  if (runtime) return { label: "Programme en cours", tone: "working" };
+  return { label: "À l’arrêt", tone: "idle" };
+}
+export function robotCapabilities(farm: Farm, robot: Robot) {
+  const has = (id: string) => farm.unlocks.includes(id);
+  const list = [{ name: "Transport", enabled: true }];
+  if (robot.model === "Farmer")
+    list.push(
+      { name: "Planter", enabled: true },
+      { name: "Récolter", enabled: true },
+      { name: "Labourer", enabled: has("till") },
+    );
+  if (robot.model !== "Transporter")
+    list.push(
+      { name: "Arroser", enabled: has("tank") && has("watering") },
+      { name: "Engrais", enabled: has("consumables") && has("fertilizer") },
+    );
+  list.push(
+    { name: "Détection", enabled: has("sensor") },
+    { name: "Position", enabled: has("position") },
+    { name: "Réservation", enabled: has("traffic2") },
+  );
+  return list;
+}
+export const robotStats = (farm: Farm, robot: Robot) => ({
+  speed: robotSpeed(farm, robot),
+  baseSpeed: models[robot.model].speed,
+  actionSeconds: actionDuration(farm, robot),
+});

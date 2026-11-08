@@ -226,12 +226,14 @@ const headers = { "X-FarmScript-Request": "1" };
     );
     assert.equal(localGold, external.gold + 1);
     await p.unroute("**/api/save");
-    await p
-      .getByRole("button", {
-        name: "Réessayer la connexion au serveur",
-        exact: true,
-      })
-      .click();
+    // Autosave may already be retrying and remove this button once it succeeds.
+    // Click only an available retry; verify the persisted result either way.
+    await p.evaluate(() => {
+      const retry = [...document.querySelectorAll("button")].find(
+        (button) => button.textContent === "Réessayer la connexion au serveur",
+      );
+      if (retry && !retry.disabled) retry.click();
+    });
     await p.waitForFunction(() =>
       document.querySelector(".sync-badge").classList.contains("saved"),
     );

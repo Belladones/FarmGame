@@ -31,7 +31,7 @@ npm run build
 
 `test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
 
-Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les trois parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les quatre parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
@@ -140,3 +140,24 @@ Après perte du dernier fermier, un unique fermier de secours non vendable et de
 Le **catalogue du shop** et ses systèmes associés sont implémentés ; la **campagne de 56 missions** n’est pas encore intégrée. Les quatre missions du prototype gardent des compteurs simplifiés et ne certifient pas l’emploi d’une notion pédagogique. L’accès aux constructions du langage n’est pas encore entièrement verrouillé selon l’arbre : Variables et Fonctions servent de prérequis de progression, mais leur syntaxe reste libre pour conserver les programmes existants. Les aides `range`, `list`, `len`, `str` et les branches de programmation avancée restent à venir.
 
 Le runtime supporte boucles, conditions, variables et fonctions nommées. Il ne prend pas en charge les callbacks, générateurs ou imports. Monaco refuse le lancement d’un code présentant des erreurs TypeScript. Le Worker préserve la réactivité mais n’est pas une frontière de sécurité pour du code hostile : exécuter son propre code. La CSP limite les connexions distantes. Les prix et le rythme restent à équilibrer en jouant, comme le précise le document.
+
+### Gestion de la flotte
+
+Le bouton **Flotte** affiche les robots possédés, leur déploiement, leur activité,
+leur cargaison, leur vitesse et leurs équipements. Les filtres permettent de
+retrouver les robots au garage, actifs ou détruits. Chaque carte permet de
+programmer, arrêter, rappeler ou déployer le robot, et de reconstruire une
+carcasse avec un atelier et l’or nécessaire.
+
+Un rappel attend la fin de l’action en cours, arrête le programme et conserve le
+code, la cargaison et l’eau. Le robot au garage ne bloque aucune case et ne peut
+pas exécuter de commandes. Le déploiement cherche une case libre compatible ;
+le programme se relance manuellement. Cet état est sauvegardé localement et dans
+PostgreSQL pour les comptes connectés. Les achats du shop restent déployés dès
+leur acquisition.
+
+L’onglet **Arbre de compétences** comprend cinq pages : Soutes, Motorisation,
+Outils et eau, Capteurs et flotte, Dépôts. Les coûts et prérequis utilisent le
+catalogue commun aux recherches. Les améliorations s’appliquent aux robots
+actuels et futurs compatibles ; la capacité des dépôts reste distincte des
+soutes embarquées. `npm run test:fleet` vérifie le panneau dans Chromium.

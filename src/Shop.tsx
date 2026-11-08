@@ -435,7 +435,8 @@ export function Shop({
                       <small>
                         {
                           farm.robots.filter(
-                            (r) => r.model === kind && !r.destroyed,
+                            (r) =>
+                              r.model === kind && !r.destroyed && r.deployed,
                           ).length
                         }{" "}
                         en service · Recherche :{" "}
@@ -648,7 +649,7 @@ export function Shop({
                     <p>
                       {r.destroyed
                         ? "Le programme est conservé. La soute a été perdue."
-                        : `${inventoryText(r.inventory)} · Soute ${sum(r.inventory)} / ${capacity(farm, r)} · Eau ${r.water.toFixed(1)} / 10`}
+                        : `${r.deployed ? "Déployé" : "Au garage"} · ${inventoryText(r.inventory)} · Soute ${sum(r.inventory)} / ${capacity(farm, r)} · Eau ${r.water.toFixed(1)} / 10`}
                     </p>
                     <div className="asset-actions">
                       {r.destroyed ? (

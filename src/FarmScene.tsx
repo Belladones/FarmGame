@@ -27,7 +27,7 @@ export function FarmScene({
       null,
     ),
     [failed, setFailed] = useState(false);
-  const sceneKey = `${farm.width}:${farm.height}:${slotCount(farm)}:${farm.buildings.map((b) => `${b.id},${b.kind},${b.x},${b.y}`).join(";")}:${farm.robots.map((r) => `${r.id},${r.model},${r.destroyed}`).join(";")}`;
+  const sceneKey = `${farm.width}:${farm.height}:${slotCount(farm)}:${farm.buildings.map((b) => `${b.id},${b.kind},${b.x},${b.y}`).join(";")}:${farm.robots.map((r) => `${r.id},${r.model},${r.destroyed},${r.deployed}`).join(";")}`;
   useEffect(() => {
     const container = host.current!;
     let renderer: THREE.WebGLRenderer;
@@ -52,7 +52,7 @@ export function FarmScene({
     renderer.domElement.setAttribute("role", "img");
     renderer.domElement.setAttribute(
       "aria-label",
-      `Ferme 3D : ${farm.width * farm.height} parcelles, ${farm.robots.filter((r) => !r.destroyed).length} robots. Le premier robot est un fermier terrestre.`,
+      `Ferme 3D : ${farm.width * farm.height} parcelles, ${farm.robots.filter((r) => !r.destroyed && r.deployed).length} robots. Le premier robot est un fermier terrestre.`,
     );
     const scene = new THREE.Scene(),
       camera = new THREE.OrthographicCamera(-8, 8, 8, -8, 0.1, 100),
@@ -605,6 +605,7 @@ export function FarmScene({
     }
     const robotObjects = new Map<string, ReturnType<typeof createRobot>>();
     for (const r of farm.robots) {
+      if (!r.deployed && !r.destroyed) continue;
       const entry = createRobot(r.model);
       island.add(entry.group);
       if (r.destroyed) {
@@ -622,6 +623,10 @@ export function FarmScene({
       );
       robotObjects.set(r.id, entry);
     }
+    container.dataset.deployedRobots = farm.robots
+      .filter((r) => r.deployed && !r.destroyed)
+      .map((r) => r.id)
+      .join(",");
     let lastEditor = state.current.editorOpen,
       lastView = state.current.resetView,
       lastZoom = state.current.zoom,
@@ -713,6 +718,8 @@ export function FarmScene({
       for (const r of s.robots) {
         const entry = robotObjects.get(r.id);
         if (!entry) continue;
+        entry.group.visible = r.deployed || r.destroyed;
+        if (!entry.group.visible) continue;
         let x = r.x,
           y = r.y;
         if (r.moving) {

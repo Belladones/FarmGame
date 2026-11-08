@@ -42,6 +42,8 @@ export interface Robot {
   paid: number;
   loan: boolean;
   destroyed: boolean;
+  deployed: boolean;
+  lastError?: string;
   readyAt: number;
   moving?: {
     x: number;
@@ -114,6 +116,7 @@ const robot = (
   water: 0,
   code: DEFAULT_PROGRAM,
   destroyed: false,
+  deployed: true,
   readyAt: 0,
 });
 const building = (
@@ -189,6 +192,15 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
     s.buildings = [building("b1", "Depot", -1, 0)];
     s.buildings[0].inventory = { ...s.resources, Wheat: s.stock };
   }
+  s.robots = s.robots.map((r) => {
+    const next = { ...r, deployed: !r.destroyed && (r.deployed ?? true) };
+    if (!next.deployed) {
+      delete next.moving;
+      delete next.reservation;
+      next.readyAt = s.time;
+    }
+    return next;
+  });
   syncBefore(s);
   sync(s);
   return s;
@@ -203,6 +215,11 @@ export const activeRobot = (s: Farm) =>
   s.robots.find((r) => !r.destroyed)!;
 export const capacity = (s: Farm, r: Robot = activeRobot(s)) =>
   models[r.model].capacity * ([1, 2, 4, 8][level(s, "hold")] ?? 1);
+export const robotSpeed = (s: Farm, r: Robot = activeRobot(s)) =>
+  (models[r.model].speed * ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1)) /
+  (r.loan ? 2 : 1);
+export const actionDuration = (s: Farm, r: Robot = activeRobot(s)) =>
+  ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1) * (r.loan ? 2 : 1);
 export const depotCapacity = (s: Farm) =>
   [200, 200, 500, 2500, 10000][level(s, "storage", 4)] ?? 200;
 export const stockCapacity = (s: Farm) =>
@@ -401,11 +418,79 @@ function spawn(s: Farm, model: Model, ignore?: string) {
         (r) =>
           r.id !== ignore &&
           !r.destroyed &&
+          r.deployed &&
           models[r.model].medium === medium &&
           ((r.x === p.x && r.y === p.y) ||
             (r.moving?.x === p.x && r.moving?.y === p.y)),
       ),
   );
+}
+export function deploymentPosition(
+  s: Farm,
+  id: string,
+): { x: number; y: number } | undefined {
+  const r = s.robots.find((r) => r.id === id && !r.destroyed);
+  if (!r) return;
+  const occupied = (x: number, y: number) =>
+    s.robots.some(
+      (other) =>
+        other.id !== id &&
+        !other.destroyed &&
+        other.deployed &&
+        models[other.model].medium === models[r.model].medium &&
+        ((other.x === x && other.y === y) ||
+          (other.moving?.x === x && other.moving?.y === y) ||
+          (other.reservation &&
+            other.reservation.expires > s.time &&
+            other.reservation.x === x &&
+            other.reservation.y === y)),
+    );
+  if (walkable(s, r.x, r.y) && !occupied(r.x, r.y)) return { x: r.x, y: r.y };
+  const candidates = [
+    ...Array.from({ length: s.width * s.height }, (_, i) => ({
+      x: i % s.width,
+      y: Math.floor(i / s.width),
+    })),
+    ...constructionSlots.slice(0, slotCount(s)),
+  ];
+  return candidates.find((p) => walkable(s, p.x, p.y) && !occupied(p.x, p.y));
+}
+export function recallBlocker(s: Farm, id: string): string | null {
+  const r = s.robots.find((r) => r.id === id);
+  if (!r || r.destroyed) return "Robot détruit ou introuvable";
+  if (!r.deployed) return "Ce robot est déjà au garage";
+  if (r.moving || r.readyAt > s.time)
+    return "Attendez la fin de l’action ou du déplacement";
+  return null;
+}
+export function recallRobot(s: Farm, id: string): boolean {
+  syncBefore(s);
+  if (recallBlocker(s, id)) return false;
+  const r = s.robots.find((r) => r.id === id)!;
+  r.deployed = false;
+  delete r.reservation;
+  delete r.moving;
+  r.readyAt = s.time;
+  sync(s);
+  return true;
+}
+export function deployRobot(s: Farm, id: string): boolean {
+  syncBefore(s);
+  const r = s.robots.find((r) => r.id === id && !r.destroyed && !r.deployed),
+    p = deploymentPosition(s, id);
+  if (!r || !p) return false;
+  r.x = p.x;
+  r.y = p.y;
+  r.deployed = true;
+  r.readyAt = s.time;
+  delete r.reservation;
+  delete r.moving;
+  if (at(s, p.x, p.y)) {
+    const index = p.y * s.width + p.x;
+    if (!s.visited.includes(index)) s.visited.push(index);
+  }
+  sync(s);
+  return true;
 }
 export function freeSlots(s: Farm) {
   return constructionSlots
@@ -413,7 +498,9 @@ export function freeSlots(s: Farm) {
     .filter(
       (p) =>
         !s.buildings.some((b) => b.x === p.x && b.y === p.y) &&
-        !s.robots.some((r) => !r.destroyed && r.x === p.x && r.y === p.y),
+        !s.robots.some(
+          (r) => !r.destroyed && r.deployed && r.x === p.x && r.y === p.y,
+        ),
     );
 }
 export function shopBlocker(
@@ -579,6 +666,8 @@ export function repair(s: Farm, id: string): boolean {
   if (!pos || s.gold < cost) return false;
   s.gold -= cost;
   r.destroyed = false;
+  r.deployed = true;
+  delete r.lastError;
   r.x = pos.x;
   r.y = pos.y;
   r.inventory = loan ? { ...loan.inventory } : {};
@@ -616,6 +705,7 @@ export function relocateBuilding(
 }
 function destroy(r: Robot) {
   r.destroyed = true;
+  r.deployed = false;
   r.inventory = {};
   r.water = 0;
   delete r.moving;
@@ -695,7 +785,7 @@ export function advance(s: Farm, delta: number) {
       (s.tiles[i].water ?? 0) - Math.max(0, delta) * 0.01,
     );
   }
-  const live = s.robots.filter((r) => !r.destroyed),
+  const live = s.robots.filter((r) => !r.destroyed && r.deployed),
     arriving = live.filter((r) => r.moving && r.moving.ends <= s.time),
     crashed = new Set<Robot>();
   for (const r of arriving) {
@@ -778,6 +868,8 @@ export function command(
   syncBefore(s);
   const r = s.robots.find((r) => r.id === robotId && !r.destroyed);
   if (!r) throw new Error("Ce robot est détruit ou indisponible.");
+  if (!r.deployed)
+    throw new Error("Ce robot est au garage. Déployez-le depuis la flotte.");
   const requireUnlock = (id: string) => {
     if (!s.unlocks.includes(id))
       throw new Error(
@@ -804,21 +896,20 @@ export function command(
   };
   const farmerOnly = () => r.model === "Farmer";
   const consumeTime = () => {
-    const movement =
-      name === "move"
-        ? 1 /
-          (models[r.model].speed * ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1))
-        : [
-              "plant",
-              "harvest",
-              "till",
-              "watering",
-              "use_item",
-              "harvest_group",
-            ].includes(name)
-          ? ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1)
-          : 1;
-    return movement * (r.loan ? 2 : 1);
+    if (name === "move") return 1 / robotSpeed(s, r);
+    const movement = [
+      "plant",
+      "harvest",
+      "till",
+      "watering",
+      "use_item",
+      "harvest_group",
+    ].includes(name)
+      ? actionDuration(s, r)
+      : r.loan
+        ? 2
+        : 1;
+    return movement;
   };
   const actions = [
     "plant",
@@ -950,6 +1041,7 @@ export function command(
         (other) =>
           other.id !== r.id &&
           !other.destroyed &&
+          other.deployed &&
           models[other.model].medium === models[r.model].medium &&
           other.reservation &&
           other.reservation.expires > s.time &&
@@ -1124,6 +1216,7 @@ export function command(
         (other) =>
           other.id !== r.id &&
           !other.destroyed &&
+          other.deployed &&
           models[other.model].medium === models[r.model].medium &&
           ((other.x === p.x && other.y === p.y) ||
             (other.moving?.x === p.x && other.moving?.y === p.y)),
@@ -1135,6 +1228,8 @@ export function command(
       const reserved = s.robots.some(
         (o) =>
           o.id !== r.id &&
+          o.deployed &&
+          !o.destroyed &&
           o.reservation &&
           o.reservation.expires > s.time &&
           models[o.model].medium === models[r.model].medium &&

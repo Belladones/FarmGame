@@ -29,7 +29,10 @@ import {
   releaseReservation,
   at,
   cropProgress,
+  deployRobot,
+  recallRobot,
 } from "./engine";
+import { FleetPanel, type FleetAction } from "./FleetPanel";
 import { FarmScene } from "./FarmScene";
 import { CloudSave, downloadFarm, type SyncStatus } from "./persistence";
 import { SessionPanel, type SessionAction } from "./SessionPanel";
@@ -311,7 +314,7 @@ function App() {
       advance(farm.current, elapsed * speedRef.current);
       for (const [id, rt] of runtimes.current) {
         const r = farm.current.robots.find((r) => r.id === id && !r.destroyed);
-        if (!r) {
+        if (!r || !r.deployed) {
           log(`[${id}] Robot détruit ou retiré ; programme conservé.`);
           stop(id);
           continue;
@@ -358,10 +361,11 @@ function App() {
     setRunning(true);
     const source = code;
     const r = farm.current.robots.find((r) => r.id === id);
-    if (!r || r.destroyed) {
+    if (!r || r.destroyed || !r.deployed) {
       stop(id);
       return;
     }
+    delete r.lastError;
     r.code = source;
     const model = monaco.editor
       .getModels()
@@ -383,7 +387,8 @@ function App() {
               typeof d.messageText === "string"
                 ? d.messageText
                 : d.messageText.messageText;
-          log(`Erreur TypeScript, ligne ${pos.lineNumber} : ${message}`);
+          r.lastError = `Erreur TypeScript, ligne ${pos.lineNumber} : ${message}`;
+          log(r.lastError);
           stop(id);
           return;
         }
@@ -406,6 +411,7 @@ function App() {
       if (runtimes.current.get(id) !== rt) return;
       if (data.type === "call") rt.queue.push(data);
       else {
+        if (data.type === "error") r.lastError = String(data.message);
         log(
           `[${id}] ` +
             (data.type === "error"
@@ -416,6 +422,7 @@ function App() {
       }
     };
     w.onerror = (e) => {
+      r.lastError = e.message;
       log(`[${id}] Erreur du programme : ${e.message}`);
       stop(id);
     };
@@ -472,6 +479,33 @@ function App() {
       return false;
     }
   };
+  const fleetAction = (action: FleetAction): boolean => {
+    let result = false;
+    if (action.type === "shop") {
+      setPanel("Shop");
+      return true;
+    }
+    if (action.type === "select") {
+      chooseRobot(action.id);
+      setEditorOpen(true);
+      setPanel(null);
+      return true;
+    }
+    if (action.type === "buy") result = buy(farm.current, action.id);
+    else if (action.type === "deploy")
+      result = deployRobot(farm.current, action.id);
+    else if (action.type === "recall") {
+      // An explicit recall stops this robot's program without affecting the others.
+      result = recallRobot(farm.current, action.id);
+      if (result) stop(action.id, false);
+    } else if (action.type === "stop") {
+      stop(action.id, false);
+      result = true;
+    } else if (action.type === "repair")
+      result = repair(farm.current, action.id);
+    refresh();
+    return result;
+  };
   const sessionAction = async (action: SessionAction) => {
     const client = cloud.current;
     if (!client) return;
@@ -511,7 +545,7 @@ function App() {
     setPaused(!paused);
   };
   const selectedRobot = activeRobot(s);
-  const tile = at(s, s.x, s.y);
+  const tile = selectedRobot.deployed ? at(s, s.x, s.y) : undefined;
   const growth = cropProgress(s, tile);
   return (
     <div className={"game " + (!editorOpen ? "editor-collapsed" : "")}>
@@ -616,20 +650,24 @@ function App() {
         </span>
         <div>
           <strong>
-            {!tile
-              ? "Hors parcelle agricole"
-              : tile.planted === null
-                ? "Prêt à planter"
-                : growth >= 1
-                  ? "La culture est mûre !"
-                  : "La culture pousse…"}
+            {!selectedRobot.deployed
+              ? "Robot au garage"
+              : !tile
+                ? "Hors parcelle agricole"
+                : tile.planted === null
+                  ? "Prêt à planter"
+                  : growth >= 1
+                    ? "La culture est mûre !"
+                    : "La culture pousse…"}
           </strong>
           <span>
-            {!tile
-              ? "Case de construction"
-              : tile.planted === null
-                ? "plant(Entities.Wheat)"
-                : `${Math.round(growth * 100)} % · ${growth >= 1 ? "harvest()" : "Croissance en cours"}`}
+            {!selectedRobot.deployed
+              ? "Déployez-le depuis la flotte"
+              : !tile
+                ? "Case de construction"
+                : tile.planted === null
+                  ? "plant(Entities.Wheat)"
+                  : `${Math.round(growth * 100)} % · ${growth >= 1 ? "harvest()" : "Croissance en cours"}`}
           </span>
         </div>
         {tile && tile.planted !== null && (
@@ -661,7 +699,11 @@ function App() {
               .map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.id} · {models[r.model].name}
-                  {runtimes.current.has(r.id) ? " · ▶" : ""}
+                  {!r.deployed
+                    ? " · Garage"
+                    : runtimes.current.has(r.id)
+                      ? " · ▶"
+                      : ""}
                 </option>
               ))}
           </select>
@@ -785,7 +827,12 @@ function App() {
               <button
                 className="action-button"
                 aria-label="▶ Exécuter"
-                title="Exécuter le programme"
+                disabled={!selectedRobot.deployed}
+                title={
+                  selectedRobot.deployed
+                    ? "Exécuter le programme"
+                    : "Déployez ce robot depuis la flotte"
+                }
                 onClick={run}
               >
                 <Icon name="play" size={26} />
@@ -799,7 +846,13 @@ function App() {
           >
             <strong>{s.activeRobotId}</strong>
             <span>
-              {running ? (paused ? "EN PAUSE" : "EN COURS") : "PRÊT À EXÉCUTER"}
+              {running
+                ? paused
+                  ? "EN PAUSE"
+                  : "EN COURS"
+                : selectedRobot.deployed
+                  ? "PRÊT À EXÉCUTER"
+                  : "AU GARAGE"}
             </span>
           </button>
           <select
@@ -849,6 +902,15 @@ function App() {
           >
             <Icon name="research" size={29} />
             <span>Recherches</span>
+          </button>
+          <button
+            className={"dock-button " + (panel === "Flotte" ? "selected" : "")}
+            aria-label="Flotte"
+            title="Flotte"
+            onClick={() => togglePanel("Flotte")}
+          >
+            <Icon name="robots" size={29} />
+            <span>Robots</span>
           </button>
           <button
             className={"dock-button " + (panel === "Shop" ? "selected" : "")}
@@ -915,7 +977,7 @@ function App() {
         <div
           className={
             "panel-backdrop " +
-            (panel === "Recherches" || panel === "Shop"
+            (panel === "Recherches" || panel === "Shop" || panel === "Flotte"
               ? "skills-backdrop"
               : "")
           }
@@ -927,7 +989,9 @@ function App() {
             aria-label={panel}
             className={
               "detail-panel floating-window " +
-              (panel === "Recherches" || panel === "Shop" ? "skill-screen" : "")
+              (panel === "Recherches" || panel === "Shop" || panel === "Flotte"
+                ? "skill-screen"
+                : "")
             }
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
@@ -943,9 +1007,11 @@ function App() {
                     ? "flag"
                     : panel === "Recherches"
                       ? "research"
-                      : panel === "Shop"
-                        ? "shop"
-                        : "info"
+                      : panel === "Flotte"
+                        ? "robots"
+                        : panel === "Shop"
+                          ? "shop"
+                          : "info"
                 }
                 size={19}
               />
@@ -1021,6 +1087,20 @@ function App() {
                     })}
                   </div>
                 </>
+              )}
+              {panel === "Flotte" && (
+                <FleetPanel
+                  farm={s}
+                  paused={paused}
+                  runtimes={Object.fromEntries(
+                    [...runtimes.current].map(([id, rt]) => [
+                      id,
+                      rt.worker ? "running" : "starting",
+                    ]),
+                  )}
+                  onPause={pause}
+                  onAction={fleetAction}
+                />
               )}
               {panel === "Shop" && (
                 <Shop
