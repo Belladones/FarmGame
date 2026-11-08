@@ -1,3 +1,5 @@
+import { CompanionPanel, CompanionAvatar } from "./CompanionPanel";
+import { customizeCompanion } from "./companion";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Editor, { loader } from "@monaco-editor/react";
@@ -815,7 +817,7 @@ function App() {
             aria-label="Session et sauvegarde"
             onClick={() => setPanel("Session et sauvegarde")}
           >
-            <span>●</span>{" "}
+            <CompanionAvatar {...s.companion} />{" "}
             {syncStatus.player ? syncStatus.player.username : "Se connecter"}{" "}
             <small>
               {syncStatus.mode === "saving"
@@ -1499,7 +1501,17 @@ function App() {
                 />
               )}
               {panel === "Session et sauvegarde" && (
-                <SessionPanel status={syncStatus} onAction={sessionAction} />
+                <SessionPanel status={syncStatus} onAction={sessionAction}>
+                  <CompanionPanel
+                    farm={s}
+                    onCustomize={(id) => {
+                      if (customizeCompanion(farm.current, id)) {
+                        refresh();
+                        notify("La nouvelle tenue de Luma est équipée.");
+                      }
+                    }}
+                  />
+                </SessionPanel>
               )}
               {panel === "Missions" && (
                 <MissionPanel

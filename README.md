@@ -303,3 +303,7 @@ Les positions des terrains, les bâtiments rangés et les robots au garage sont
 sauvegardés localement et dans PostgreSQL. Les anciennes parties gardent leurs
 bâtiments et les positions des anciens emplacements. `npm run test:inventory`
 vérifie achats différés, pose/retrait des blocs, rangement, robots et rechargement.
+
+Luma est la compagne du compte : une petite robot humanoïde à coque ivoire et écran lumineux. Elle se promène aléatoirement sur une passerelle extérieure à la ferme, change de direction et fait des pauses, sans consommer de ressources ni participer aux collisions ou programmes agricoles. Le réglage système de réduction des animations la garde immobile.
+
+Cliquez sur l’avatar du compte pour retrouver ses **Apparences** et **Accessoires** sous les paramètres de sauvegarde. Perle et Ruban sont disponibles au départ ; Rosée, Menthe et Nébuleuse se débloquent après 1, 3 et 6 missions récompensées ; Fleur solaire et Halo orbital après 2 et 5. Le bouton « Débloquer et équiper » est gratuit. Les deux emplacements sont indépendants et enregistrés dans la sauvegarde locale et celle du compte PostgreSQL. Les anciennes sauvegardes reçoivent la tenue initiale.

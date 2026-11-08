@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { SyncStatus } from "./persistence";
 export type SessionAction =
   | {
@@ -11,7 +11,9 @@ export type SessionAction =
 export function SessionPanel({
   status,
   onAction,
+  children,
 }: {
+  children?: ReactNode;
   status: SyncStatus;
   onAction: (action: SessionAction) => Promise<void>;
 }) {
@@ -174,6 +176,7 @@ export function SessionPanel({
         </button>
         <span>La copie locale est conservée en cas de panne du serveur.</span>
       </div>
+      {children}
       {error && (
         <p className="session-error" role="alert">
           {error}

@@ -161,6 +161,11 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
       "full farm snapshots roundtrip through JSONB with revisions",
       async () => {
         const farm = fresh();
+        farm.companion = {
+          skin: "rose",
+          accessory: "flower",
+          unlocked: ["pearl", "none", "ribbon", "rose", "flower"],
+        };
         farm.stock = 42;
         farm.produced.Flour = 5;
         farm.storedBuildings.push({

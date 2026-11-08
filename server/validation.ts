@@ -27,6 +27,18 @@ function safeTree(value: unknown, depth = 0): boolean {
 export function validFarm(value: unknown): value is RecordValue {
   if (!record(value) || !safeTree(value)) return false;
   const f = value;
+  if (f.companion !== undefined) {
+    const c = f.companion;
+    if (
+      !record(c) ||
+      typeof c.skin !== "string" ||
+      typeof c.accessory !== "string" ||
+      !Array.isArray(c.unlocked) ||
+      c.unlocked.length > 64 ||
+      !c.unlocked.every((id) => typeof id === "string")
+    )
+      return false;
+  }
   if (
     !integer(f.width, 1, 7) ||
     !integer(f.height, 1, 7) ||

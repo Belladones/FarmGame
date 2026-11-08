@@ -1,3 +1,4 @@
+import { freshCompanion, hydrateCompanion, type Companion } from "./companion";
 import { missions } from "./missions";
 import {
   buildings,
@@ -69,6 +70,7 @@ export interface Building {
   cycle?: { ends: number };
 }
 export interface Farm {
+  companion: Companion;
   time: number;
   width: number;
   height: number;
@@ -141,6 +143,7 @@ const building = (
   water: 0,
 });
 export const fresh = (): Farm => ({
+  companion: freshCompanion(),
   time: 0,
   width: 1,
   height: 1,
@@ -181,6 +184,7 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
   const s = {
     ...fresh(),
     ...v,
+    companion: hydrateCompanion(v.companion),
     height: v.height ?? 1,
     resources: v.resources ?? {},
     produced: v.produced ?? {},
