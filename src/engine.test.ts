@@ -1,0 +1,83 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { fresh, command, buy, claim, sell } from "./engine";
+test("growth, harvesting and adjacent deposit follow game time", () => {
+  const s = fresh();
+  assert.equal(command(s, "plant", ["Wheat"]), true);
+  assert.equal(command(s, "harvest", []), false);
+  s.time = 5;
+  assert.equal(command(s, "harvest", []), true);
+  assert.equal(s.cargo, 1);
+  assert.equal(s.stock, 0);
+  assert.equal(command(s, "deposit", []), 1);
+  assert.equal(s.stock, 1);
+});
+test("research preserves planted yield and changes future plantings", () => {
+  const s = fresh();
+  s.stock = 20;
+  command(s, "plant", ["Wheat"]);
+  assert.equal(buy(s, "wheat"), true);
+  s.time = 5;
+  command(s, "harvest", []);
+  assert.equal(s.cargo, 1);
+  command(s, "plant", ["Wheat"]);
+  s.time = 10;
+  command(s, "harvest", []);
+  assert.equal(s.cargo, 6);
+  assert.equal(buy(s, "wheat"), false);
+});
+test("expansion preserves coordinates, blocks borders and distant deposit", () => {
+  const s = fresh();
+  s.stock = 25;
+  buy(s, "extension");
+  assert.equal(command(s, "move", ["West"]), false);
+  assert.equal(command(s, "move", ["East"]), true);
+  s.cargo = 3;
+  assert.equal(command(s, "deposit", []), 0);
+  command(s, "move", ["East"]);
+  assert.equal(command(s, "move", ["East"]), false);
+  assert.deepEqual(s.visited, [0, 1, 2]);
+});
+test("partial harvest conserves excess yield when cargo is nearly full", () => {
+  const s = fresh();
+  s.wheatLevel = 2;
+  command(s, "plant", ["Wheat"]);
+  s.time = 5;
+  s.cargo = 19;
+  command(s, "harvest", []);
+  assert.equal(s.tiles[0].yield, 4);
+  assert.notEqual(s.tiles[0].planted, null);
+  command(s, "deposit", []);
+  command(s, "harvest", []);
+  assert.equal(s.cargo, 4);
+  assert.equal(s.tiles[0].planted, null);
+});
+test("locked sensors fail and research spends stock only once", () => {
+  const s = fresh();
+  assert.throws(() => command(s, "can_harvest", []));
+  s.stock = 10;
+  assert.equal(buy(s, "sensor"), true);
+  assert.equal(s.stock, 0);
+  assert.equal(command(s, "can_harvest", []), false);
+});
+test("missions are ordered, rewards are unique, sale consumes stock", () => {
+  const s = fresh();
+  s.deposited = 20;
+  assert.equal(claim(s, "deposit"), false);
+  s.harvested = 1;
+  assert.equal(claim(s, "first"), true);
+  assert.equal(claim(s, "first"), false);
+  assert.equal(claim(s, "deposit"), true);
+  assert.equal(s.stock, 12);
+  assert.equal(sell(s), true);
+  assert.equal(s.stock, 2);
+  assert.equal(s.gold, 10);
+});
+test("depot capacity never destroys excess cargo", () => {
+  const s = fresh();
+  s.stock = 199;
+  s.cargo = 10;
+  assert.equal(command(s, "deposit", []), 1);
+  assert.equal(s.cargo, 9);
+  assert.equal(s.stock, 200);
+});
