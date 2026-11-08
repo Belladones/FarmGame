@@ -162,6 +162,7 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
       async () => {
         const farm = fresh();
         farm.stock = 42;
+        farm.produced.Flour = 5;
         farm.robots[0].deployed = false;
         farm.robots[0].lastError = "Erreur conservée dans la flotte";
         const writeId = randomUUID();

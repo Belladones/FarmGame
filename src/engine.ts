@@ -1,3 +1,4 @@
+import { missions } from "./missions";
 import {
   buildings,
   constructionSlots,
@@ -81,6 +82,7 @@ export interface Farm {
   harvested: number;
   deposited: number;
   planted: number;
+  produced: Inventory;
   visited: number[];
   wheatLevel: number;
   unlocks: string[];
@@ -154,6 +156,7 @@ export const fresh = (): Farm => ({
   wheatLevel: 1,
   unlocks: [],
   claimed: [],
+  produced: {},
   robots: [robot("f1", "Farmer")],
   buildings: [building("b1", "Depot", -1, 0)],
   activeRobotId: "f1",
@@ -176,6 +179,7 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
     ...v,
     height: v.height ?? 1,
     resources: v.resources ?? {},
+    produced: v.produced ?? {},
     orderPeriods: v.orderPeriods ?? {},
     tiles: v.tiles.map((t) => ({
       ...tile(),
@@ -751,8 +755,10 @@ function machine(s: Farm, b: Building, cursor: number) {
   while (loops++ < 1000) {
     if (b.cycle) {
       if (b.cycle.ends > s.time) return;
-      for (const [item, n] of Object.entries(recipe.output))
+      for (const [item, n] of Object.entries(recipe.output)) {
         b.output[item as Item] = (b.output[item as Item] ?? 0) + n;
+        s.produced[item as Item] = (s.produced[item as Item] ?? 0) + n;
+      }
       cursor = b.cycle.ends;
       delete b.cycle;
     }
@@ -1309,53 +1315,29 @@ export function command(
   sync(s);
   return result;
 }
-export const missions = [
-  {
-    id: "first",
-    title: "Première pousse",
-    text: "Plantez et récoltez votre premier blé.",
-    target: 1,
-    progress: (s: Farm) => s.harvested,
-    reward: 4,
-  },
-  {
-    id: "deposit",
-    title: "À l’abri dans le dépôt",
-    text: "Déposez 5 blés. Le dépôt est voisin de (0, 0).",
-    target: 5,
-    progress: (s: Farm) => s.deposited,
-    reward: 8,
-  },
-  {
-    id: "routine",
-    title: "Une ferme qui travaille",
-    text: "Déposez 20 blés au total avec votre programme.",
-    target: 20,
-    progress: (s: Farm) => s.deposited,
-    reward: 10,
-  },
-  {
-    id: "explore",
-    title: "Voyez plus grand",
-    text: "Débloquez trois cases et visitez-les toutes.",
-    target: 3,
-    progress: (s: Farm) => s.visited.length,
-    reward: 20,
-  },
-];
-export function claim(s: Farm, id: string): boolean {
-  syncBefore(s);
+export { missions } from "./missions";
+export function missionBlocker(s: Farm, id: string): string | null {
   const index = missions.findIndex((m) => m.id === id),
     m = missions[index];
+  if (!m) return "Mission introuvable";
+  if (s.claimed.includes(id)) return "Récompense déjà récupérée";
   if (
-    !m ||
-    s.claimed.includes(id) ||
-    (index > 0 && !s.claimed.includes(missions[index - 1].id)) ||
-    m.progress(s) < m.target ||
-    totalStock(s) + m.reward > stockCapacity(s)
+    missions
+      .slice(0, index)
+      .some((previous) => !s.claimed.includes(previous.id))
   )
-    return false;
-  addStock(s, { Wheat: m.reward });
+    return "Terminez les missions précédentes";
+  if (m.progress(s) < m.target) return "Objectif en cours";
+  if (m.reward && totalStock(s) + m.reward > stockCapacity(s))
+    return "Dépôt plein : vendez ou utilisez des ressources pour récupérer les blés";
+  return null;
+}
+export function claim(s: Farm, id: string): boolean {
+  syncBefore(s);
+  const m = missions.find((m) => m.id === id);
+  if (!m || missionBlocker(s, id)) return false;
+  if (m.reward) addStock(s, { Wheat: m.reward });
+  s.gold += m.gold;
   s.claimed.push(id);
   return true;
 }

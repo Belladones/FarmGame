@@ -60,8 +60,11 @@ const { chromium } = require("playwright");
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
     );
     if (state.deposited < 2) throw Error("No automated harvest");
-    await page.locator(".mission-peek").click();
     await page
+      .getByRole("button", { name: "Ouvrir les missions", exact: true })
+      .click();
+    await page
+      .getByRole("dialog", { name: "Missions", exact: true })
       .getByRole("button", { name: "Récupérer la récompense", exact: true })
       .click();
     await page.reload();

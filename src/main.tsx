@@ -9,7 +9,6 @@ import {
   command,
   buy,
   claim,
-  missions,
   sell,
   type Farm,
   hydrateFarm,
@@ -17,7 +16,7 @@ import {
   activeRobot,
   capacity,
   stockCapacity,
-  totalStock,
+  missionBlocker,
   getStock,
   selectRobot,
   purchase,
@@ -32,6 +31,13 @@ import {
   deployRobot,
   recallRobot,
 } from "./engine";
+import { MissionPanel } from "./MissionPanel";
+import {
+  currentMission,
+  chapters,
+  career,
+  completedMissions,
+} from "./missions";
 import { FleetPanel, type FleetAction } from "./FleetPanel";
 import { FarmScene } from "./FarmScene";
 import { CloudSave, downloadFarm, type SyncStatus } from "./persistence";
@@ -537,7 +543,17 @@ function App() {
       if (freeze) syncReady.current = true;
     }
   };
-  const active = missions.find((m) => !s.claimed.includes(m.id));
+  const active = currentMission(s);
+  const rank = career(s);
+  const missionReady = !!active && active.progress(s) >= active.target;
+  const navigateMission = (
+    destination: import("./missions").MissionDestination,
+  ) => {
+    if (destination === "code") {
+      setEditorOpen(true);
+      setPanel(null);
+    } else setPanel(destination);
+  };
   const togglePanel = (name: string) =>
     setPanel((p) => (p === name ? null : name));
   const pause = () => {
@@ -944,32 +960,67 @@ function App() {
           </button>
         </nav>
       </div>
-      <button className="mission-peek" onClick={() => togglePanel("Missions")}>
-        <span className="mission-emblem">
-          <Icon name="flag" size={20} />
-        </span>
-        <div>
-          <span>
-            MISSION{" "}
-            {Math.min(s.claimed.length + 1, missions.length)
-              .toString()
-              .padStart(2, "0")}{" "}
-            / {missions.length.toString().padStart(2, "0")}
+      <div
+        className={
+          "mission-peek campaign-peek " + (missionReady ? "ready" : "")
+        }
+      >
+        <button
+          className="mission-peek-open"
+          onClick={() => togglePanel("Missions")}
+          aria-label="Ouvrir les missions"
+        >
+          <span className="mission-emblem">
+            <Icon name="flag" size={22} />
           </span>
-          <strong>{active?.title || "Toutes les missions terminées"}</strong>
-          {active && (
-            <div className="mission-progress">
-              <i
-                style={{
-                  width:
-                    Math.min(1, active.progress(s) / active.target) * 100 + "%",
-                }}
+          <div>
+            <span className="overline">
+              {active
+                ? `CHAPITRE ${active.chapter + 1} · ${chapters[active.chapter].title}`
+                : "CAMPAGNE TERMINÉE"}
+            </span>
+            <strong>{active?.title ?? "Votre ferme a pris son envol"}</strong>
+            <span className="peek-objective">
+              {active
+                ? `${Math.min(active.target, active.progress(s))} / ${active.target} · ${active.text}`
+                : `${completedMissions(s)} missions validées`}
+            </span>
+            {active && (
+              <progress
+                aria-label="Mission en cours"
+                value={Math.min(active.target, active.progress(s))}
+                max={active.target}
               />
-            </div>
+            )}
+          </div>
+          <Icon name="arrow" size={18} />
+        </button>
+        <div className="peek-footer">
+          <span>
+            Niv. {rank.level} · {rank.xp} XP
+          </span>
+          {missionReady ? (
+            <button
+              disabled={!!missionBlocker(s, active!.id)}
+              title={
+                missionBlocker(s, active!.id) ??
+                "Valider et passer à la prochaine mission"
+              }
+              onClick={() => {
+                if (claim(farm.current, active!.id)) refresh();
+              }}
+            >
+              {missionBlocker(s, active!.id)
+                ? "Dépôt plein"
+                : "Récupérer la récompense"}
+            </button>
+          ) : (
+            <button onClick={() => togglePanel("Missions")}>
+              Voir la progression →
+            </button>
           )}
         </div>
-        <Icon name="arrow" size={18} />
-      </button>
+      </div>
       <div className="scene-hint">
         Glisser pour tourner <span>·</span> Molette pour zoomer
       </div>
@@ -977,7 +1028,10 @@ function App() {
         <div
           className={
             "panel-backdrop " +
-            (panel === "Recherches" || panel === "Shop" || panel === "Flotte"
+            (panel === "Recherches" ||
+            panel === "Shop" ||
+            panel === "Flotte" ||
+            panel === "Missions"
               ? "skills-backdrop"
               : "")
           }
@@ -989,7 +1043,10 @@ function App() {
             aria-label={panel}
             className={
               "detail-panel floating-window " +
-              (panel === "Recherches" || panel === "Shop" || panel === "Flotte"
+              (panel === "Recherches" ||
+              panel === "Shop" ||
+              panel === "Flotte" ||
+              panel === "Missions"
                 ? "skill-screen"
                 : "")
             }
@@ -1029,64 +1086,15 @@ function App() {
                 <SessionPanel status={syncStatus} onAction={sessionAction} />
               )}
               {panel === "Missions" && (
-                <>
-                  <p className="panel-intro">
-                    Chaque récolte vous apprend quelque chose.
-                    <br />
-                    Faites grandir votre ferme, une ligne de code à la fois.
-                  </p>
-                  <div className="mission-grid">
-                    {missions.map((m, i) => {
-                      const done = s.claimed.includes(m.id),
-                        available = active?.id === m.id;
-                      return (
-                        <article
-                          className={"mission " + (done ? "complete" : "")}
-                          key={m.id}
-                        >
-                          <div className="mission-number">
-                            {done ? "✓" : String(i + 1).padStart(2, "0")}
-                          </div>
-                          <div>
-                            <h3>{m.title}</h3>
-                            <p>{m.text}</p>
-                            <div className="mission-progress">
-                              <i
-                                style={{
-                                  width:
-                                    Math.min(1, m.progress(s) / m.target) *
-                                      100 +
-                                    "%",
-                                }}
-                              />
-                            </div>
-                            <small>
-                              {Math.min(m.target, m.progress(s))} / {m.target}
-                              <span>+{m.reward} blés</span>
-                            </small>
-                            <button
-                              disabled={
-                                !available ||
-                                m.progress(s) < m.target ||
-                                totalStock(s) + m.reward > stockCapacity(s)
-                              }
-                              onClick={() => {
-                                claim(farm.current, m.id);
-                                refresh();
-                              }}
-                            >
-                              {done
-                                ? "Terminée"
-                                : available
-                                  ? "Récupérer la récompense"
-                                  : "À venir"}
-                            </button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </>
+                <MissionPanel
+                  farm={s}
+                  onClaim={(id) => {
+                    const ok = claim(farm.current, id);
+                    refresh();
+                    return ok;
+                  }}
+                  onNavigate={navigateMission}
+                />
               )}
               {panel === "Flotte" && (
                 <FleetPanel

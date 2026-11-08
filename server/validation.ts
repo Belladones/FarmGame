@@ -72,7 +72,11 @@ export function validFarm(value: unknown): value is RecordValue {
     return false;
   const inventory = (v: unknown) =>
     record(v) && Object.values(v).every((n) => typeof n === "number" && n >= 0);
-  if (!inventory(f.resources)) return false;
+  if (
+    !inventory(f.resources) ||
+    (f.produced !== undefined && !inventory(f.produced))
+  )
+    return false;
   const ids = new Set<string>();
   for (const r of f.robots) {
     if (

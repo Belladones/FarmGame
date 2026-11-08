@@ -31,7 +31,7 @@ npm run build
 
 `test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
 
-Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les quatre parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les cinq parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
@@ -161,3 +161,28 @@ Outils et eau, Capteurs et flotte, Dépôts. Les coûts et prérequis utilisent 
 catalogue commun aux recherches. Les améliorations s’appliquent aux robots
 actuels et futurs compatibles ; la capacité des dépôts reste distincte des
 soutes embarquées. `npm run test:fleet` vérifie le panneau dans Chromium.
+
+
+### Campagne de missions
+
+Le carnet de ferme propose **19 missions en quatre chapitres** : Premiers pas,
+Une ferme autonome, Cultiver autrement, Changer d’échelle. L’objectif actif reste
+sur l’écran de jeu, avec son compteur et la récupération directe de la récompense.
+Le carnet affiche les chapitres, les étapes futures, les conseils TypeScript et
+les raccourcis vers le programme, les recherches, la flotte ou le shop.
+
+Les récompenses sont récupérées une seule fois, dans l’ordre. Elles accordent de
+l’expérience et, selon l’étape, du blé ou de l’or pour financer la progression.
+Cinq rangs suivent l’expérience gagnée ; l’expérience se calcule depuis les
+missions validées et reste cohérente après une reconnexion. Les récompenses en
+blé demandent de la place dans les dépôts ; une récompense en or n’en demande pas.
+
+Les quatre missions historiques, leurs identifiants et leurs récompenses en blé
+sont conservés. Une ancienne partie continue au premier objectif non validé.
+Le nombre de farines produites est désormais cumulatif, indépendant des ventes
+et des collectes, et conservé dans la sauvegarde PostgreSQL. Ce nouveau compteur
+démarre à zéro sur les anciennes parties ; les productions antérieures ne sont
+pas reconstituées. La mission industrielle compte les nouveaux cycles du moulin.
+
+`npm run test:missions` vérifie le carnet, les récompenses, les niveaux, les
+changements de chapitre, la navigation et l’affichage mobile dans Chromium.
