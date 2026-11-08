@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { cosmetics, perimeterPoint, type Companion } from "./companion";
+import { cosmetics, type Companion } from "./companion";
 export function companionExpression(time: number, reduced = false) {
   if (reduced) return { height: 0.48, blink: 1, wave: 0, sway: 0 };
   const blinkPhase = time % 4.6;
@@ -19,12 +19,7 @@ export function companionExpression(time: number, reduced = false) {
   };
 }
 /** Decorative, camera-facing companion. No ground or agricultural robot is created. */
-export function createCompanion(
-  left: number,
-  right: number,
-  back: number,
-  front: number,
-) {
+export function createCompanion() {
   const group = new THREE.Group(),
     body = new THREE.Group();
   group.name = "Luma";
@@ -117,8 +112,8 @@ export function createCompanion(
   const head = new THREE.Group();
   head.position.y = 1.13;
   body.add(head);
-  rounded(head, joint, 0.48, 0.45, 0.33, 0, 0, 0, 0.1);
-  rounded(head, shell, 0.5, 0.45, 0.3, 0, 0, 0.035, 0.1);
+  orb(head, joint, 0.255, 0, 0, 0).scale.set(1, 0.93, 0.7);
+  orb(head, shell, 0.25, 0, 0, 0.025).scale.set(1, 0.96, 0.73);
   rounded(head, accent, 0.435, 0.37, 0.035, 0, -0.005, 0.197, 0.08);
   rounded(head, screen, 0.405, 0.34, 0.045, 0, 0, 0.217, 0.09);
   const eyes: THREE.Mesh[] = [];
@@ -127,14 +122,19 @@ export function createCompanion(
     e.scale.set(0.78, 1.12, 0.22);
     eyes.push(e);
     orb(head, petal, 0.024, side * 0.14, -0.07, 0.242).scale.set(1, 0.3, 0.2);
-    const antenna = new THREE.Mesh(
-      new THREE.ConeGeometry(0.028, 0.22, 5),
-      joint,
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.19, 3), shell);
+    ear.position.set(side * 0.185, 0.235, 0);
+    ear.rotation.z = side * -0.27;
+    head.add(ear);
+    const innerEar = new THREE.Mesh(
+      new THREE.ConeGeometry(0.055, 0.12, 3),
+      petal,
     );
-    antenna.position.set(side * 0.2, 0.29, -0.01);
-    antenna.rotation.z = side * -0.2;
-    head.add(antenna);
+    innerEar.position.set(side * 0.185, 0.24, 0.036);
+    innerEar.rotation.z = side * -0.27;
+    head.add(innerEar);
   }
+  orb(head, petal, 0.015, 0, -0.043, 0.25).scale.set(1, 0.7, 0.4);
   const smile = new THREE.Mesh(
     new THREE.TorusGeometry(0.031, 0.005, 5, 16, Math.PI * 0.7),
     eye,
@@ -148,10 +148,17 @@ export function createCompanion(
   sprig.rotation.z = -0.5;
   // Tapered chest, exposed waist and petal-shaped hip plates replace the skirt.
   rounded(body, joint, 0.075, 0.1, 0.08, 0, 0.87, 0);
-  const chest = rounded(body, shell, 0.25, 0.29, 0.19, 0, 0.69, 0, 0.055);
+  const chest = rounded(body, shell, 0.25, 0.18, 0.16, 0, 0.755, 0, 0.055);
+  for (const side of [-1, 1])
+    orb(body, shell, 0.086, side * 0.075, 0.745, 0.075).scale.set(
+      1,
+      0.88,
+      0.95,
+    );
+  rounded(body, shell, 0.105, 0.14, 0.11, 0, 0.59, 0, 0.04);
   chest.rotation.z = -0.035;
   rounded(body, accent, 0.012, 0.23, 0.015, 0, 0.7, 0.1, 0.004);
-  orb(body, joint, 0.093, 0, 0.475, 0).scale.set(1, 0.75, 0.9);
+  orb(body, joint, 0.068, 0, 0.475, 0).scale.set(0.8, 0.8, 0.85);
   for (const side of [-1, 1]) {
     const hip = rounded(body, shell, 0.1, 0.14, 0.14, side * 0.07, 0.39, 0);
     hip.rotation.z = side * -0.25;
@@ -229,18 +236,10 @@ export function createCompanion(
   halo.position.y = 0.39;
   head.add(halo);
   body.scale.setScalar(0.63);
-  const w = right - left,
-    perimeter = 2 * (w + front - back),
-    reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let distance = w * 0.6,
-    direction = 1,
-    remaining = 0,
-    wait = 0.5,
-    time = 0,
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  let time = 0,
     lastSkin = "";
-  const start = perimeterPoint(distance, left, right, back, front);
-  body.position.set(start.x, 0.48, start.z);
-  const target = new THREE.Vector3();
+  body.position.set(0, 0.48, 0);
   function update(dt: number, appearance: Companion, camera: THREE.Vector3) {
     if (appearance.skin !== lastSkin) {
       const c = cosmetics.find(
@@ -256,28 +255,9 @@ export function createCompanion(
     ribbon.visible = appearance.accessory === "ribbon";
     flower.visible = appearance.accessory === "flower";
     halo.visible = appearance.accessory === "halo";
-    let moving = false;
-    if (!reduced.matches) {
-      time += dt;
-      if (wait > 0) wait -= dt;
-      else {
-        if (remaining <= 0) {
-          direction = Math.random() < 0.5 ? -1 : 1;
-          remaining = 0.8 + Math.random() * perimeter * 0.55;
-        }
-        const step = Math.min(remaining, dt * 0.28);
-        distance += direction * step;
-        remaining -= step;
-        moving = true;
-        if (remaining <= 0) wait = 1 + Math.random() * 3;
-      }
-    }
-    const p = perimeterPoint(distance, left, right, back, front),
-      expression = companionExpression(time, reduced.matches);
-    target.set(p.x, expression.height, p.z);
-    if (dt === 0) body.position.copy(target);
-    else if (!reduced.matches)
-      body.position.lerp(target, 1 - Math.exp(-dt * 4));
+    if (!reduced.matches) time += dt;
+    const expression = companionExpression(time, reduced.matches);
+    if (!reduced.matches || dt === 0) body.position.y = expression.height;
     // Position may travel in any direction; the face always follows the current camera.
     const dx = camera.x - body.position.x,
       dz = camera.z - body.position.z;
@@ -316,7 +296,7 @@ export function createCompanion(
       x: body.position.x,
       y: body.position.y,
       z: body.position.z,
-      moving,
+      moving: false,
       facing: body.rotation.y,
       blink: expression.blink,
       wave: expression.wave,

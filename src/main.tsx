@@ -1,3 +1,4 @@
+import { GuiCompanion } from "./GuiCompanion";
 import { CompanionPanel, CompanionAvatar } from "./CompanionPanel";
 import { customizeCompanion } from "./companion";
 import React, { useEffect, useRef, useState } from "react";
@@ -782,6 +783,10 @@ function App() {
       }}
       className={"game " + (!editorOpen ? "editor-collapsed" : "")}
     >
+      <GuiCompanion
+        appearance={s.companion}
+        hidden={!!panel || !sessionReady}
+      />
       {!sessionReady && (
         <div className="session-loading" role="status">
           Chargement de la session…

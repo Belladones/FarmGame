@@ -6,7 +6,6 @@ import {
   customizeCompanion,
   freshCompanion,
   hydrateCompanion,
-  perimeterPoint,
 } from "./companion";
 import { validFarm } from "../server/validation";
 test("legacy saves gain a default companion without changing the fleet", () => {
@@ -65,20 +64,4 @@ test("cosmetic data is normalized and validated on loading", () => {
     false,
   );
   assert.equal(validFarm(fresh()), true);
-});
-test("patrol follows the outside boundary through corners and wraps in both directions", () => {
-  const left = -3,
-    right = 4,
-    back = -2,
-    front = 5;
-  for (let t = -100; t < 100; t += 0.03) {
-    const p = perimeterPoint(t, left, right, back, front);
-    assert.ok(p.x >= left && p.x <= right);
-    assert.ok(p.z >= back && p.z <= front);
-    assert.ok(p.x === left || p.x === right || p.z === back || p.z === front);
-  }
-  assert.deepEqual(
-    perimeterPoint(0, left, right, back, front),
-    perimeterPoint(28, left, right, back, front),
-  );
 });

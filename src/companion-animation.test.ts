@@ -17,7 +17,7 @@ test("the companion floats without ground and faces cameras on every side", () =
       return true;
     },
   });
-  const companion = createCompanion(-2, 2, -2, 2);
+  const companion = createCompanion();
   try {
     const appearance = freshCompanion(),
       body = companion.group.children[0];

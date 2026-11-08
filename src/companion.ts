@@ -113,21 +113,3 @@ export function customizeCompanion(farm: Farm, id: string): boolean {
   c[item.kind] = id;
   return true;
 }
-export function perimeterPoint(
-  distance: number,
-  left: number,
-  right: number,
-  back: number,
-  front: number,
-) {
-  const w = right - left,
-    h = front - back,
-    total = 2 * (w + h);
-  let t = ((distance % total) + total) % total;
-  if (t < w) return { x: left + t, z: front, heading: Math.PI / 2 };
-  t -= w;
-  if (t < h) return { x: right, z: front - t, heading: Math.PI };
-  t -= h;
-  if (t < w) return { x: right - t, z: back, heading: -Math.PI / 2 };
-  return { x: left, z: back + t - w, heading: 0 };
-}

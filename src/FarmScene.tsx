@@ -1,4 +1,3 @@
-import { createCompanion } from "./Companion3D";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -60,7 +59,7 @@ export function FarmScene({
     renderer.domElement.setAttribute("role", "img");
     renderer.domElement.setAttribute(
       "aria-label",
-      `Ferme 3D : ${farm.width * farm.height} parcelles, ${farm.robots.filter((r) => !r.destroyed && r.deployed).length} robots. Le premier robot est un fermier terrestre. Luma, votre compagne, flotte autour de la ferme et regarde vers vous.`,
+      `Ferme 3D : ${farm.width * farm.height} parcelles, ${farm.robots.filter((r) => !r.destroyed && r.deployed).length} robots. Le premier robot est un fermier terrestre.`,
     );
     const scene = new THREE.Scene(),
       camera = new THREE.OrthographicCamera(-8, 8, 8, -8, 0.1, 100),
@@ -638,16 +637,6 @@ export function FarmScene({
       ring.castShadow = false;
       return { group, wheels, rotors, tool, ring };
     }
-    const companion = createCompanion(
-      cx(minX) - STEP * 0.85,
-      cx(maxX) + STEP * 0.85,
-      cz(maxY) - STEP * 0.85,
-      cz(minY) + STEP * 0.85,
-    );
-    island.add(companion.group);
-    companion.update(0, farm.companion, camera.position);
-    container.dataset.companionGround = "none";
-    container.dataset.companion = "Luma";
     const robotObjects = new Map<string, ReturnType<typeof createRobot>>();
     for (const r of farm.robots) {
       if (!r.deployed && !r.destroyed) continue;
@@ -687,8 +676,8 @@ export function FarmScene({
       const view = farmViewport(
         w,
         h,
-        (maxX - minX + 1) * STEP + 1.5,
-        (maxY - minY + 1) * STEP + 1.5,
+        (maxX - minX + 1) * STEP,
+        (maxY - minY + 1) * STEP,
         state.current.editorOpen,
       );
       camera.left = view.left;
@@ -806,17 +795,6 @@ export function FarmScene({
               );
       }
       controls.update();
-      const companionPose = companion.update(dt, s.companion, camera.position);
-      container.dataset.companionX = String(companionPose.x);
-      container.dataset.companionZ = String(companionPose.z);
-      container.dataset.companionY = String(companionPose.y);
-      container.dataset.companionFacing = String(companionPose.facing);
-      container.dataset.companionCameraX = String(camera.position.x);
-      container.dataset.companionCameraZ = String(camera.position.z);
-      container.dataset.companionBlink = String(companionPose.blink);
-      container.dataset.companionWave = String(companionPose.wave);
-      container.dataset.companionSkin = s.companion.skin;
-      container.dataset.companionAccessory = s.companion.accessory;
       if (now - lastShadow > 300) {
         renderer.shadowMap.needsUpdate = true;
         lastShadow = now;
@@ -834,7 +812,6 @@ export function FarmScene({
         if (o instanceof THREE.Mesh || o instanceof THREE.LineSegments)
           o.geometry.dispose();
       });
-      companion.dispose();
       materials.forEach((m) => m.dispose());
       textures.forEach((t) => t.dispose());
       renderer.dispose();

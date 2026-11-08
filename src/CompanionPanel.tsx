@@ -24,20 +24,23 @@ export function CompanionAvatar({
         stroke="#8195a5"
         strokeWidth="2"
       />
-      <path d="M59 87L54 109Q70 121 86 109L81 87Z" fill={color} />
+      <path
+        d="M54 87Q48 97 62 102L63 110Q70 116 77 110L78 102Q92 97 86 87Z"
+        fill={color}
+      />
       <path
         d="M56 94L43 116m41-22 12 22"
         stroke={color}
         strokeWidth="8"
         strokeLinecap="round"
       />
-      <path d="M38 29L34 7l10 18m52-1 9-21-2 30" fill="#304651" />
+      <path d="M35 30L30 7l23 17m36 0 23-17-5 28" fill="#304651" />
       <rect
         x="29"
         y="21"
         width="82"
         height="70"
-        rx="30"
+        rx="35"
         fill={color}
         stroke="#8da1ad"
         strokeWidth="2"
@@ -60,6 +63,24 @@ export function CompanionAvatar({
         <circle cx="29" cy="66" r="5" />
         <circle cx="34" cy="66" r="3" fill="#ffda79" />
       </g>
+      <ellipse
+        cx="61"
+        cy="94"
+        rx="8"
+        ry="6"
+        fill={color}
+        stroke="#a4bac5"
+        strokeWidth=".8"
+      />
+      <ellipse
+        cx="79"
+        cy="94"
+        rx="8"
+        ry="6"
+        fill={color}
+        stroke="#a4bac5"
+        strokeWidth=".8"
+      />
       <path d="M70 92v15" stroke={accent} strokeWidth="2" />
       {accessory === "ribbon" && (
         <path
@@ -109,8 +130,8 @@ export function CompanionPanel({
           <span className="overline">VOTRE COMPAGNE</span>
           <h3>Luma</h3>
           <p>
-            Elle flotte autour de votre ferme, vous regarde et vous fait des
-            petits coucous.
+            Elle flotte près de vos menus, vous regarde et vous fait des petits
+            coucous.
           </p>
           <small>
             Cosmétiques sans bonus de production · {count} mission

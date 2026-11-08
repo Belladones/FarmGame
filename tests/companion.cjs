@@ -13,56 +13,59 @@ const { fresh } = require("../src/engine.ts");
     p.setDefaultTimeout(30000);
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
+    const mascot = p.locator(".gui-companion");
+    await mascot.locator("canvas").waitFor();
     await p.waitForFunction(
-      () => document.querySelector(".farm-scene")?.dataset.companionX,
+      () => document.querySelector(".gui-companion").dataset.x,
     );
-    assert.equal(
-      await p.locator(".farm-scene").getAttribute("data-companion-ground"),
-      "none",
-    );
-    const initial = await p
-      .locator(".farm-scene")
-      .getAttribute("data-companion-x");
+    const initial = await mascot.getAttribute("data-x");
     await p.waitForFunction(
-      (x) => document.querySelector(".farm-scene").dataset.companionX !== x,
+      (x) => document.querySelector(".gui-companion").dataset.x !== x,
       initial,
     );
+    assert.equal(
+      await mascot.evaluate((el) => getComputedStyle(el).position),
+      "fixed",
+    );
+    assert.equal(
+      await mascot.evaluate((el) => getComputedStyle(el).pointerEvents),
+      "none",
+    );
+    assert.equal(await p.locator(".farm-scene .gui-companion").count(), 0);
     assert.equal(
       await p.locator(".farm-scene").getAttribute("data-deployed-robots"),
       "f1",
     );
-    for (let i = 0; i < 3; i++) {
-      const azimuth = await p
-        .locator(".farm-scene")
-        .getAttribute("data-camera-azimuth");
-      await p.mouse.move(470, 490);
-      await p.mouse.down();
-      await p.mouse.move(650, 520, { steps: 10 });
-      await p.mouse.up();
-      await p.waitForFunction(
-        (a) =>
-          Math.abs(
-            Number(
-              document.querySelector(".farm-scene").dataset.cameraAzimuth,
-            ) - Number(a),
-          ) > 0.1,
-        azimuth,
-      );
-      const aligned = await p.locator(".farm-scene").evaluate((el) => {
-        const d = el.dataset,
-          dx = Number(d.companionCameraX) - Number(d.companionX),
-          dz = Number(d.companionCameraZ) - Number(d.companionZ),
-          angle = Number(d.companionFacing);
-        return (
-          (Math.sin(angle) * dx + Math.cos(angle) * dz) / Math.hypot(dx, dz)
+    const azimuth = await p
+      .locator(".farm-scene")
+      .getAttribute("data-camera-azimuth");
+    await p.mouse.move(470, 490);
+    await p.mouse.down();
+    await p.mouse.move(650, 520, { steps: 10 });
+    await p.mouse.up();
+    await p.waitForFunction(
+      (a) =>
+        Math.abs(
+          Number(document.querySelector(".farm-scene").dataset.cameraAzimuth) -
+            Number(a),
+        ) > 0.1,
+      azimuth,
+    );
+    assert.equal(await mascot.getAttribute("data-space"), "gui");
+    assert.equal(
+      await mascot.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return !el.contains(
+          document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2),
         );
-      });
-      assert.ok(aligned > 0.9999, "Luma keeps facing the player during orbit");
-    }
+      }),
+      true,
+    );
     await p.screenshot({ path: "/tmp/farm-luma.png" });
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
+    assert.equal(await mascot.isVisible(), false);
     const panel = p.getByRole("region", { name: "Votre compagne Luma" });
     await panel
       .getByRole("button", { name: "Équipé Perle", exact: true })
@@ -107,37 +110,46 @@ const { fresh } = require("../src/engine.ts");
       .click();
     await p.waitForFunction(
       () =>
-        document.querySelector(".farm-scene").dataset.companionSkin ===
-          "rose" &&
-        document.querySelector(".farm-scene").dataset.companionAccessory ===
-          "flower",
+        document.querySelector(".gui-companion").dataset.skin === "rose" &&
+        document.querySelector(".gui-companion").dataset.accessory === "flower",
     );
     await p.reload();
     await p.waitForFunction(
-      () =>
-        document.querySelector(".farm-scene").dataset.companionSkin === "rose",
+      () => document.querySelector(".gui-companion").dataset.skin === "rose",
     );
     assert.equal(
-      await p.locator(".farm-scene").getAttribute("data-companion-accessory"),
+      await p.locator(".gui-companion").getAttribute("data-accessory"),
       "flower",
     );
     await p.emulateMedia({ reducedMotion: "reduce" });
-    const still = await p
-      .locator(".farm-scene")
-      .getAttribute("data-companion-x");
-    const stillY = await p
-      .locator(".farm-scene")
-      .getAttribute("data-companion-y");
+    const still = await p.locator(".gui-companion").getAttribute("data-x");
+    const stillY = await p.locator(".gui-companion").getAttribute("data-y");
     await p.waitForTimeout(1000);
     assert.equal(
-      await p.locator(".farm-scene").getAttribute("data-companion-y"),
+      await p.locator(".gui-companion").getAttribute("data-y"),
       stillY,
     );
     assert.equal(
-      await p.locator(".farm-scene").getAttribute("data-companion-x"),
+      await p.locator(".gui-companion").getAttribute("data-x"),
       still,
     );
     await p.setViewportSize({ width: 390, height: 844 });
+    if (await p.locator(".workspace .editor").isVisible())
+      await p
+        .getByRole("button", { name: "Afficher le code", exact: true })
+        .click();
+    await p.waitForFunction(() => {
+      const el = document.querySelector(".gui-companion"),
+        r = el.getBoundingClientRect();
+      return (
+        getComputedStyle(el).visibility === "visible" &&
+        r.x >= 0 &&
+        r.y >= 0 &&
+        r.right <= innerWidth &&
+        r.bottom <= innerHeight
+      );
+    });
+    await p.screenshot({ path: "/tmp/luma-gui-mobile.png" });
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
@@ -154,7 +166,7 @@ const { fresh } = require("../src/engine.ts");
     );
     assert.deepEqual(errors, []);
     console.log(
-      "Companion: floating without ground, camera facing, separate fleet, cosmetic unlocks, equipment, persistence, reduced motion and mobile passed",
+      "Companion: GUI roaming, click-through, independent farm camera, separate fleet, cosmetic unlocks, equipment, persistence, reduced motion and mobile passed",
     );
   } finally {
     await b.close();
