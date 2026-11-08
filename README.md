@@ -31,7 +31,7 @@ npm run build
 
 `test:server` utilise une vraie base PostgreSQL et exige `TEST_DATABASE_URL` ou `DATABASE_URL`. Il crée des comptes de test uniques puis les supprime, sans vider les autres données. La CI démarre une base PostgreSQL dédiée pour ces vérifications.
 
-Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les six parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
+Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run test:e2e` pour les sept parcours du jeu ; `npm run test:session` pour les comptes et sauvegardes. Ils utilisent `/usr/bin/chromium`, personnalisable avec `CHROMIUM_PATH`, et `FARM_URL` (défaut : port 5173). Sur Mac, définir par exemple `CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"`. Les captures sont écrites dans `/tmp`. Les tests de session créent un compte de test dans la base configurée.
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
@@ -223,3 +223,10 @@ les commandes et le suivi des missions dans des zones séparées. Sur mobile, le
 outils restent dans la barre inférieure. Le tableau de télémétrie apparaît sur les
 grands écrans et affiche les données réelles du robot sélectionné. La caméra,
 les parcelles débloquées et la simulation restent indépendantes du thème.
+
+
+La colonne gauche place les ressources, le stockage, le titre et les outils dans
+un flux vertical. La mission reste séparée en bas ; sur une fenêtre basse, la
+partie supérieure défile pour garder les outils accessibles. Le message de dépôt
+plein et les récompenses de mission n’empiètent donc pas sur les autres blocs.
+`npm run test:sidebar` vérifie ce cas sur sept tailles de fenêtre, jusqu’à 320 px.

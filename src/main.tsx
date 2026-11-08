@@ -725,34 +725,6 @@ function App() {
         </button>
       </nav>
       <header className="game-header">
-        <div className="resources" aria-label="Ressources de la ferme">
-          <div
-            className="resource"
-            title={`Blé au dépôt : ${s.stock} / ${stockCapacity(s)}`}
-          >
-            <ResourceIcon kind="wheat" />
-            <strong>{s.stock}</strong>
-            <span>BLÉ</span>
-          </div>
-          <div className="resource" title="Bois dans les dépôts">
-            <ResourceIcon kind="wood" />
-            <strong>{getStock(s, "Wood")}</strong>
-            <span>BOIS</span>
-          </div>
-          <div className="resource" title="Carottes dans les dépôts">
-            <ResourceIcon kind="carrot" />
-            <strong>{getStock(s, "Carrot")}</strong>
-            <span>CAROTTES</span>
-          </div>
-          <div
-            className="resource"
-            title="Eau dans le réservoir du robot sélectionné"
-          >
-            <ResourceIcon kind="water" />
-            <strong>{selectedRobot.water.toFixed(1)}</strong>
-            <span>EAU EMBARQUÉE</span>
-          </div>
-        </div>
         <div className="game-brand">
           <b>
             farm<span>script</span>
@@ -790,59 +762,231 @@ function App() {
           </button>
         </div>
       </header>
-      <div className="island-caption">
-        <span className="overline">VOTRE EXPLOITATION</span>
-        <h1>Centre de contrôle agricole.</h1>
-        <p>
-          <span
-            className={"status-light " + (running && !paused ? "on" : "")}
-          />
-          {running
-            ? paused
-              ? "Programme en pause"
-              : "Robot au travail"
-            : "La ferme attend vos instructions"}
-          <span className="caption-divider">/</span>
-          {s.width} × {s.height} parcelle{s.width > 1 ? "s" : ""}
-        </p>
-      </div>
-      {showStart && s.harvested === 0 && (
-        <aside className="start-hint" aria-label="Conseils de départ">
+      <aside className="left-rail" aria-label="Gestion de la ferme">
+        <div
+          className="sidebar-scroll"
+          tabIndex={0}
+          aria-label="Ressources et outils, zone défilante"
+        >
+          {" "}
+          <div className="resources" aria-label="Ressources de la ferme">
+            <div
+              className="resource"
+              title={`Blé au dépôt : ${s.stock} / ${stockCapacity(s)}`}
+            >
+              <ResourceIcon kind="wheat" />
+              <strong>{s.stock}</strong>
+              <span>BLÉ</span>
+            </div>
+            <div className="resource" title="Bois dans les dépôts">
+              <ResourceIcon kind="wood" />
+              <strong>{getStock(s, "Wood")}</strong>
+              <span>BOIS</span>
+            </div>
+            <div className="resource" title="Carottes dans les dépôts">
+              <ResourceIcon kind="carrot" />
+              <strong>{getStock(s, "Carrot")}</strong>
+              <span>CAROTTES</span>
+            </div>
+            <div
+              className="resource"
+              title="Eau dans le réservoir du robot sélectionné"
+            >
+              <ResourceIcon kind="water" />
+              <strong>{selectedRobot.water.toFixed(1)}</strong>
+              <span>EAU EMBARQUÉE</span>
+            </div>
+          </div>
           <button
-            className="start-dismiss"
-            aria-label="Masquer les conseils de départ"
-            onClick={() => {
-              setShowStart(false);
-              localStorage.setItem("farmscript-tips-dismissed", "1");
-            }}
+            className="depot-summary"
+            onClick={() => setPanel("Shop")}
+            aria-label="Voir les stocks des dépôts"
           >
-            ×
+            <span>Stockage des dépôts</span>
+            <strong>
+              {totalStock(s)} / {stockCapacity(s)}
+            </strong>
+            <progress value={totalStock(s)} max={stockCapacity(s)} />
+            {totalStock(s) >= stockCapacity(s) && (
+              <small>Dépôts pleins · Vendre ou améliorer</small>
+            )}
           </button>
-          <span className="overline">VOTRE PREMIÈRE RÉCOLTE</span>
-          <strong>Votre fermier est prêt.</strong>
-          <p>
-            Le programme est déjà écrit. Lancez-le avec ▶, puis récupérez votre
-            première récompense.
-          </p>
-          <button onClick={() => setPanel("Missions")}>
-            Découvrir ma première mission →
+          <div className="island-caption">
+            <span className="overline">VOTRE EXPLOITATION</span>
+            <h1>Centre de contrôle agricole.</h1>
+            <p>
+              <span
+                className={"status-light " + (running && !paused ? "on" : "")}
+              />
+              {running
+                ? paused
+                  ? "Programme en pause"
+                  : "Robot au travail"
+                : "La ferme attend vos instructions"}
+              <span className="caption-divider">/</span>
+              {s.width} × {s.height} parcelle{s.width > 1 ? "s" : ""}
+            </p>
+          </div>
+          {showStart && s.harvested === 0 && (
+            <aside className="start-hint" aria-label="Conseils de départ">
+              <button
+                className="start-dismiss"
+                aria-label="Masquer les conseils de départ"
+                onClick={() => {
+                  setShowStart(false);
+                  localStorage.setItem("farmscript-tips-dismissed", "1");
+                }}
+              >
+                ×
+              </button>
+              <span className="overline">VOTRE PREMIÈRE RÉCOLTE</span>
+              <strong>Votre fermier est prêt.</strong>
+              <p>
+                Le programme est déjà écrit. Lancez-le avec ▶, puis récupérez
+                votre première récompense.
+              </p>
+              <button onClick={() => setPanel("Missions")}>
+                Découvrir ma première mission →
+              </button>
+            </aside>
+          )}
+          <nav className="dock" aria-label="Outils de la ferme">
+            <button
+              className={"dock-button " + (editorOpen ? "selected" : "")}
+              aria-label="Afficher le code"
+              title="Afficher le code"
+              onClick={() => setEditorOpen(!editorOpen)}
+            >
+              <Icon name="code" size={29} />
+              <span>Code</span>
+            </button>
+            <button
+              className={
+                "dock-button " + (panel === "API & aide" ? "selected" : "")
+              }
+              aria-label="API et aide"
+              title="API et aide"
+              onClick={() => togglePanel("API & aide")}
+            >
+              <Icon name="info" size={29} />
+              <span>Guide</span>
+            </button>
+            <button
+              className={
+                "dock-button " + (panel === "Recherches" ? "selected" : "")
+              }
+              aria-label="Recherches"
+              title="Recherches"
+              onClick={() => togglePanel("Recherches")}
+            >
+              <Icon name="research" size={29} />
+              <span>Recherches</span>
+            </button>
+            <button
+              className={
+                "dock-button " + (panel === "Flotte" ? "selected" : "")
+              }
+              aria-label="Flotte"
+              title="Flotte"
+              onClick={() => togglePanel("Flotte")}
+            >
+              <Icon name="robots" size={29} />
+              <span>Robots</span>
+            </button>
+            <button
+              className={"dock-button " + (panel === "Shop" ? "selected" : "")}
+              aria-label="Shop"
+              title="Shop"
+              onClick={() => togglePanel("Shop")}
+            >
+              <Icon name="shop" size={29} />
+              <span>Shop</span>
+            </button>
+            <button
+              className="dock-button"
+              aria-label="Zoomer sur la ferme"
+              title="Zoomer sur la ferme"
+              onClick={() => setZoom((z) => (z >= 1.5 ? 1 : z + 0.25))}
+            >
+              <Icon name="zoom" size={29} />
+              <span>Zoom</span>
+            </button>
+            <button
+              className="dock-button"
+              aria-label="Recentrer la vue"
+              title="Recentrer la vue"
+              onClick={() => {
+                setZoom(1);
+                setResetView((r) => r + 1);
+              }}
+            >
+              <Icon name="home" size={29} />
+              <span>Ferme</span>
+            </button>
+          </nav>
+        </div>{" "}
+        <div
+          className={
+            "mission-peek campaign-peek " + (missionReady ? "ready" : "")
+          }
+        >
+          <button
+            className="mission-peek-open"
+            onClick={() => togglePanel("Missions")}
+            aria-label="Ouvrir les missions"
+          >
+            <span className="mission-emblem">
+              <Icon name="flag" size={22} />
+            </span>
+            <div>
+              <span className="overline">
+                {active
+                  ? `CHAPITRE ${active.chapter + 1} · ${chapters[active.chapter].title}`
+                  : "CAMPAGNE TERMINÉE"}
+              </span>
+              <strong>{active?.title ?? "Votre ferme a pris son envol"}</strong>
+              <span className="peek-objective">
+                {active
+                  ? `${Math.min(active.target, active.progress(s))} / ${active.target} · ${active.text}`
+                  : `${completedMissions(s)} missions validées`}
+              </span>
+              {active && (
+                <progress
+                  aria-label="Mission en cours"
+                  value={Math.min(active.target, active.progress(s))}
+                  max={active.target}
+                />
+              )}
+            </div>
+            <Icon name="arrow" size={18} />
           </button>
-        </aside>
-      )}
-      <button
-        className="depot-summary"
-        onClick={() => setPanel("Shop")}
-        aria-label="Voir les stocks des dépôts"
-      >
-        <span>Stockage des dépôts</span>
-        <strong>
-          {totalStock(s)} / {stockCapacity(s)}
-        </strong>
-        <progress value={totalStock(s)} max={stockCapacity(s)} />
-        {totalStock(s) >= stockCapacity(s) && (
-          <small>Dépôts pleins · Vendre ou améliorer</small>
-        )}
-      </button>
+          <div className="peek-footer">
+            <span>
+              Niv. {rank.level} · {rank.xp} XP
+            </span>
+            {missionReady ? (
+              <button
+                disabled={!!missionBlocker(s, active!.id)}
+                title={
+                  missionBlocker(s, active!.id) ??
+                  "Valider et passer à la prochaine mission"
+                }
+                onClick={() => {
+                  claimMission(active!.id);
+                }}
+              >
+                {missionBlocker(s, active!.id)
+                  ? "Dépôt plein"
+                  : "Récupérer la récompense"}
+              </button>
+            ) : (
+              <button onClick={() => togglePanel("Missions")}>
+                Voir la progression →
+              </button>
+            )}
+          </div>
+        </div>
+      </aside>
       <div className="plot-info">
         <span className="plot-coordinate">
           {s.x}, {s.y}
@@ -1106,139 +1250,6 @@ function App() {
               </option>
             ))}
           </select>
-        </div>
-        <nav className="dock" aria-label="Outils de la ferme">
-          <button
-            className={"dock-button " + (editorOpen ? "selected" : "")}
-            aria-label="Afficher le code"
-            title="Afficher le code"
-            onClick={() => setEditorOpen(!editorOpen)}
-          >
-            <Icon name="code" size={29} />
-            <span>Code</span>
-          </button>
-          <button
-            className={
-              "dock-button " + (panel === "API & aide" ? "selected" : "")
-            }
-            aria-label="API et aide"
-            title="API et aide"
-            onClick={() => togglePanel("API & aide")}
-          >
-            <Icon name="info" size={29} />
-            <span>Guide</span>
-          </button>
-          <button
-            className={
-              "dock-button " + (panel === "Recherches" ? "selected" : "")
-            }
-            aria-label="Recherches"
-            title="Recherches"
-            onClick={() => togglePanel("Recherches")}
-          >
-            <Icon name="research" size={29} />
-            <span>Recherches</span>
-          </button>
-          <button
-            className={"dock-button " + (panel === "Flotte" ? "selected" : "")}
-            aria-label="Flotte"
-            title="Flotte"
-            onClick={() => togglePanel("Flotte")}
-          >
-            <Icon name="robots" size={29} />
-            <span>Robots</span>
-          </button>
-          <button
-            className={"dock-button " + (panel === "Shop" ? "selected" : "")}
-            aria-label="Shop"
-            title="Shop"
-            onClick={() => togglePanel("Shop")}
-          >
-            <Icon name="shop" size={29} />
-            <span>Shop</span>
-          </button>
-          <button
-            className="dock-button"
-            aria-label="Zoomer sur la ferme"
-            title="Zoomer sur la ferme"
-            onClick={() => setZoom((z) => (z >= 1.5 ? 1 : z + 0.25))}
-          >
-            <Icon name="zoom" size={29} />
-            <span>Zoom</span>
-          </button>
-          <button
-            className="dock-button"
-            aria-label="Recentrer la vue"
-            title="Recentrer la vue"
-            onClick={() => {
-              setZoom(1);
-              setResetView((r) => r + 1);
-            }}
-          >
-            <Icon name="home" size={29} />
-            <span>Ferme</span>
-          </button>
-        </nav>
-      </div>
-      <div
-        className={
-          "mission-peek campaign-peek " + (missionReady ? "ready" : "")
-        }
-      >
-        <button
-          className="mission-peek-open"
-          onClick={() => togglePanel("Missions")}
-          aria-label="Ouvrir les missions"
-        >
-          <span className="mission-emblem">
-            <Icon name="flag" size={22} />
-          </span>
-          <div>
-            <span className="overline">
-              {active
-                ? `CHAPITRE ${active.chapter + 1} · ${chapters[active.chapter].title}`
-                : "CAMPAGNE TERMINÉE"}
-            </span>
-            <strong>{active?.title ?? "Votre ferme a pris son envol"}</strong>
-            <span className="peek-objective">
-              {active
-                ? `${Math.min(active.target, active.progress(s))} / ${active.target} · ${active.text}`
-                : `${completedMissions(s)} missions validées`}
-            </span>
-            {active && (
-              <progress
-                aria-label="Mission en cours"
-                value={Math.min(active.target, active.progress(s))}
-                max={active.target}
-              />
-            )}
-          </div>
-          <Icon name="arrow" size={18} />
-        </button>
-        <div className="peek-footer">
-          <span>
-            Niv. {rank.level} · {rank.xp} XP
-          </span>
-          {missionReady ? (
-            <button
-              disabled={!!missionBlocker(s, active!.id)}
-              title={
-                missionBlocker(s, active!.id) ??
-                "Valider et passer à la prochaine mission"
-              }
-              onClick={() => {
-                claimMission(active!.id);
-              }}
-            >
-              {missionBlocker(s, active!.id)
-                ? "Dépôt plein"
-                : "Récupérer la récompense"}
-            </button>
-          ) : (
-            <button onClick={() => togglePanel("Missions")}>
-              Voir la progression →
-            </button>
-          )}
         </div>
       </div>
       {notice && (
