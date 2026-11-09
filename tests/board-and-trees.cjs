@@ -1,3 +1,5 @@
+require("tsx/cjs");
+const { legacyFarm } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 (async () => {
   const browser = await chromium.launch({
@@ -11,6 +13,13 @@ const { chromium } = require("playwright");
     });
     const errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
+    await p.addInitScript((f) => {
+      if (!localStorage.getItem("farmscript-v1"))
+        localStorage.setItem(
+          "farmscript-v1",
+          JSON.stringify({ version: 1, farm: f }),
+        );
+    }, legacyFarm());
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     await p.locator(".farm-scene canvas").waitFor();
     await p.waitForTimeout(1000);
@@ -38,6 +47,7 @@ const { chromium } = require("playwright");
       if (!sessionStorage.getItem("test-stock-seeded")) {
         const s = JSON.parse(localStorage.getItem("farmscript-v1"));
         s.farm.stock = 100;
+        s.farm.resources.Hay = 20;
         s.farm.tiles[0].planted = s.farm.time;
         localStorage.setItem("farmscript-v1", JSON.stringify(s));
         sessionStorage.setItem("test-stock-seeded", "1");
@@ -57,7 +67,7 @@ const { chromium } = require("playwright");
     await p.locator('[data-skill="extension"]').click();
     await p.screenshot({ path: "/tmp/farm-skill-tree.png" });
     await p
-      .getByRole("button", { name: "Rechercher · 25 blés", exact: true })
+      .getByRole("button", { name: "Rechercher · 20 foins", exact: true })
       .click();
     await p.waitForFunction(
       () => document.querySelector(".farm-scene").dataset.plotCount === "3",
@@ -89,10 +99,10 @@ const { chromium } = require("playwright");
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
     );
     if (
-      saved.stock !== 45 ||
+      saved.stock !== 70 ||
       saved.tiles.length !== 3 ||
       saved.tiles[0].planted === null ||
-      saved.tiles[1].planted !== null
+      saved.tiles[1].entity !== "Grass"
     )
       throw Error("Purchase changed crops or charged incorrect amount");
     await p.getByRole("button", { name: "Fermer le panneau" }).click();

@@ -3,7 +3,7 @@ export interface ResearchNode {
   id: string;
   title: string;
   symbol?: string;
-  art?: "wheat" | "wood" | "carrot" | "water";
+  art?: "hay" | "wheat" | "wood" | "carrot" | "water";
   x: number;
   y: number;
   parents: string[];
@@ -35,21 +35,21 @@ export function researchDepth(id: string, chain = new Set<string>()): number {
 const definitions = [
   {
     name: "Agriculture",
-    root: "wheat-base",
-    title: "Blé de départ",
+    root: "grass-base",
+    title: "Prairie et herbe",
     symbol: "🌾",
     caption: "Cultures et parcelles, dans l’ordre réel de progression.",
     detail:
-      "Le blé initial est gratuit. Déposez les récoltes pour financer les cultures suivantes.",
+      "L’herbe pousse seule en 0,5 seconde sur prairie. Récoltez du foin, déposez-le, puis débloquez les premières cultures.",
   },
   {
     name: "Programmation",
     root: "code-base",
     title: "Programme initial",
-    symbol: "while",
+    symbol: "harvest()",
     caption: "Comprendre, observer et automatiser votre ferme.",
     detail:
-      "Les boucles et appels simples sont disponibles dès le départ. Seules les fonctionnalités réellement proposées apparaissent ici.",
+      "Les appels simples sont disponibles au départ. Boucle while coûte 5 foins ; viennent ensuite les conditions, variables et fonctions.",
   },
   {
     name: "Technologie",
@@ -77,7 +77,7 @@ export const researchTrees: ResearchTree[] = definitions.map((def) => {
       id: def.root,
       title: def.title,
       symbol: def.symbol,
-      art: def.name === "Agriculture" ? "wheat" : undefined,
+      art: def.name === "Agriculture" ? "hay" : undefined,
       x: 315,
       y: 25,
       parents: [],
@@ -100,13 +100,15 @@ export const researchTrees: ResearchTree[] = definitions.map((def) => {
           ? (r.name.split("·")[1]?.trim() ?? "3 × 1")
           : r.id.startsWith("storage")
             ? "▣"
-            : r.id === "conditions"
-              ? "if / else"
-              : r.id === "functions"
-                ? "function"
-                : r.id === "variables"
-                  ? "const / let"
-                  : "⬡",
+            : r.id === "loops"
+              ? "while"
+              : r.id === "conditions"
+                ? "if / else"
+                : r.id === "functions"
+                  ? "function"
+                  : r.id === "variables"
+                    ? "const / let"
+                    : "⬡",
         art: r.id.startsWith("wheat")
           ? "wheat"
           : r.id.startsWith("bush") || r.id.startsWith("tree")

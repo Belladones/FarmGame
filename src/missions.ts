@@ -140,7 +140,7 @@ export const missions: Mission[] = [
     researched("conditions", "sensor"),
     25,
     50,
-    "Ces deux recherches coûtent 10 blés chacune. Le capteur permet de tester la maturité avant de récolter.",
+    "Conditions coûte 10 blés et le capteur 5 foins. Le capteur permet de tester la maturité avant de récolter.",
     "Recherches",
     "Rechercher les capteurs",
     "if (can_harvest()) {\n  harvest();\n}",
@@ -335,12 +335,93 @@ export const missions: Mission[] = [
     "Perfectionner mes programmes",
   ),
 ];
+const firstGrass: Mission = {
+  ...missions[0],
+  title: "Premiers foins",
+  text: "Récoltez votre premier foin sur la prairie.",
+  progress: (s) => s.harvestedItems.Hay ?? 0,
+  reward: 0,
+  hint: "L’herbe est déjà présente : harvest() la récolte. Elle repousse seule en 0,5 seconde. Déposez le foin avec deposit().",
+  code: "harvest();\ndeposit();",
+};
+const firstDeposit: Mission = {
+  ...missions[1],
+  text: "Déposez 5 foins dans le dépôt voisin.",
+  progress: (s) => s.depositedItems.Hay ?? 0,
+  reward: 0,
+  hint: "Relancez harvest(); deposit(); jusqu’à posséder 5 foins au dépôt. La soute du robot et le stock du dépôt sont distincts.",
+};
+const firstLoop: Mission = milestone(
+  "first-loop",
+  0,
+  "Votre première boucle",
+  "Recherchez Boucle while pour 5 foins.",
+  1,
+  researched("loops"),
+  0,
+  25,
+  "Ouvrez Recherches → Programmation. La boucle while répète une séquence. Utilisez true et false, en minuscules, et des accolades en TypeScript.",
+  "Recherches",
+  "Débloquer la boucle",
+  "while (true) {\n  harvest();\n  deposit();\n}",
+);
+const firstRoutine: Mission = {
+  ...missions[2],
+  title: "Une prairie autonome",
+  text: "Atteignez 20 foins déposés au total.",
+  progress: (s) => s.depositedItems.Hay ?? 0,
+  reward: 0,
+  hint: "Après Boucle while, répétez harvest() puis deposit(). L’herbe repousse pendant les actions du robot. Arrêter termine immédiatement le programme.",
+  code: "while (true) {\n  harvest();\n  deposit();\n}",
+};
+const firstExplore: Mission = {
+  ...missions[3],
+  reward: 0,
+  hint: "Trois parcelles coûte 20 foins. Continuez à produire du foin, puis recherchez l’extension. Visitez les trois cases et revenez près du dépôt pour décharger.",
+};
+const firstWheat: Mission = milestone(
+  "first-wheat",
+  0,
+  "Vos premières cultures",
+  "Recherchez Culture du blé et Capteur de maturité, puis récoltez un blé.",
+  3,
+  (s) =>
+    researched("wheat-base", "sensor")(s) +
+    Math.min(1, s.harvestedItems.Wheat ?? 0),
+  0,
+  50,
+  "Gardez 15 foins : 10 pour Culture du blé et 5 pour le capteur. Contrairement à l’herbe, le blé doit être planté. Attendez sa maturité avant harvest() : une récolte trop précoce détruit la culture sans produire de ressources.",
+  "Recherches",
+  "Débloquer le blé et le capteur",
+  "plant(Entities.Wheat);\nwhile (!can_harvest()) {\n  // Le robot attend la maturité.\n}\nharvest();\ndeposit();",
+);
+const modernMissions: Mission[] = [
+  firstGrass,
+  firstDeposit,
+  firstLoop,
+  firstRoutine,
+  firstExplore,
+  firstWheat,
+  ...missions
+    .slice(4)
+    .map((m) =>
+      m.id === "hundred"
+        ? {
+            ...m,
+            progress: (s: Farm) => s.depositedItems.Wheat ?? 0,
+            hint: "Déposez 100 blés au total, même si vous en dépensez entre-temps. Blé · niveau 2 coûte 20 blés et multiplie le rendement des nouvelles plantations par cinq. Attendez can_harvest() avant chaque récolte.",
+          }
+        : m,
+    ),
+];
+export const missionsFor = (s: Farm): Mission[] =>
+  s.progressionVersion === 2 ? modernMissions : missions;
 export const currentMission = (s: Farm) =>
-  missions.find((m) => !s.claimed.includes(m.id));
+  missionsFor(s).find((m) => !s.claimed.includes(m.id));
 export const completedMissions = (s: Farm) =>
-  missions.filter((m) => s.claimed.includes(m.id)).length;
+  missionsFor(s).filter((m) => s.claimed.includes(m.id)).length;
 export function career(s: Farm) {
-  const xp = missions
+  const xp = missionsFor(s)
     .filter((m) => s.claimed.includes(m.id))
     .reduce((n, m) => n + m.xp, 0);
   const ranks = [

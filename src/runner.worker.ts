@@ -1,3 +1,4 @@
+import { validateProgramProgression } from "./programProgression";
 import ts from "typescript";
 import { apiNames } from "./api";
 import { cropData, items } from "./catalog";
@@ -28,9 +29,11 @@ self.onmessage = async ({ data }) => {
       ts.ScriptKind.TS,
     );
     const functions = new Set<string>();
+    validateProgramProgression(source, {
+      loops: data.loops !== false,
+      conditions: !!data.conditions,
+    });
     const collect = (n: ts.Node) => {
-      if (ts.isIfStatement(n) && !data.conditions)
-        throw new Error("Débloquez Conditions avant d’utiliser if / else.");
       if (ts.isFunctionDeclaration(n) && n.name) functions.add(n.name.text);
       ts.forEachChild(n, collect);
     };
@@ -172,7 +175,7 @@ self.onmessage = async ({ data }) => {
         items.filter((i) => i !== "Fertilizer").map((k) => [k, k]),
       ),
       { North: "North", South: "South", East: "East", West: "West" },
-      { Fertilizer: "Fertilizer" },
+      { Hay: "Hay", Fertilizer: "Fertilizer" },
       { Grassland: "Grassland", Soil: "Soil" },
     );
     self.postMessage({ type: "done" });

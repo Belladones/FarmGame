@@ -105,19 +105,45 @@ monaco.languages.typescript.typescriptDefaults.addExtraLib(
   declarations,
   "file:///farm-api.d.ts",
 );
-const starter = `// Votre première ferme autonome 🌱\n// Chaque récolte prend 5 secondes.\nwhile (true) {\n  harvest();\n  plant(Entities.Wheat);\n  deposit();\n}\n`;
+const resourceNumber = (n: number) =>
+  n >= 10000
+    ? new Intl.NumberFormat("fr-FR", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }).format(n)
+    : String(n);
+const starter = `// Récoltez l’herbe, puis déposez le foin.\n// Relancez ce programme pour obtenir 5 foins.\nharvest();\ndeposit();\n`;
 const examples: Record<string, string> = {
-  "Première boucle": starter,
+  "Premier programme": starter,
+  "Première boucle":
+    "// Recherche : Boucle while (5 foins)\nwhile (true) {\n  harvest();\n  deposit();\n}\n",
+  "Cultiver le blé":
+    "// Recherches : Boucle while + Culture du blé + Capteur de maturité\nwhile (true) {\n  plant(Entities.Wheat);\n  while (!can_harvest()) {\n    // Attendre la maturité avant de récolter.\n  }\n  harvest();\n  deposit();\n}",
   "Avec un capteur":
     "// Recherches : Conditions + Capteur de maturité\nwhile (true) {\n  if (can_harvest()) {\n    harvest();\n    deposit();\n  }\n  plant(Entities.Wheat);\n}",
   "Explorer les parcelles":
     "// Recherches : Trois parcelles + Positionnement\nfor (let x: number = 0; x < get_world_size().width; x++) {\n  plant(Entities.Wheat);\n  move(Direction.East);\n}\nwhile (get_pos_x() > 0) {\n  move(Direction.West);\n}\ndeposit();",
 };
 const docs = [
-  ["plant(Entities.Wheat)", "Plante gratuitement sur la case vide du robot."],
+  [
+    "plant(Entities.Wheat)",
+    "Recherche Culture du blé : plante gratuitement sur une case vide ou remplace l’herbe. Pousse en 5 secondes.",
+  ],
+  [
+    "Entities.Grass / Items.Hay",
+    "L’herbe pousse automatiquement sur prairie en 0,5 seconde et produit du foin. Elle peut être plantée sur Soil ou Grassland.",
+  ],
+  [
+    "while (true) { harvest(); deposit(); }",
+    "Recherche Boucle while : 5 foins au dépôt. Les booléens TypeScript sont true et false. Arrêter termine une boucle infinie sans bloquer le jeu.",
+  ],
+  [
+    "Grounds.Grassland / Grounds.Soil",
+    "La prairie est le sol par défaut. till() alterne prairie et terre labourée. L’herbe repousse seule sur prairie, mais pas sur sol labouré.",
+  ],
   [
     "harvest()",
-    "Récolte une plante mûre. Fermier uniquement, soute de base : 10 unités.",
+    "Sur les nouvelles parties : récolte l’entité sous le robot ; une entité immature est détruite sans ressource. Renvoie true si une entité est retirée, false sinon. Durée de base : 200 ticks (1 s) si retrait, 1 tick (5 ms) sinon. Soute pleine : la culture mûre est conservée.",
   ],
   [
     "deposit()",
@@ -143,7 +169,7 @@ const docs = [
   ],
   [
     "till()",
-    "Alterne prairie et terre labourée sur une case vide. Recherche Labourage, fermier uniquement.",
+    "Disponible dès le départ pour le fermier : alterne prairie et terre labourée et retire l’herbe. Récoltez d’abord les autres cultures présentes.",
   ],
   [
     "watering() / refill_water()",
@@ -211,8 +237,12 @@ interface Runtime {
   queue: { id: number; name: string; args: unknown[] }[];
 }
 function App() {
-  const farm = useRef(load());
+  const [initialFarm] = useState(load);
+  const farm = useRef(initialFarm);
   const [s, setS] = useState({ ...farm.current });
+  const programExamples: Record<string, string> = s.previousProgram
+    ? { ...examples, "Mon programme précédent": s.previousProgram }
+    : examples;
   const [code, setCode] = useState(
     () => activeRobot(farm.current).code || starter,
   );
@@ -389,7 +419,8 @@ function App() {
     }
   }, [s.activeRobotId]);
   useEffect(() => {
-    let previousTick = performance.now();
+    let previousTick = performance.now(),
+      previousRender = previousTick;
     const timer = setInterval(() => {
       const now = performance.now(),
         elapsed = Math.min(1, (now - previousTick) / 1000);
@@ -427,8 +458,11 @@ function App() {
           });
         }
       }
-      refresh();
-    }, 100);
+      if (now - previousRender >= 100) {
+        previousRender = now;
+        refresh();
+      }
+    }, 5);
     return () => {
       clearInterval(timer);
       for (const rt of runtimes.current.values()) rt.worker?.terminate();
@@ -526,6 +560,9 @@ function App() {
       type: "run",
       code: source,
       conditions: farm.current.unlocks.includes("conditions"),
+      loops:
+        farm.current.unlocks.includes("loops") ||
+        farm.current.progressionVersion === 1,
     });
     log(`[${id}] Programme lancé.`);
     notify(`Programme de ${id} lancé. Suivez sa progression sur le terrain.`);
@@ -854,23 +891,31 @@ function App() {
           aria-label="Ressources et outils, zone défilante"
         >
           {" "}
-          <div className="resources" aria-label="Ressources de la ferme">
+          <div
+            className="resources resources-with-hay"
+            aria-label="Ressources de la ferme"
+          >
+            <div className="resource" title="Foin disponible dans les dépôts">
+              <ResourceIcon kind="hay" />
+              <strong>{resourceNumber(getStock(s, "Hay"))}</strong>
+              <span>FOIN</span>
+            </div>
             <div
               className="resource"
               title={`Blé au dépôt : ${s.stock} / ${stockCapacity(s)}`}
             >
               <ResourceIcon kind="wheat" />
-              <strong>{s.stock}</strong>
+              <strong>{resourceNumber(s.stock)}</strong>
               <span>BLÉ</span>
             </div>
             <div className="resource" title="Bois dans les dépôts">
               <ResourceIcon kind="wood" />
-              <strong>{getStock(s, "Wood")}</strong>
+              <strong>{resourceNumber(getStock(s, "Wood"))}</strong>
               <span>BOIS</span>
             </div>
             <div className="resource" title="Carottes dans les dépôts">
               <ResourceIcon kind="carrot" />
-              <strong>{getStock(s, "Carrot")}</strong>
+              <strong>{resourceNumber(getStock(s, "Carrot"))}</strong>
               <span>CAROTTES</span>
             </div>
             <div
@@ -1086,7 +1131,11 @@ function App() {
               : !tile
                 ? "Case de construction"
                 : tile.planted === null
-                  ? "plant(Entities.Wheat)"
+                  ? s.unlocks.includes("wheat-base")
+                    ? "plant(Entities.Wheat)"
+                    : tile.ground === "Soil"
+                      ? "till() : rétablir la prairie"
+                      : "L’herbe repousse seule"
                   : `${Math.round(growth * 100)} % · ${growth >= 1 ? "harvest()" : "Croissance en cours"}`}
           </span>
         </div>
@@ -1189,12 +1238,12 @@ function App() {
                 onChange={(e) => {
                   if (e.target.value) {
                     if (robot.id === s.activeRobotId)
-                      setCode(examples[e.target.value]);
+                      setCode(programExamples[e.target.value]);
                     farm.current.robots.find((r) => r.id === robot.id)!.code =
-                      examples[e.target.value];
+                      programExamples[e.target.value];
                     localStorage.setItem(
                       "farmscript-code",
-                      examples[e.target.value],
+                      programExamples[e.target.value],
                     );
                     refresh();
                   }
@@ -1203,7 +1252,7 @@ function App() {
                 <option value="" disabled>
                   Exemples de programmes
                 </option>
-                {Object.keys(examples).map((k) => (
+                {Object.keys(programExamples).map((k) => (
                   <option key={k}>{k}</option>
                 ))}
               </select>
@@ -1593,13 +1642,19 @@ function App() {
                       const result = command(
                         farm.current,
                         name,
-                        name === "plant" ? ["Wheat"] : [],
+                        name === "plant"
+                          ? [
+                              farm.current.unlocks.includes("wheat-base")
+                                ? "Wheat"
+                                : "Grass",
+                            ]
+                          : [],
                       );
                       refresh();
                       const message = result
                         ? `${name}() → ${result}`
                         : name === "harvest"
-                          ? "Rien à récolter : la culture est absente ou encore en croissance, ou la soute est pleine."
+                          ? "Aucune entité retirée : la case est vide ou la soute est pleine."
                           : name === "deposit"
                             ? "Aucun dépôt effectué : vérifiez la cargaison et la proximité d’un dépôt disposant de place."
                             : "Semis impossible : vérifiez que la case est agricole et libre.";
@@ -1612,15 +1667,24 @@ function App() {
                   onReset={() => {
                     if (
                       confirm(
-                        "Effacer la ferme et recommencer ? Le code sera conservé.",
+                        "Effacer la ferme et recommencer ? Le code actuel sera conservé dans les exemples.",
                       )
                     ) {
                       stopAll();
-                      farm.current = fresh();
-                      activeRobot(farm.current).code = code;
+                      const previousProgram = activeRobot(farm.current).code;
+                      farm.current = { ...fresh(), previousProgram };
+                      setCode(activeRobot(farm.current).code);
+                      localStorage.setItem(
+                        "farmscript-code",
+                        activeRobot(farm.current).code,
+                      );
+                      setExpanded(null);
+                      setEditorOpen(true);
+                      setShowStart(true);
+                      localStorage.removeItem("farmscript-tips-dismissed");
                       refresh();
                       notify(
-                        "Nouvelle ferme créée. Votre code a été conservé.",
+                        "Nouvelle ferme créée avec le premier programme. Votre ancien code est conservé dans « Mon programme précédent ».",
                       );
                       setPanel(null);
                     }

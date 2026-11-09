@@ -58,7 +58,7 @@ export function ResourceIcon({
   kind,
   style,
 }: {
-  kind: "wheat" | "wood" | "carrot" | "water";
+  kind: "hay" | "wheat" | "wood" | "carrot" | "water";
   style?: CSSProperties;
 }) {
   return (
@@ -69,7 +69,7 @@ export function ResourceIcon({
       aria-hidden="true"
     >
       <ellipse cx="53" cy="86" rx="29" ry="6" fill="#263b43" opacity=".2" />
-      {kind === "wheat" && (
+      {kind === "hay" && (
         <g stroke="#87712a" strokeWidth="1.4" strokeLinejoin="round">
           <path fill="#c0a744" d="m17 48 35-8 24 12-4 29-37 8-20-11Z" />
           <path fill="#ead06a" d="m17 48 23 10 36-6-24-12Z" />
@@ -84,6 +84,34 @@ export function ResourceIcon({
           <path fill="#f1d466" d="m31 20 15 10-2 32-15-13Z" />
           <path fill="#ccb04a" d="m46 30 32-4-1 29-33 7Z" />
           <path fill="#aa8428" d="m49 17 4-1 4 11-3 1ZM54 28l3-1-1 32-4 1Z" />
+        </g>
+      )}
+      {kind === "wheat" && (
+        <g stroke="#946c21" strokeWidth="2" strokeLinecap="round">
+          <path d="M33 85L56 19M49 88L73 34M23 74L37 31" fill="none" />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <g
+              key={i}
+              transform={`translate(${54 - i * 4} ${23 + i * 11}) rotate(20)`}
+            >
+              <ellipse
+                cx="-6"
+                cy="0"
+                rx="5"
+                ry="9"
+                fill="#edc951"
+                transform="rotate(-35 -6 0)"
+              />
+              <ellipse
+                cx="6"
+                cy="5"
+                rx="5"
+                ry="9"
+                fill="#ffd967"
+                transform="rotate(35 6 5)"
+              />
+            </g>
+          ))}
         </g>
       )}
       {kind === "wood" && (

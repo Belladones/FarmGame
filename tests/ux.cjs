@@ -111,7 +111,7 @@ const assert = require("node:assert/strict");
     await p.getByRole("button", { name: "harvest()", exact: true }).click();
     assert.match(
       await p.locator(".help-result").innerText(),
-      /Rien à récolter/,
+      /harvest\(\) → true|Aucune entité/,
     );
     await p.screenshot({ path: "/tmp/farm-ux-guide-mobile.png" });
     assert.equal(

@@ -1,7 +1,8 @@
 require("tsx/cjs");
+const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { fresh, buy } = require("../src/engine.ts");
+const { buy } = require("../src/engine.ts");
 const { missions } = require("../src/missions.ts");
 (async () => {
   const browser = await chromium.launch({
@@ -77,6 +78,7 @@ const { missions } = require("../src/missions.ts");
     // Finish chapter one and verify the next chapter becomes the selected page.
     const expanded = fresh();
     expanded.stock = 25;
+    expanded.resources.Hay = 20;
     buy(expanded, "extension");
     expanded.visited = [0, 1, 2];
     expanded.claimed = missions.slice(0, 3).map((m) => m.id);

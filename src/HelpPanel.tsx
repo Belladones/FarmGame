@@ -32,14 +32,48 @@ export function HelpPanel({
           apprentissage.
         </p>
       </header>
+      <section className="help-onboarding">
+        <h3>Pour commencer</h3>
+        <p>
+          La prairie porte déjà de l’herbe. Elle repousse seule en 0,5 seconde :
+          inutile de planter. <code>harvest();</code> récolte le foin dans la
+          soute du robot, puis <code>deposit();</code> le transfère au dépôt
+          adjacent.
+        </p>
+        <p>
+          Relancez votre premier programme jusqu’à obtenir 5 foins au dépôt,
+          puis ouvrez Recherches → Programmation pour acheter Boucle while. En
+          TypeScript :{" "}
+          <code>
+            while (true) {"{"} harvest(); deposit(); {"}"}
+          </code>
+          . Arrêter met fin au programme, même dans une boucle infinie.
+        </p>
+        <p>
+          Une récolte prématurée retire la culture sans donner de ressource.
+          Avant d’automatiser le blé, débloquez le capteur et attendez{" "}
+          <code>can_harvest()</code>.
+        </p>
+        <p>
+          Le bouton − réduit un programme, le bouton d’agrandissement le
+          restaure en grand. Glissez en dehors des fenêtres pour tourner autour
+          de la ferme ; utilisez la molette ou deux doigts pour zoomer. Le robot
+          initial roule au sol.
+        </p>
+      </section>
       <div className="help-start">
         <button onClick={() => onNavigate("Missions")}>
           <strong>01 · Suivre les missions</strong>
-          <span>Des objectifs guidés, du premier semis à votre flotte.</span>
+          <span>
+            De la prairie et des premiers foins aux cultures et à la flotte.
+          </span>
         </button>
         <button onClick={() => onNavigate("code")}>
-          <strong>02 · Programmer mon robot</strong>
-          <span>Le programme fourni plante, récolte et dépose en boucle.</span>
+          <strong>02 · Premier Programme</strong>
+          <span>
+            Récoltez l’herbe et déposez le foin ; la première boucle se débloque
+            ensuite.
+          </span>
         </button>
         <button onClick={() => onNavigate("Robots")}>
           <strong>03 · Comprendre ma flotte</strong>
@@ -137,7 +171,8 @@ export function HelpPanel({
         <summary>Recommencer une partie</summary>
         <p>
           La ferme et sa progression seront réinitialisées. Le code du robot
-          sélectionné sera conservé. Une confirmation est demandée avant
+          sélectionné sera conservé dans « Mon programme précédent » et le
+          premier programme sera chargé. Une confirmation est demandée avant
           d’effacer.
         </p>
         <button className="reset-farm" onClick={onReset}>

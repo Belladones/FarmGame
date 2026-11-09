@@ -1,6 +1,7 @@
+import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, command, buy, claim, sell, advance } from "./engine";
+import { command, buy, claim, sell, advance } from "./engine";
 test("growth, harvesting and adjacent deposit follow game time", () => {
   const s = fresh();
   assert.equal(command(s, "plant", ["Wheat"]), true);
@@ -29,6 +30,7 @@ test("research preserves planted yield and changes future plantings", () => {
 test("expansion preserves coordinates, blocks borders and distant deposit", () => {
   const s = fresh();
   s.stock = 25;
+  s.resources.Hay = 20;
   buy(s, "extension");
   assert.equal(command(s, "move", ["West"]), false);
   assert.equal(command(s, "move", ["East"]), true);
@@ -58,8 +60,10 @@ test("locked sensors fail and research spends stock only once", () => {
   const s = fresh();
   assert.throws(() => command(s, "can_harvest", []));
   s.stock = 10;
+  s.resources.Hay = 5;
   assert.equal(buy(s, "sensor"), true);
-  assert.equal(s.stock, 0);
+  assert.equal(s.stock, 10);
+  assert.equal(s.resources.Hay ?? 0, 0);
   assert.equal(command(s, "can_harvest", []), false);
 });
 test("missions are ordered, rewards are unique, sale consumes stock", () => {

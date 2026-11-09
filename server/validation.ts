@@ -27,6 +27,14 @@ function safeTree(value: unknown, depth = 0): boolean {
 export function validFarm(value: unknown): value is RecordValue {
   if (!record(value) || !safeTree(value)) return false;
   const f = value;
+  if (f.previousProgram !== undefined && typeof f.previousProgram !== "string")
+    return false;
+  if (
+    f.progressionVersion !== undefined &&
+    f.progressionVersion !== 1 &&
+    f.progressionVersion !== 2
+  )
+    return false;
   if (f.companion !== undefined) {
     const c = f.companion;
     if (
@@ -86,6 +94,8 @@ export function validFarm(value: unknown): value is RecordValue {
   const inventory = (v: unknown) =>
     record(v) && Object.values(v).every((n) => typeof n === "number" && n >= 0);
   if (
+    (f.harvestedItems !== undefined && !inventory(f.harvestedItems)) ||
+    (f.depositedItems !== undefined && !inventory(f.depositedItems)) ||
     !inventory(f.resources) ||
     (f.produced !== undefined && !inventory(f.produced))
   )

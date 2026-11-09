@@ -1,7 +1,8 @@
 require("tsx/cjs");
+const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { fresh, buy } = require("../src/engine.ts");
+const { buy } = require("../src/engine.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -13,6 +14,13 @@ const { fresh, buy } = require("../src/engine.ts");
       }),
       errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
+    await p.addInitScript((f) => {
+      if (!localStorage.getItem("farmscript-v1"))
+        localStorage.setItem(
+          "farmscript-v1",
+          JSON.stringify({ version: 1, farm: f }),
+        );
+    }, fresh());
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     await p.getByRole("button", { name: "Recherches", exact: true }).click();
     await p.locator('[data-skill="wheat3"]').click();
@@ -45,6 +53,7 @@ const { fresh, buy } = require("../src/engine.ts");
       .click();
     const fixture = fresh();
     fixture.stock = 25;
+    fixture.resources.Hay = 20;
     buy(fixture, "extension");
     fixture.unlocks.push("wheat", "bush");
     fixture.stock = 150;

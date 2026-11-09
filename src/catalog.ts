@@ -1,5 +1,6 @@
 /** Values from docs/CONCEPTION.md, sections 1, 3, 6, 7 and 10. */
 export const itemNames = {
+  Hay: "Foin",
   Wheat: "Blé",
   Wood: "Bois",
   Carrot: "Carotte",
@@ -12,6 +13,7 @@ export const itemNames = {
 export type Item = keyof typeof itemNames;
 export type Inventory = Partial<Record<Item, number>>;
 export const salePrices: Record<Item, number> = {
+  Hay: 1,
   Wheat: 1,
   Wood: 3,
   Carrot: 6,
@@ -163,6 +165,22 @@ const A = "Agriculture",
   P = "Programmation";
 export const research: Research[] = [
   r(
+    "loops",
+    "Boucle while",
+    { Hay: 5 },
+    [],
+    P,
+    "Répétez une séquence avec while (true). Les programmes restent isolés : Arrêter termine une boucle infinie.",
+  ),
+  r(
+    "wheat-base",
+    "Culture du blé",
+    { Hay: 10 },
+    ["loops"],
+    A,
+    "Débloque plant(Entities.Wheat). Le blé pousse en 5 secondes et produit 1 blé. L’herbe reste disponible gratuitement.",
+  ),
+  r(
     "wheat",
     "Blé · niveau 2",
     { Wheat: 20 },
@@ -309,8 +327,8 @@ export const research: Research[] = [
   r(
     "extension",
     "Trois parcelles",
-    { Wheat: 25 },
-    [],
+    { Hay: 20 },
+    ["loops"],
     A,
     "Étend la zone agricole à 3 × 1, sans changer les coordonnées existantes.",
   ),
@@ -418,7 +436,14 @@ export const research: Research[] = [
     A,
     "Bonus de récolte groupée : +100 %.",
   ),
-  r("conditions", "Conditions", { Wheat: 10 }, [], P, "Débloque if et else."),
+  r(
+    "conditions",
+    "Conditions",
+    { Wheat: 10 },
+    ["loops"],
+    P,
+    "Débloque if et else.",
+  ),
   r("print", "Journal", { Wheat: 5 }, [], P, "Débloque print()."),
   r(
     "variables",
@@ -439,8 +464,8 @@ export const research: Research[] = [
   r(
     "sensor",
     "Capteur de maturité",
-    { Wheat: 10 },
-    [],
+    { Hay: 5 },
+    ["loops"],
     T,
     "Débloque can_harvest().",
   ),
@@ -471,10 +496,10 @@ export const research: Research[] = [
   r(
     "till",
     "Labourage",
-    { Wheat: 40, Wood: 20 },
-    ["bush"],
+    {},
+    [],
     T,
-    "till() : alterne prairie et terre labourée sur une case vide. Réservé aux fermiers.",
+    "Disponible dès le départ : till() alterne prairie et terre labourée. L’herbe repousse uniquement sur prairie.",
   ),
   r(
     "construction",
@@ -751,6 +776,7 @@ export const research: Research[] = [
 ].map((entry): Research => {
   const prerequisites = new Set(entry.prerequisites);
   const providers: Partial<Record<Item, string>> = {
+    Wheat: "wheat-base",
     Wood: "bush",
     Carrot: "carrot",
     Pumpkin: "pumpkin",
@@ -808,7 +834,7 @@ export const formatCost = (cost: Inventory) =>
       ([k, v]) =>
         `${v.toLocaleString("fr-FR")} ${itemNames[k as Item].toLowerCase()}${["Wood", "Fertilizer"].includes(k) ? "" : "s"}`,
     )
-    .join(" + ");
+    .join(" + ") || "Gratuit";
 export const sum = (inventory: Inventory) =>
   Object.values(inventory).reduce((a, b) => a + (b ?? 0), 0);
 export const items = Object.keys(itemNames) as Item[];
@@ -831,12 +857,20 @@ export const constructionSlots = [
   [-1, 7],
 ].map(([x, y]) => ({ x, y }));
 export const cropData = {
+  Grass: {
+    resource: "Hay",
+    seconds: 0.5,
+    soil: "Any",
+    cost: {},
+    unlock: null,
+    yields: [1],
+  },
   Wheat: {
     resource: "Wheat",
     seconds: 5,
     soil: "Any",
     cost: {},
-    unlock: null,
+    unlock: "wheat-base",
     yields: [1, 5, 12, 30, 75],
   },
   Bush: {

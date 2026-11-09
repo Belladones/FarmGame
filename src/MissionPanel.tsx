@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { missionBlocker, type Farm } from "./engine";
 import {
-  missions,
+  missionsFor,
   chapters,
   currentMission,
   career,
@@ -17,6 +17,7 @@ export function MissionPanel({
   onClaim: (id: string) => boolean;
   onNavigate: (destination: MissionDestination) => void;
 }) {
+  const missions = missionsFor(farm);
   const active = currentMission(farm),
     rank = career(farm);
   const [page, setPage] = useState(active?.chapter ?? chapters.length - 1);

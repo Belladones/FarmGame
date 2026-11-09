@@ -1,3 +1,5 @@
+require("tsx/cjs");
+const { legacyFarm } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 (async () => {
   const browser = await chromium.launch({
@@ -34,6 +36,13 @@ const { chromium } = require("playwright");
       );
     };
     page.on("pageerror", (e) => errors.push(e.message));
+    await page.addInitScript((f) => {
+      if (!localStorage.getItem("farmscript-v1"))
+        localStorage.setItem(
+          "farmscript-v1",
+          JSON.stringify({ version: 1, farm: f }),
+        );
+    }, legacyFarm());
     await page.goto(process.env.FARM_URL || "http://localhost:5173");
     await openEditor();
     await page.waitForTimeout(2500);

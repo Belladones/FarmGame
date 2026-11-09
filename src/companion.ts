@@ -1,4 +1,4 @@
-import { missions } from "./missions";
+import { missionsFor } from "./missions";
 import type { Farm } from "./engine";
 export const cosmetics = [
   {
@@ -101,7 +101,7 @@ export function hydrateCompanion(raw: unknown): Companion {
   };
 }
 export const companionMissionCount = (farm: Farm) =>
-  missions.filter((m) => farm.claimed.includes(m.id)).length;
+  missionsFor(farm).filter((m) => farm.claimed.includes(m.id)).length;
 export function customizeCompanion(farm: Farm, id: string): boolean {
   const item = cosmetics.find((c) => c.id === id);
   if (!item) return false;

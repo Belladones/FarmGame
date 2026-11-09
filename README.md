@@ -61,15 +61,23 @@ docker compose exec -T db pg_dump -U farmscript -d farmscript > farmscript-backu
 
 La partie commence avec **0 or, un fermier terrestre gratuit, une parcelle et un dépôt gratuit adjacent**. Le fermier est un laboureur sur roues avec outil avant, sans hélices. Sa soute de base contient **10 unités**, conformément au document. Le dépôt contient 200 unités au total, toutes ressources confondues.
 
+Le premier programme récolte l’herbe déjà présente et dépose le foin :
+
+```ts
+harvest();
+deposit();
+```
+
+Après 5 foins déposés, recherchez **Boucle while** pour automatiser cette séquence :
+
 ```ts
 while (true) {
   harvest();
-  plant(Entities.Wheat);
   deposit();
 }
 ```
 
-Le blé pousse en 5 secondes de simulation. Les appels agricoles et transferts prennent une seconde de base, même quand l’action est impossible ; les capteurs ne prennent pas de temps agricole. Chaque boucle rend la main à l’interface. La simulation et les actions sont suspendues pendant la pause, sans rattrapage hors ligne.
+L’herbe repousse spontanément sur prairie en 0,5 seconde. Le blé demande Culture du blé (10 foins), une plantation et 5 secondes de croissance ; le capteur de maturité (5 foins) permet de l’attendre sans détruire les cultures immatures. Une récolte avec retrait dure 200 ticks (1 seconde de base), sinon 1 tick (5 ms). Les anciennes parties conservent leur récolte non destructive sur culture immature. Les programmes sont isolés dans des Workers et arrêtables. La pause suspend toute la simulation, sans rattrapage hors ligne.
 
 - Glisser sur le champ pour tourner autour à 360° et changer son inclinaison. Molette ou pincement pour zoomer ; maison pour recentrer.
 - Le plateau affiche uniquement les parcelles débloquées : 1 × 1, puis 3 × 1, 3 × 3, jusqu’à 7 × 7. Les cellules sont carrées dans le modèle 3D ; leur projection dépend de l’angle de vue. Les coordonnées et cultures existantes sont conservées lors des extensions.
@@ -137,7 +145,7 @@ Après perte du dernier fermier, un unique fermier de secours non vendable et de
 - `src/api.ts` : API typée injectée dans Monaco et partagée avec le runtime.
 - `src/runner.worker.ts` : transpilation TypeScript et instrumentation des boucles et appels dans un Worker ; chaque robot a un runtime indépendant.
 
-Le **catalogue du magasin** et ses systèmes associés sont implémentés ; la **campagne de 56 missions** n’est pas encore intégrée. Les quatre missions du prototype gardent des compteurs simplifiés et ne certifient pas l’emploi d’une notion pédagogique. L’accès aux constructions du langage n’est pas encore entièrement verrouillé selon l’arbre : Variables et Fonctions servent de prérequis de progression, mais leur syntaxe reste libre pour conserver les programmes existants. Les aides `range`, `list`, `len`, `str` et les branches de programmation avancée restent à venir.
+Le **catalogue du magasin** et ses systèmes associés sont implémentés ; la **campagne de 56 missions** n’est pas encore intégrée. La campagne guidée commence par le foin, la première boucle, l’agrandissement puis la culture du blé ; elle vérifie les ressources réellement récoltées et déposées ainsi que les recherches acquises. L’accès aux constructions du langage n’est pas encore entièrement verrouillé selon l’arbre : Variables et Fonctions servent de prérequis de progression, mais leur syntaxe reste libre pour conserver les programmes existants. Les aides `range`, `list`, `len`, `str` et les branches de programmation avancée restent à venir.
 
 Le runtime supporte boucles, conditions, variables et fonctions nommées. Il ne prend pas en charge les callbacks, générateurs ou imports. Monaco refuse le lancement d’un code présentant des erreurs TypeScript. Le Worker préserve la réactivité mais n’est pas une frontière de sécurité pour du code hostile : exécuter son propre code. La CSP limite les connexions distantes. Les prix et le rythme restent à équilibrer en jouant, comme le précise le document.
 
@@ -309,3 +317,14 @@ Le design actif de Luma est basé sur celui du commit `fcad563` : petite androï
 Les fichiers du modèle `cyber` restent archivés dans `public/models/luma/`, ainsi que ses scripts d’import ; ils ne sont plus chargés par Luma et aucune texture externe n’est nécessaire au design actif. Les commandes `npm run assets:luma` et `npm run assets:luma:previews` restent disponibles pour ce modèle optionnel.
 
 Cliquez sur l’avatar du compte pour retrouver ses **Apparences** et **Accessoires** sous les paramètres de sauvegarde. Perle et Ruban sont disponibles au départ ; Rosée, Menthe et Nébuleuse se débloquent après 1, 3 et 6 missions récompensées ; Fleur solaire et Halo orbital après 2 et 5. Le bouton « Débloquer et équiper » est gratuit. Les deux emplacements sont indépendants et enregistrés dans la sauvegarde locale et celle du compte PostgreSQL. Les anciennes sauvegardes reçoivent la tenue initiale.
+
+
+Les nouvelles parties suivent désormais un départ guidé : une seule prairie avec de l’herbe mûre, un fermier terrestre (soute de 10) et un dépôt adjacent (200). Le premier programme appelle simplement `harvest(); deposit();`. L’herbe repousse seule en 0,5 seconde sur prairie et donne `Items.Hay` / `Resources.Hay`. `till()` est disponible dès le départ et alterne prairie et sol labouré ; l’herbe peut aussi être plantée sur les deux sols, mais ne repousse spontanément que sur prairie.
+
+Après 5 foins **déposés**, achetez **Boucle while** dans Programmation. Le compilateur du robot refuse les boucles avant cet achat. **Trois parcelles** coûte 20 foins ; **Culture du blé**, 10 foins ; **Capteur de maturité**, 5 foins. Les coûts suivants en blé nécessitent la culture du blé, puis les autres ressources exigent leurs propres producteurs et des dépôts suffisants. Le guide et les exemples utilisent TypeScript (`true`, `false`, accolades), pas la syntaxe Python.
+
+Pour ces nouvelles parties, récolter une culture immature la retire sans donner de ressources. Une récolte réussie dure de base 200 ticks (1 seconde, avant améliorations), une récolte sans retrait 1 tick (5 ms). Une soute pleine conserve la culture mûre. Les missions vérifient des compteurs séparés de foin et de blé récoltés/déposés : un total agrégé ne permet pas de sauter une étape. Les anciennes sauvegardes gardent leur campagne, leur code, le blé et les boucles acquis implicitement, ainsi que leur récolte non destructive sur culture immature. Elles peuvent également récolter l’herbe spontanée et accéder aux nouveaux prix.
+
+`npm run test:onboarding` parcourt une vraie partie neuve : premier programme, boucle refusée puis achetée avec 5 foins, production automatique, agrandissement, capteur, premier blé mûr et rechargement de la sauvegarde. Les scénarios avancés de l’ancienne économie utilisent des fixtures de sauvegardes établies ; les tests du nouveau départ utilisent directement `fresh()`.
+
+Lors d’un redémarrage confirmé depuis le guide, le premier programme est rechargé pour le nouveau départ. Le code précédemment sélectionné reste accessible dans l’exemple **Mon programme précédent** et dans la sauvegarde du compte ; il n’est pas effacé pour installer le tutoriel.

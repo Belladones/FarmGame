@@ -1,7 +1,7 @@
+import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  fresh,
   advance,
   buy,
   configureSite,
@@ -123,6 +123,7 @@ test("legacy saves retain their original construction positions and buildings", 
 test("robots deploy on the chosen cell and honor reservations", () => {
   const s = equipped();
   s.stock = 25;
+  s.resources.Hay = 20;
   buy(s, "extension");
   purchaseForInventory(s, "Farmer");
   const id = s.robots[1].id;

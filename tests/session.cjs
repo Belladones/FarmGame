@@ -35,16 +35,26 @@ async function requestSave(page) {
       errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     const fixture = fresh();
-    fixture.unlocks = ["construction", "storage2", "wheat", "bush"];
+    fixture.unlocks = [
+      "construction",
+      "storage2",
+      "wheat",
+      "bush",
+      "loops",
+      "wheat-base",
+      "till",
+    ];
     fixture.stock = 300;
-    fixture.resources = { Wood: 50 };
+    fixture.resources = { Wood: 50, Hay: 20 };
     buy(fixture, "extension");
     assert.equal(buy(fixture, "extension3"), true);
     fixture.unlocks = research.map((r) => r.id);
     fixture.sites = structuredClone(constructionSlots);
     fixture.sites[fixture.sites.length - 1] = { x: -1, y: -1 };
     fixture.stock = 100;
-    fixture.resources = { Wood: 50, Carrot: 20, Fertilizer: 2 };
+    fixture.resources = { Wood: 50, Carrot: 20, Fertilizer: 2, Hay: 17 };
+    fixture.harvestedItems = { Hay: 23, Wheat: 4 };
+    fixture.depositedItems = { Hay: 17, Wheat: 3 };
     fixture.gold = 3000;
     purchase(fixture, "Farmer");
     purchase(fixture, "Mill", 1, { x: 0, y: -1 });
@@ -91,6 +101,9 @@ async function requestSave(page) {
     assert.equal(data.save.farm.storedBuildings.length, 1);
     assert.deepEqual(data.save.farm.sites, fixture.sites);
     assert.equal(data.save.farm.robots[1].code, fixture.robots[1].code);
+    assert.equal(data.save.farm.progressionVersion, 2);
+    assert.equal(data.save.farm.depositedItems.Hay, 17);
+    assert.equal(data.save.farm.harvestedItems.Wheat, 4);
     const cookies = await context.cookies();
     const cookie = cookies.find((c) => c.name === "farmscript_session");
     assert.ok(cookie?.httpOnly);

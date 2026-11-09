@@ -1,7 +1,8 @@
+import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import ts from "typescript";
-import { fresh, claim, hydrateFarm, missionBlocker, advance } from "./engine";
+import { claim, hydrateFarm, missionBlocker, advance } from "./engine";
 import {
   missions,
   chapters,

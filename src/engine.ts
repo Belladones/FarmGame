@@ -1,5 +1,5 @@
 import { freshCompanion, hydrateCompanion, type Companion } from "./companion";
-import { missions } from "./missions";
+import { missions, missionsFor } from "./missions";
 import {
   buildings,
   constructionSlots,
@@ -20,9 +20,11 @@ import {
 } from "./catalog";
 export { research } from "./catalog";
 export type Crop = keyof typeof cropData;
+export const TICK_SECONDS = 0.005;
 export const DEFAULT_PROGRAM =
-  "// Mon premier fermier terrestre\nwhile (true) {\n  harvest();\n  plant(Entities.Wheat);\n  deposit();\n}\n";
+  "// Premier programme : récolter l’herbe, puis déposer le foin.\n// Relancez ce programme pour obtenir les 5 foins de Boucle while.\nharvest();\ndeposit();\n";
 export interface Tile {
+  emptySince?: number;
   planted: number | null;
   yield: number;
   entity?: Crop;
@@ -70,6 +72,8 @@ export interface Building {
   cycle?: { ends: number };
 }
 export interface Farm {
+  previousProgram?: string;
+  progressionVersion: 1 | 2;
   companion: Companion;
   time: number;
   width: number;
@@ -81,6 +85,8 @@ export interface Farm {
   stock: number;
   resources: Inventory;
   gold: number;
+  harvestedItems: Inventory;
+  depositedItems: Inventory;
   harvested: number;
   deposited: number;
   planted: number;
@@ -97,8 +103,9 @@ export interface Farm {
   sites: { x: number; y: number }[];
   storedBuildings: Building[];
 }
-const tile = (): Tile => ({
-  planted: null,
+const tile = (time = 0): Tile => ({
+  planted: time,
+  entity: "Grass",
   yield: 1,
   ground: "Grassland",
   water: 0,
@@ -143,23 +150,26 @@ const building = (
   water: 0,
 });
 export const fresh = (): Farm => ({
+  progressionVersion: 2,
   companion: freshCompanion(),
   time: 0,
   width: 1,
   height: 1,
   x: 0,
   y: 0,
-  tiles: [tile()],
+  tiles: [{ ...tile(), progress: 1 }],
   cargo: 0,
   stock: 0,
   resources: {},
   gold: 0,
+  harvestedItems: {},
+  depositedItems: {},
   harvested: 0,
   deposited: 0,
   planted: 0,
   visited: [0],
   wheatLevel: 1,
-  unlocks: [],
+  unlocks: ["till"],
   claimed: [],
   produced: {},
   robots: [robot("f1", "Farmer")],
@@ -184,10 +194,19 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
   const s = {
     ...fresh(),
     ...v,
+    previousProgram:
+      typeof v.previousProgram === "string" ? v.previousProgram : undefined,
+    progressionVersion: v.progressionVersion === 2 ? 2 : 1,
+    unlocks:
+      v.progressionVersion === 2
+        ? (v.unlocks ?? ["till"])
+        : [...new Set([...(v.unlocks ?? []), "loops", "wheat-base"])],
     companion: hydrateCompanion(v.companion),
     height: v.height ?? 1,
     resources: v.resources ?? {},
     produced: v.produced ?? {},
+    harvestedItems: v.harvestedItems ?? {},
+    depositedItems: v.depositedItems ?? {},
     storedBuildings: v.storedBuildings ?? [],
     orderPeriods: v.orderPeriods ?? {},
     tiles: v.tiles.map((t) => ({
@@ -333,7 +352,10 @@ export function researchBlocker(s: Farm, id: string): string | null {
   if (!r) return "Recherche inconnue";
   if (s.unlocks.includes(id)) return "Compétence déjà acquise";
   const missing = r.prerequisites.filter(
-    (p) => !s.unlocks.includes(p) && !(p === "extension" && s.width >= 3),
+    (p) =>
+      !s.unlocks.includes(p) &&
+      !(s.progressionVersion === 1 && (p === "loops" || p === "wheat-base")) &&
+      !(p === "extension" && s.width >= 3),
   );
   if (missing.length)
     return (
@@ -371,13 +393,24 @@ function resizeFarm(s: Farm, w: number, h: number) {
   s.tiles = Array.from({ length: w * h }, (_, i) => {
     const x = i % w,
       y = Math.floor(i / w);
-    return x < oldW && y < oldH ? old[y * oldW + x] : tile();
+    return x < oldW && y < oldH
+      ? old[y * oldW + x]
+      : s.progressionVersion === 1
+        ? { ...tile(), planted: null, entity: undefined }
+        : tile(s.time);
   });
   s.width = w;
   s.height = h;
   s.visited = s.visited.map((i) => Math.floor(i / oldW) * w + (i % oldW));
 }
 function growth(s: Farm, t: Tile, index: number) {
+  if (t.planted === null && (t.ground ?? "Grassland") === "Grassland") {
+    t.entity = "Grass";
+    t.planted = t.emptySince ?? s.time;
+    t.updatedAt = t.planted;
+    t.progress = 0;
+    t.yield = 1;
+  }
   if (t.planted === null) return;
   const kind = t.entity ?? "Wheat";
   let duration = cropData[kind].seconds;
@@ -971,11 +1004,15 @@ export function command(
       if (!Object.hasOwn(cropData, String(kind)))
         throw new Error("Culture inconnue.");
       const spec = cropData[kind];
-      if (spec.unlock) requireUnlock(spec.unlock);
+      if (
+        spec.unlock &&
+        !(s.progressionVersion === 1 && spec.unlock === "wheat-base")
+      )
+        requireUnlock(spec.unlock);
       if (
         !farmerOnly() ||
         !current ||
-        current.planted !== null ||
+        (current.planted !== null && current.entity !== "Grass") ||
         (spec.soil !== "Any" &&
           (current.ground ?? "Grassland") !== spec.soil) ||
         Object.entries(spec.cost).some(
@@ -1003,6 +1040,22 @@ export function command(
       break;
     }
     case "harvest": {
+      if (s.progressionVersion === 2) r.readyAt = s.time + TICK_SECONDS;
+      if (
+        farmerOnly() &&
+        current &&
+        current.planted !== null &&
+        !ready &&
+        s.progressionVersion === 2
+      ) {
+        current.planted = null;
+        current.emptySince = s.time;
+        delete current.entity;
+        current.progress = 0;
+        r.readyAt = s.time + 200 * TICK_SECONDS * actionDuration(s, r);
+        result = true;
+        break;
+      }
       if (!farmerOnly() || !ready || !current) {
         result = false;
         break;
@@ -1017,10 +1070,14 @@ export function command(
       }
       const item = cropData[current.entity ?? "Wheat"].resource;
       r.inventory[item] = (r.inventory[item] ?? 0) + n;
+      if (s.progressionVersion === 2)
+        r.readyAt = s.time + 200 * TICK_SECONDS * actionDuration(s, r);
+      s.harvestedItems[item] = (s.harvestedItems[item] ?? 0) + n;
       s.harvested += n;
       current.yield -= n;
       if (!current.yield) {
         current.planted = null;
+        current.emptySince = s.time;
         delete current.entity;
         current.progress = 0;
       }
@@ -1037,6 +1094,7 @@ export function command(
           );
           b.inventory[item] = (b.inventory[item] ?? 0) + n;
           r.inventory[item] = (r.inventory[item] ?? 0) - n;
+          s.depositedItems[item] = (s.depositedItems[item] ?? 0) + n;
           total += n;
         }
       }
@@ -1101,10 +1159,18 @@ export function command(
     }
     case "till":
       requireUnlock("till");
-      if (!farmerOnly() || !current || current.planted !== null) {
+      if (
+        !farmerOnly() ||
+        !current ||
+        (current.planted !== null && current.entity !== "Grass")
+      ) {
         result = false;
         break;
       }
+      current.planted = null;
+      current.emptySince = s.time;
+      delete current.entity;
+      current.progress = 0;
       current.ground = current.ground === "Soil" ? "Grassland" : "Soil";
       result = true;
       break;
@@ -1348,12 +1414,13 @@ export function command(
 }
 export { missions } from "./missions";
 export function missionBlocker(s: Farm, id: string): string | null {
-  const index = missions.findIndex((m) => m.id === id),
-    m = missions[index];
+  const sequence = missionsFor(s);
+  const index = sequence.findIndex((m) => m.id === id),
+    m = sequence[index];
   if (!m) return "Mission introuvable";
   if (s.claimed.includes(id)) return "Récompense déjà récupérée";
   if (
-    missions
+    sequence
       .slice(0, index)
       .some((previous) => !s.claimed.includes(previous.id))
   )
@@ -1365,7 +1432,7 @@ export function missionBlocker(s: Farm, id: string): string | null {
 }
 export function claim(s: Farm, id: string): boolean {
   syncBefore(s);
-  const m = missions.find((m) => m.id === id);
+  const m = missionsFor(s).find((m) => m.id === id);
   if (!m || missionBlocker(s, id)) return false;
   if (m.reward) addStock(s, { Wheat: m.reward });
   s.gold += m.gold;

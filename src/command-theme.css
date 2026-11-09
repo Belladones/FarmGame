@@ -1868,3 +1868,42 @@
 img.companion-avatar {
   object-fit: contain;
 }
+.game .resources-with-hay {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.game .resources-with-hay .resource strong {
+  font-size: clamp(16px, 1.8vw, 25px);
+}
+.game .resources-with-hay .resource span {
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+.game .resources-with-hay .resource-art {
+  max-width: 100%;
+}
+.help-onboarding {
+  padding: 18px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  background: #142533;
+}
+.help-onboarding p {
+  color: #b8cbd7;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.help-onboarding code {
+  color: #ffc189;
+  overflow-wrap: anywhere;
+}
+.game .resources-with-hay .resource strong {
+  font-size: clamp(14px, 1.45vw, 20px);
+}
+.game .resources-with-hay .resource span {
+  white-space: normal;
+  line-height: 1.35;
+  min-height: 22px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}

@@ -1,7 +1,8 @@
 require("tsx/cjs");
+const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { fresh, buy } = require("../src/engine.ts");
+const { buy } = require("../src/engine.ts");
 const { research, constructionSlots } = require("../src/catalog.ts");
 (async () => {
   const browser = await chromium.launch({
@@ -22,7 +23,7 @@ const { research, constructionSlots } = require("../src/catalog.ts");
       "Farmer",
     );
     await p.getByRole("button", { name: "Magasin", exact: true }).click();
-    assert.equal(await p.locator(".sale-row").count(), 8);
+    assert.equal(await p.locator(".sale-row").count(), 9);
     await p.getByRole("button", { name: "Robots", exact: true }).click();
     await p
       .getByLabel("Livraison des achats", { exact: true })
@@ -41,6 +42,7 @@ const { research, constructionSlots } = require("../src/catalog.ts");
     );
     const fixture = fresh();
     fixture.stock = 100;
+    fixture.resources.Hay = 20;
     buy(fixture, "extension");
     fixture.stock = 200;
     fixture.gold = 3000;

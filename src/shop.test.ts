@@ -1,7 +1,7 @@
+import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  fresh,
   buy,
   configureSite,
   purchase,
@@ -26,6 +26,7 @@ import { research, buildings, models, sum, constructionSlots } from "./catalog";
 function prepared() {
   const s = fresh();
   s.stock = 100;
+  s.resources.Hay = 20;
   buy(s, "extension");
   s.unlocks = research.map((r) => r.id);
   s.sites = structuredClone(constructionSlots);
@@ -289,6 +290,9 @@ test("watering and fertilizer do not consume supplies on invalid targets", () =>
   const s = prepared();
   activeRobot(s).water = 2;
   activeRobot(s).inventory.Fertilizer = 1;
+  s.tiles[0].ground = "Soil";
+  s.tiles[0].planted = null;
+  delete s.tiles[0].entity;
   assert.equal(command(s, "use_item", ["Fertilizer"]), false);
   assert.equal(activeRobot(s).inventory.Fertilizer, 1);
   command(s, "plant", ["Wheat"]);

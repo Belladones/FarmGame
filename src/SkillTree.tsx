@@ -31,8 +31,18 @@ export function SkillTree({
   onSell: () => void;
   focus?: "robots";
 }) {
-  const [page, setPage] = useState(0),
-    [selected, setSelected] = useState("wheat-base");
+  const [page, setPage] = useState(
+      focus !== "robots" &&
+        farm.progressionVersion === 2 &&
+        !farm.unlocks.includes("loops")
+        ? 1
+        : 0,
+    ),
+    [selected, setSelected] = useState(
+      farm.progressionVersion === 2 && !farm.unlocks.includes("loops")
+        ? "loops"
+        : "grass-base",
+    );
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;

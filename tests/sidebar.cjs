@@ -1,7 +1,8 @@
 require("tsx/cjs");
+const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { fresh, buy } = require("../src/engine.ts");
+const { buy } = require("../src/engine.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -10,6 +11,7 @@ const { fresh, buy } = require("../src/engine.ts");
   try {
     const fixture = fresh();
     fixture.stock = 25;
+    fixture.resources.Hay = 20;
     buy(fixture, "extension");
     fixture.stock = 135;
     fixture.resources = { Wood: 65 };

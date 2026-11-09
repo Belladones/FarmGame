@@ -285,6 +285,28 @@ export function FarmScene({
     function plantModels(parent: THREE.Object3D, index: number) {
       const result = {} as Record<Crop, THREE.Group>;
       result.Wheat = wheat(parent, index);
+      const grassGroup = new THREE.Group();
+      parent.add(grassGroup);
+      result.Grass = grassGroup;
+      const grassMaterial = mat(0x8bbf52);
+      const blades = new THREE.InstancedMesh(
+        new THREE.ConeGeometry(0.025, 0.22, 3),
+        grassMaterial,
+        28,
+      );
+      blades.castShadow = blades.receiveShadow = true;
+      grassGroup.add(blades);
+      for (let i = 0; i < 28; i++) {
+        dummy.position.set(
+          ((i * 17) % 29) / 29 - 0.48,
+          0.11,
+          ((i * 11) % 31) / 31 - 0.48,
+        );
+        dummy.rotation.set(0, 0, ((i % 3) - 1) * 0.2);
+        dummy.scale.set(1, 1, 1);
+        dummy.updateMatrix();
+        blades.setMatrixAt(i, dummy.matrix);
+      }
       for (const kind of ["Bush", "Tree", "Carrot", "Pumpkin"] as Crop[]) {
         const group = new THREE.Group();
         parent.add(group);

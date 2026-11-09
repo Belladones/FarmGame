@@ -1,7 +1,8 @@
 require("tsx/cjs");
+const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { fresh, buy } = require("../src/engine.ts");
+const { buy } = require("../src/engine.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: "/usr/bin/chromium",
@@ -16,6 +17,7 @@ const { fresh, buy } = require("../src/engine.ts");
     p.on("pageerror", (e) => errors.push(e.message));
     const f = fresh();
     f.stock = 100;
+    f.resources.Hay = 20;
     buy(f, "extension");
     f.unlocks = require("../src/catalog.ts").research.map((r) => r.id);
     f.robots[0].code =

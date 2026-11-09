@@ -1,4 +1,5 @@
 require("tsx/cjs");
+const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 (async () => {
@@ -60,9 +61,10 @@ const assert = require("node:assert/strict");
       ),
       true,
     );
-    const { fresh, buy } = require("../src/engine.ts");
+    const { buy } = require("../src/engine.ts");
     const fixture = fresh();
     fixture.stock = 100;
+    fixture.resources.Hay = 20;
     buy(fixture, "extension");
     fixture.stock = 180;
     fixture.resources = { Wood: 100 };

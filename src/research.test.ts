@@ -1,9 +1,9 @@
+import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { research, sum } from "./catalog";
 import { researchTrees, researchDepth } from "./researchTrees";
 import {
-  fresh,
   buy,
   hydrateFarm,
   researchBlocker,
@@ -22,7 +22,12 @@ function ancestors(id: string, result = new Set<string>()) {
   return result;
 }
 test("every research is acyclic, has producible costs and fits reachable storage", () => {
-  const providers = { Wood: "bush", Carrot: "carrot", Pumpkin: "pumpkin" };
+  const providers = {
+    Wheat: "wheat-base",
+    Wood: "bush",
+    Carrot: "carrot",
+    Pumpkin: "pumpkin",
+  };
   for (const r of research) {
     assert.ok(researchDepth(r.id) > 0);
     const previous = ancestors(r.id),

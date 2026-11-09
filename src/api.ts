@@ -31,9 +31,9 @@ export const apiNames = [
   "get_gold",
 ];
 export const declarations = `
-declare enum Entities { Wheat="Wheat", Bush="Bush", Carrot="Carrot", Tree="Tree", Pumpkin="Pumpkin" }
-declare enum Resources { Wheat="Wheat", Wood="Wood", Carrot="Carrot", Pumpkin="Pumpkin", Flour="Flour", Bread="Bread", Plank="Plank" }
-declare enum Items { Fertilizer="Fertilizer" }
+declare enum Entities { Grass="Grass", Wheat="Wheat", Bush="Bush", Carrot="Carrot", Tree="Tree", Pumpkin="Pumpkin" }
+declare enum Resources { Hay="Hay", Wheat="Wheat", Wood="Wood", Carrot="Carrot", Pumpkin="Pumpkin", Flour="Flour", Bread="Bread", Plank="Plank" }
+declare enum Items { Hay="Hay", Fertilizer="Fertilizer" }
 declare enum Grounds { Grassland="Grassland", Soil="Soil" }
 declare enum Direction { North="North", East="East", South="South", West="West" }
 declare function plant(entity:Entities):boolean;
