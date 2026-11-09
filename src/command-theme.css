@@ -1972,3 +1972,35 @@ img.companion-avatar {
   outline: 2px solid #ffab70;
   outline-offset: 3px;
 }
+
+.game .skill-node .node-level {
+  position: absolute;
+  right: -5px;
+  top: -12px;
+  z-index: 1;
+  padding: 3px 6px;
+  background: #192d3a;
+  border: 1px solid #9ab7c8;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.research-level-detail {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 14px;
+  background: #152632;
+  border: 1px solid #465e6d;
+}
+.research-level-detail progress {
+  width: 100%;
+  accent-color: #ff944c;
+}
+.research-level-detail p {
+  margin: 0;
+  font-size: 12px;
+}
+.research-level-detail > span {
+  color: #ffb07b;
+}

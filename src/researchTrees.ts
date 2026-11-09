@@ -1,4 +1,9 @@
-import { research, formatResearchCost, type Research } from "./catalog";
+import { research, formatResearchCost } from "./catalog";
+import {
+  researchGroupFor,
+  researchGroups,
+  type ResearchGroup,
+} from "./researchGroups";
 export interface ResearchNode {
   id: string;
   title: string;
@@ -8,6 +13,7 @@ export interface ResearchNode {
   y: number;
   parents: string[];
   research?: string;
+  group?: ResearchGroup;
   base?: boolean;
   detail: string;
   cost?: string;
@@ -62,17 +68,101 @@ const definitions = [
       "harvest() est disponible au départ : récolte la plante sous le fermier (200 ticks si retrait, 1 sinon). Le fermier de 20 unités et le dépôt de 200 unités sont offerts. Stockage 2 : 400 unités pour 500 or.",
   },
 ];
-export const researchTrees: ResearchTree[] = definitions.map((def) => {
-  const entries = research
-    .filter((r) => r.category === def.name)
-    .sort(
-      (a, b) =>
-        researchDepth(a.id) - researchDepth(b.id) ||
-        total(a) - total(b) ||
-        a.id.localeCompare(b.id),
-    );
-  const levels = [...new Set(entries.map((r) => researchDepth(r.id)))];
-  const nodes: ResearchNode[] = [
+/** Layout uses the first tier only. Later tier requirements are shown in the
+ * detail panel: merging every tier's edges would create false family cycles. */
+export function buildGroupedTree(
+  name: string,
+  caption: string,
+  root: ResearchNode,
+  ids: string[],
+): ResearchTree {
+  const nodes = new Map<string, ResearchNode>([[root.id, root]]);
+  for (const id of ids) {
+    const r = byId.get(id)!;
+    const group = researchGroupFor(id);
+    const nodeId = group?.id ?? id;
+    if (nodes.has(nodeId)) continue;
+    const first = group ? byId.get(group.steps[0])! : r;
+    nodes.set(nodeId, {
+      id: nodeId,
+      title: group?.title ?? r.name,
+      group,
+      research: first.id,
+      x: 0,
+      y: 0,
+      parents: [],
+      detail: first.detail,
+      cost: formatResearchCost(first),
+      symbol:
+        nodeId === "extension"
+          ? "▦"
+          : nodeId.startsWith("storage")
+            ? "▣"
+            : nodeId === "loops"
+              ? "while"
+              : nodeId === "conditions"
+                ? "if / else"
+                : nodeId === "functions"
+                  ? "function"
+                  : nodeId === "variables"
+                    ? "const / let"
+                    : "⬡",
+      art:
+        nodeId === "grass-base"
+          ? "hay"
+          : nodeId === "watering"
+            ? "water"
+            : nodeId.startsWith("wheat")
+              ? "wheat"
+              : ["bush", "tree"].includes(nodeId)
+                ? "wood"
+                : nodeId === "carrot"
+                  ? "carrot"
+                  : undefined,
+    });
+  }
+  for (const node of nodes.values()) {
+    if (node === root) continue;
+    const first = byId.get(node.research!)!;
+    const local = first.prerequisites
+      .map((id) => researchGroupFor(id)?.id ?? id)
+      .filter((id) => id !== node.id && nodes.has(id));
+    node.parents = [...new Set(local.length ? local : [root.id])];
+  }
+  const depths = new Map<string, number>([[root.id, 0]]);
+  function depth(id: string, chain = new Set<string>()): number {
+    if (depths.has(id)) return depths.get(id)!;
+    if (chain.has(id)) throw new Error(`Cycle de groupes : ${id}`);
+    const d =
+      1 +
+      Math.max(
+        0,
+        ...nodes.get(id)!.parents.map((p) => depth(p, new Set(chain).add(id))),
+      );
+    depths.set(id, d);
+    return d;
+  }
+  const rows = new Map<number, ResearchNode[]>();
+  for (const node of nodes.values())
+    if (node !== root) {
+      const d = depth(node.id);
+      rows.set(d, [...(rows.get(d) ?? []), node]);
+    }
+  let y = 205;
+  for (const [, row] of [...rows].sort(([a], [b]) => a - b)) {
+    row.sort((a, b) => a.title.localeCompare(b.title, "fr"));
+    row.forEach((node, i) => {
+      node.x = row.length === 1 ? 315 : 45 + (i % 3) * 220;
+      node.y = y + Math.floor(i / 3) * 180;
+    });
+    y += Math.ceil(row.length / 3) * 180;
+  }
+  return { name, caption, nodes: [...nodes.values()] };
+}
+export const researchTrees: ResearchTree[] = definitions.map((def) =>
+  buildGroupedTree(
+    def.name,
+    def.caption,
     {
       id: def.root,
       title: def.title,
@@ -83,57 +173,11 @@ export const researchTrees: ResearchTree[] = definitions.map((def) => {
       parents: [],
       base: true,
       detail: def.detail,
+      group:
+        def.name === "Agriculture"
+          ? researchGroups.find((g) => g.id === "grass-base")
+          : undefined,
     },
-  ];
-  let y = 205;
-  for (const level of levels) {
-    const row = entries.filter((r) => researchDepth(r.id) === level);
-    row.forEach((r, i) => {
-      const local = r.prerequisites.filter(
-        (id) => byId.get(id)?.category === def.name,
-      );
-      nodes.push({
-        id: r.id,
-        title: r.name,
-        research: r.id,
-        symbol: r.id.startsWith("extension")
-          ? (r.name.split("·")[1]?.trim() ?? "3 × 1")
-          : r.id.startsWith("storage")
-            ? "▣"
-            : r.id === "loops"
-              ? "while"
-              : r.id === "conditions"
-                ? "if / else"
-                : r.id === "functions"
-                  ? "function"
-                  : r.id === "variables"
-                    ? "const / let"
-                    : "⬡",
-        art: r.id.startsWith("grass")
-          ? "hay"
-          : r.id.startsWith("watering")
-            ? "water"
-            : r.id.startsWith("wheat")
-              ? "wheat"
-              : r.id.startsWith("bush") || r.id.startsWith("tree")
-                ? "wood"
-                : r.id.startsWith("carrot")
-                  ? "carrot"
-                  : undefined,
-        x: row.length === 1 ? 315 : 45 + (i % 3) * 220,
-        y: y + Math.floor(i / 3) * 180,
-        parents: local.length ? local : [def.root],
-        detail: r.detail,
-        cost: formatResearchCost(r),
-        prerequisite: r.prerequisites
-          .map((id) => byId.get(id)!.name)
-          .join(" + "),
-      });
-    });
-    y += Math.ceil(row.length / 3) * 180;
-  }
-  return { name: def.name, caption: def.caption, nodes };
-});
-function total(r: Research) {
-  return Object.values(r.materials).reduce((n, v) => n + (v ?? 0), 0);
-}
+    research.filter((r) => r.category === def.name).map((r) => r.id),
+  ),
+);

@@ -82,7 +82,9 @@ const assert = require("node:assert/strict");
     await p
       .getByRole("button", { name: "Arbre de compétences", exact: true })
       .click();
-    await p.getByRole("button", { name: /^Soute · 80/, exact: true }).click();
+    await p
+      .getByRole("button", { name: /^Soute · 0 \/ 3 · 80/, exact: true })
+      .click();
     await p
       .getByRole("button", {
         name: /^Rechercher · 80/,

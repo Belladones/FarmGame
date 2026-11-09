@@ -39,6 +39,8 @@ En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_
 
 Les arbres suivent le classeur fourni par le joueur : foin → While → Vitesse → plant()/move() → Buisson → Carottes → Arbre, avec eau passive, cultures jusqu’au niveau 10, terrain jusqu’à 10×10 et stockage payé en or. Les valeurs explicites, les choix pour les niveaux vides et les règles de compatibilité sont détaillés dans [REEQUILIBRAGE.md](docs/REEQUILIBRAGE.md). La source est conservée dans `docs/sources/amelioration.xlsx`.
 
+Les améliorations à plusieurs niveaux sont regroupées sur une carte unique dans les arbres et les menus des robots. Le compteur indique le niveau acquis et le maximum ; le prix, l’effet et les prérequis concernent toujours le prochain palier. Expansion conserve ses 9 achats (1×1 → 10×10), tandis que les cultures montent jusqu’à 10 niveaux. Les niveaux de base gratuits de l’herbe et du stockage sont inclus dans leur compteur. Les anciens identifiants de recherche sont conservés dans les sauvegardes.
+
 ## Comptes, sessions et sauvegardes PostgreSQL
 
 Le bouton **Session et sauvegarde**, en haut à droite, permet de créer un compte avec pseudo et mot de passe, se connecter et se déconnecter. Le pseudo accepte 3 à 24 lettres, chiffres, `_` ou `-`, sans distinction de casse. Les mots de passe font 10 à 128 caractères et sont hachés avec scrypt et un sel aléatoire. La récupération de mot de passe et la vérification par email ne sont pas encore proposées.

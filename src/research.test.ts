@@ -43,9 +43,11 @@ test("every research is acyclic, has producible costs and fits reachable storage
   }
 });
 test("trees contain exactly the actual research, in dependency order", () => {
-  const nodes = researchTrees.flatMap((t) => t.nodes.filter((n) => n.research));
-  assert.equal(nodes.length, research.length);
-  assert.equal(new Set(nodes.map((n) => n.id)).size, research.length);
+  const represented = researchTrees.flatMap((t) =>
+    t.nodes.flatMap((n) => n.group?.steps ?? (n.research ? [n.research] : [])),
+  );
+  assert.equal(represented.length, research.length);
+  assert.equal(new Set(represented).size, research.length);
   for (const t of researchTrees)
     for (const n of t.nodes)
       for (const p of n.parents)

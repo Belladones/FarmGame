@@ -10,15 +10,36 @@ import { formatResearchCost, type Item } from "./catalog";
 import { Icon, ResourceIcon } from "./Icons";
 import { robotTrees } from "./robotTrees";
 import {
+  groupProgress,
+  researchGroupFor,
+  hasResearchLevel,
+} from "./researchGroups";
+import {
   researchTrees as trees,
   type ResearchNode as Node,
   type ResearchTree as Tree,
 } from "./researchTrees";
 import { sum } from "./catalog";
+function progressOf(node: Node, farm: Farm) {
+  return node.group ? groupProgress(node.group, farm.unlocks) : undefined;
+}
+function nextResearch(node: Node, farm: Farm) {
+  return node.group
+    ? progressOf(node, farm)!.next
+    : research.find((r) => r.id === node.research);
+}
 function isAcquired(node: Node, farm: Farm) {
-  return (
-    !!node.base || (!!node.research && farm.unlocks.includes(node.research))
-  );
+  const progress = progressOf(node, farm);
+  return progress
+    ? progress.level === progress.max
+    : !!node.base ||
+        (!!node.research && hasResearchLevel(farm.unlocks, node.research));
+}
+function isLearned(node: Node, farm: Farm) {
+  return (progressOf(node, farm)?.level ?? 0) > 0 || isAcquired(node, farm);
+}
+function containsResearch(node: Node, id: string) {
+  return node.research === id || !!node.group?.steps.includes(id);
 }
 export function SkillTree({
   farm,
@@ -43,6 +64,9 @@ export function SkillTree({
         ? "loops"
         : "grass-base",
     );
+  const [requirementTarget, setRequirementTarget] = useState<string | null>(
+    null,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
@@ -62,10 +86,11 @@ export function SkillTree({
         top: Math.max(0, node.y - (el.clientHeight - 114) / 2),
       });
   }, [page, selected]);
-  const researchItem = research.find((r) => r.id === node.research);
+  const progress = progressOf(node, farm);
+  const researchItem = nextResearch(node, farm);
   const acquired = isAcquired(node, farm),
-    future = !node.base && !node.research;
-  const blocker = node.research ? researchBlocker(farm, node.research) : null;
+    future = !node.base && !node.research && !node.group;
+  const blocker = researchItem ? researchBlocker(farm, researchItem.id) : null;
   const prerequisiteMissing = !!blocker?.startsWith("Requis");
   const affordable =
     !!researchItem &&
@@ -75,15 +100,17 @@ export function SkillTree({
     );
   const visitResearch = (id: string) => {
     const pageIndex = pages.findIndex((p) =>
-      p.nodes.some((n) => n.research === id),
+      p.nodes.some((n) => containsResearch(n, id)),
     );
     if (pageIndex >= 0) {
       setPage(pageIndex);
-      setSelected(id);
+      setSelected(researchGroupFor(id)?.id ?? id);
+      setRequirementTarget(id);
     }
   };
   const changePage = (index: number) => {
     setPage(index);
+    setRequirementTarget(null);
     setSelected(pages[index].nodes[0].id);
   };
   return (
@@ -121,7 +148,7 @@ export function SkillTree({
             <span>0{i + 1}</span>
             {t.name}
             <small>
-              {t.nodes.filter((n) => isAcquired(n, farm)).length} /{" "}
+              {t.nodes.filter((n) => isLearned(n, farm)).length} /{" "}
               {t.nodes.length}
             </small>
           </button>
@@ -164,7 +191,7 @@ export function SkillTree({
                       <path
                         key={id + "-" + n.id}
                         d={`M${x} ${y}V${mid}H${cx}V${cy}`}
-                        className={isAcquired(parent, farm) ? "unlocked" : ""}
+                        className={isLearned(parent, farm) ? "unlocked" : ""}
                       />
                     );
                   }),
@@ -172,14 +199,15 @@ export function SkillTree({
               </svg>
               {tree.nodes.map((n) => {
                 const owned = isAcquired(n, farm),
-                  r = research.find((r) => r.id === n.research),
-                  planned = !n.base && !n.research,
+                  r = nextResearch(n, farm),
+                  level = progressOf(n, farm),
+                  planned = !n.base && !n.research && !n.group,
                   locked =
                     !owned &&
                     !!r &&
                     r.prerequisites.some(
                       (id) =>
-                        !farm.unlocks.includes(id) &&
+                        !hasResearchLevel(farm.unlocks, id) &&
                         !(id === "extension" && farm.width >= 3),
                     );
                 return (
@@ -199,8 +227,11 @@ export function SkillTree({
                     }
                     style={{ left: n.x, top: n.y }}
                     aria-pressed={n.id === node.id}
-                    aria-label={`${n.title} · ${owned ? "Acquis" : planned ? "À venir" : r ? formatResearchCost(r) : ""}`}
-                    onClick={() => setSelected(n.id)}
+                    aria-label={`${n.title}${level ? ` · ${level.level} / ${level.max}` : ""} · ${owned ? (level ? "Niveau maximum" : "Acquis") : planned ? "À venir" : r ? formatResearchCost(r) : ""}`}
+                    onClick={() => {
+                      setSelected(n.id);
+                      setRequirementTarget(null);
+                    }}
                   >
                     <div className="node-art">
                       {n.art ? (
@@ -225,10 +256,20 @@ export function SkillTree({
                         </svg>
                       )}
                     </div>
+                    {level && (
+                      <span
+                        className="node-level"
+                        aria-label={`Niveau ${level.level} sur ${level.max}`}
+                      >
+                        {level.level} / {level.max}
+                      </span>
+                    )}
                     <span className="node-title">{n.title}</span>
                     <span className="node-status">
                       {owned
-                        ? "✓ Acquis"
+                        ? level
+                          ? "✓ Maximum"
+                          : "✓ Acquis"
                         : planned
                           ? "À venir"
                           : `${r ? formatResearchCost(r) : ""}`}
@@ -242,7 +283,13 @@ export function SkillTree({
         <aside className="skill-detail" aria-label="Détail de la compétence">
           <span className="overline">
             {tree.name.toUpperCase()} /{" "}
-            {acquired ? "ACQUIS" : future ? "BRANCHE À VENIR" : "RECHERCHE"}
+            {acquired
+              ? progress
+                ? "NIVEAU MAXIMUM"
+                : "ACQUIS"
+              : future
+                ? "BRANCHE À VENIR"
+                : "RECHERCHE"}
           </span>
           <div className="detail-art">
             {node.art ? (
@@ -252,7 +299,37 @@ export function SkillTree({
             )}
           </div>
           <h3>{node.title}</h3>
-          <p>{node.detail}</p>
+          {progress && (
+            <div className="research-level-detail">
+              <strong>
+                Niveau {progress.level} / {progress.max}
+              </strong>
+              <progress
+                aria-label={`Progression ${node.title}`}
+                value={progress.level}
+                max={progress.max}
+              />
+              {progress.current && (
+                <p>Effet acquis : {progress.current.detail}</p>
+              )}
+              {progress.next && (
+                <span>
+                  Prochain niveau : {progress.level + 1} / {progress.max}
+                </span>
+              )}
+            </div>
+          )}
+          {requirementTarget &&
+            !hasResearchLevel(farm.unlocks, requirementTarget) &&
+            researchItem?.id !== requirementTarget && (
+              <p className="capacity-warning">
+                Prérequis à atteindre :{" "}
+                {research.find((r) => r.id === requirementTarget)?.name}
+              </p>
+            )}
+          {(!progress?.current || researchItem) && (
+            <p>{researchItem?.detail ?? node.detail}</p>
+          )}
           {node.prerequisite && !researchItem && (
             <div
               className={
@@ -265,15 +342,17 @@ export function SkillTree({
           )}
           {researchItem && (
             <div className="research-requirements">
-              <span>PRÉREQUIS RÉELS</span>
+              <span>
+                {progress ? "PRÉREQUIS DU PROCHAIN NIVEAU" : "PRÉREQUIS RÉELS"}
+              </span>
               {researchItem.prerequisites.length ? (
                 researchItem.prerequisites.map((id) => {
                   const requirement = research.find((r) => r.id === id)!;
                   const known =
-                    farm.unlocks.includes(id) ||
+                    hasResearchLevel(farm.unlocks, id) ||
                     (id === "extension" && farm.width >= 3);
                   const available = pages.some((p) =>
-                    p.nodes.some((n) => n.research === id),
+                    p.nodes.some((n) => containsResearch(n, id)),
                   );
                   return (
                     <button
@@ -306,20 +385,24 @@ export function SkillTree({
           <div className="skill-price">
             <span>COÛT</span>
             <strong>
-              {node.base
-                ? "Gratuit"
+              {acquired && progress
+                ? "Niveau maximum atteint"
                 : researchItem
                   ? formatResearchCost(researchItem)
-                  : node.cost}
+                  : node.base
+                    ? "Gratuit"
+                    : node.cost}
             </strong>
           </div>
           <button
             className="purchase-skill"
             disabled={acquired || future || !!blocker || !affordable}
-            onClick={() => node.research && onBuy(node.research)}
+            onClick={() => researchItem && onBuy(researchItem.id)}
           >
             {acquired
-              ? "✓ Compétence acquise"
+              ? progress
+                ? "✓ Niveau maximum atteint"
+                : "✓ Compétence acquise"
               : future
                 ? "Disponible ultérieurement"
                 : prerequisiteMissing

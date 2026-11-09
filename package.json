@@ -7,7 +7,7 @@
     "dev": "concurrently --kill-others-on-fail -n api,web \"npm:dev:api\" \"npm:dev:web\"",
     "build": "tsc -b && vite build && npm run build:server",
     "test": "tsx --test src/*.test.ts",
-    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs && node tests/fleet.cjs && node tests/missions.cjs && node tests/ux.cjs && node tests/sidebar.cjs && node tests/progression.cjs && node tests/inventory.cjs && npm run test:programs && npm run test:companion && npm run test:onboarding && npm run test:saves",
+    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs && node tests/fleet.cjs && node tests/missions.cjs && node tests/ux.cjs && node tests/sidebar.cjs && node tests/progression.cjs && node tests/inventory.cjs && npm run test:programs && npm run test:companion && npm run test:onboarding && npm run test:saves && npm run test:research-groups",
     "dev:web": "vite --host 0.0.0.0",
     "dev:api": "tsx watch server/index.ts",
     "db:migrate": "tsx server/migrate.ts",
@@ -26,7 +26,8 @@
     "assets:luma": "node scripts/prepare-luma.mjs",
     "assets:luma:previews": "node scripts/render-luma-previews.mjs",
     "test:onboarding": "node tests/onboarding.cjs",
-    "test:saves": "node tests/save-slots.cjs"
+    "test:saves": "node tests/save-slots.cjs",
+    "test:research-groups": "node tests/research-groups.cjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

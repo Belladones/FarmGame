@@ -14,19 +14,22 @@ const { buy } = require("../src/engine.ts");
       }),
       errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
-    await p.addInitScript((f) => {
-      if (!localStorage.getItem("farmscript-v1"))
-        localStorage.setItem(
-          "farmscript-v1",
-          JSON.stringify({ version: 1, farm: f }),
-        );
-    }, fresh());
+    await p.addInitScript(
+      (f) => {
+        if (!localStorage.getItem("farmscript-v1"))
+          localStorage.setItem(
+            "farmscript-v1",
+            JSON.stringify({ version: 1, farm: f }),
+          );
+      },
+      Object.assign(fresh(), { unlocks: ["wheat"], wheatLevel: 2 }),
+    );
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     await p.getByRole("button", { name: "Recherches", exact: true }).click();
-    await p.locator('[data-skill="wheat3"]').click();
+    await p.locator('[data-skill="wheat-base"]').click();
     assert.equal(
       await p
-        .locator('[data-skill="wheat3"]')
+        .locator('[data-skill="wheat-base"]')
         .getAttribute("class")
         .then((c) => c.includes("locked")),
       true,
@@ -37,10 +40,7 @@ const { buy } = require("../src/engine.ts");
         exact: true,
       })
       .click();
-    assert.equal(
-      await p.locator(".skill-detail h3").innerText(),
-      "Stockage · niveau 2",
-    );
+    assert.equal(await p.locator(".skill-detail h3").innerText(), "Stockage");
     await p.waitForFunction(() => {
       const n = document.querySelector('[data-skill="storage2"]'),
         box = document.querySelector(".skill-scroll").getBoundingClientRect(),
@@ -77,11 +77,8 @@ const { buy } = require("../src/engine.ts");
     await p.locator(".farm-scene canvas").waitFor();
     await p.getByRole("button", { name: "Recherches", exact: true }).click();
     assert.equal(
-      await p
-        .locator('[data-skill="wheat3"]')
-        .getAttribute("class")
-        .then((c) => c.includes("acquired")),
-      true,
+      await p.locator('[data-skill="wheat-base"] .node-level').innerText(),
+      "3 / 5",
     );
     await p
       .getByRole("button", { name: "Fermer le panneau", exact: true })
