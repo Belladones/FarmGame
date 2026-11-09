@@ -17,11 +17,11 @@ const { buy } = require("../src/engine.ts");
     p.on("pageerror", (e) => errors.push(e.message));
     const f = fresh();
     f.stock = 100;
-    f.resources.Hay = 20;
+    f.resources.Hay = 30;
     buy(f, "extension");
     f.unlocks = require("../src/catalog.ts").research.map((r) => r.id);
     f.robots[0].code =
-      'const marker: string = "ONE";\nwhile (true) { print(marker); harvest(); }';
+      'const marker: string = "ONE";\nwhile (true) { console.log(marker); harvest(); }';
     f.robots.push({
       ...structuredClone(f.robots[0]),
       id: "f2",

@@ -35,6 +35,10 @@ Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run tes
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
+## Arbres de recherche
+
+Les arbres suivent le classeur fourni par le joueur : foin → While → Vitesse → plant()/move() → Buisson → Carottes → Arbre, avec eau passive, cultures jusqu’au niveau 10, terrain jusqu’à 10×10 et stockage payé en or. Les valeurs explicites, les choix pour les niveaux vides et les règles de compatibilité sont détaillés dans [REEQUILIBRAGE.md](docs/REEQUILIBRAGE.md). La source est conservée dans `docs/sources/amelioration.xlsx`.
+
 ## Comptes, sessions et sauvegardes PostgreSQL
 
 Le bouton **Session et sauvegarde**, en haut à droite, permet de créer un compte avec pseudo et mot de passe, se connecter et se déconnecter. Le pseudo accepte 3 à 24 lettres, chiffres, `_` ou `-`, sans distinction de casse. Les mots de passe font 10 à 128 caractères et sont hachés avec scrypt et un sel aléatoire. La récupération de mot de passe et la vérification par email ne sont pas encore proposées.
@@ -63,7 +67,7 @@ docker compose exec -T db pg_dump -U farmscript -d farmscript > farmscript-backu
 
 ## Jouer
 
-La partie commence avec **0 or, un fermier terrestre gratuit, une parcelle et un dépôt gratuit adjacent**. Le fermier est un laboureur sur roues avec outil avant, sans hélices. Sa soute de base contient **10 unités**, conformément au document. Le dépôt contient 200 unités au total, toutes ressources confondues.
+La partie commence avec **0 or, un fermier terrestre gratuit, une parcelle et un dépôt gratuit adjacent**. Le fermier est un laboureur sur roues avec outil avant, sans hélices. Sa soute de base contient **20 unités**, conformément au classeur d’améliorations. Le dépôt contient 200 unités au total, toutes ressources confondues.
 
 Le premier programme récolte l’herbe déjà présente et dépose le foin :
 
@@ -81,24 +85,24 @@ while (true) {
 }
 ```
 
-L’herbe repousse spontanément sur prairie en 0,5 seconde. Le blé demande Culture du blé (10 foins), une plantation et 5 secondes de croissance ; le capteur de maturité (5 foins) permet de l’attendre sans détruire les cultures immatures. Une récolte avec retrait dure 200 ticks (1 seconde de base), sinon 1 tick (5 ms). Les anciennes parties conservent leur récolte non destructive sur culture immature. Les programmes sont isolés dans des Workers et arrêtables. La pause suspend toute la simulation, sans rattrapage hors ligne.
+L’herbe repousse spontanément sur prairie en 0,5 seconde. Le blé devient une branche après Carottes : Culture du blé (200 foins + 50 bois), une plantation et 5 secondes de croissance ; le capteur de maturité (50 foins + 10 bois) permet de l’attendre sans détruire les cultures immatures. Une récolte avec retrait dure 200 ticks (1 seconde de base), sinon 1 tick (5 ms). Les anciennes parties conservent leur récolte non destructive sur culture immature. Les programmes sont isolés dans des Workers et arrêtables. La pause suspend toute la simulation, sans rattrapage hors ligne.
 
 - Glisser sur le champ pour tourner autour à 360° et changer son inclinaison. Molette ou pincement pour zoomer ; maison pour recentrer.
-- Le plateau affiche uniquement les parcelles débloquées : 1 × 1, puis 3 × 1, 3 × 3, jusqu’à 7 × 7. Les cellules sont carrées dans le modèle 3D ; leur projection dépend de l’angle de vue. Les coordonnées et cultures existantes sont conservées lors des extensions.
+- Le plateau affiche uniquement les parcelles débloquées : 1 × 1, puis 3 × 1, 3 × 3, jusqu’à 10 × 10. Les cellules sont carrées dans le modèle 3D ; leur projection dépend de l’angle de vue. Les coordonnées et cultures existantes sont conservées lors des extensions.
 - Les emplacements constructibles sont débloqués séparément et ont un bloc de béton, distinct de la zone agricole.
 - Chaque robot déployé possède sa propre fenêtre TypeScript, son code et son journal. Les boutons Exécuter/Arrêter concernent uniquement ce robot. Le bouton − réduit la fenêtre à son en-tête sans arrêter le programme ; il permet ensuite de la restaurer. Les fenêtres sont réduites initialement sur mobile. Le bouton Code restaure le programme du robot sélectionné. Les programmes sauvegardés ne redémarrent pas automatiquement.
 - La barre du programme lance, suspend ou arrête son exécution. ×1 / ×2 / ×5 règle le temps de simulation. La pause s’applique à toute la ferme ; le magasin permet aussi de suspendre la simulation sans lancer un robot.
 - Le bouton i ouvre le guide et l’API ; les chevrons ouvrent les trois pages de recherches ; le panier ouvre le magasin ; la carte de mission ouvre les objectifs.
 
-Les anciennes sauvegardes locales sont migrées automatiquement, puis importables dans un compte. Le blé, la cargaison, les cultures, le code, les recherches et l’or sont conservés. Une ancienne cargaison supérieure aux nouvelles 10 unités n’est pas détruite : déposez-la avant de récolter davantage. Les processus ne sont pas relancés automatiquement après rechargement.
+Les anciennes sauvegardes locales sont migrées automatiquement, puis importables dans un compte. Le blé, la cargaison, les cultures, le code, les recherches et l’or sont conservés. Une ancienne cargaison supérieure à la capacité actuelle n’est pas détruite : déposez-la avant de récolter davantage. Les processus ne sont pas relancés automatiquement après rechargement.
 
 ## Magasin et économie
 
-Les recherches consomment les matériaux déposés ; les achats du magasin consomment l’or. Un bâtiment n’exige aucun second paiement de matériaux après sa recherche. Le magasin est accessible dès le départ, sans bâtiment commercial.
+Les recherches consomment les matériaux déposés, sauf les paliers Stockage payés en or ; les achats du magasin consomment l’or. Un bâtiment n’exige aucun second paiement de matériaux après sa recherche. Le magasin est accessible dès le départ, sans bâtiment commercial.
 
-- **Vendre** : blé 1 or, bois 3, carotte 6, citrouille 12, farine 8, pain 25, planche 12 et engrais 18. Seuls les stocks des dépôts sont vendus, jamais les soutes ni les machines. Les marchandises ne sont pas achetables et l’eau n’est pas vendable.
-- **Robots** : fermier 250 or (1 case/s, soute 10), transporteur 600 or (0,75 case/s, soute 100), drone 1 000 or (2 cases/s, soute 10). Les recherches Flotte, Transporteur et Drone débloquent les achats correspondants. Une case de départ libre dans le bon milieu est requise. Seul le fermier peut planter, récolter et labourer ; le drone peut transporter, arroser et appliquer de l’engrais. Le transporteur se limite aux transferts.
-- **Bâtiments** : dépôt 100 or, puits 150, citerne 120, moulin 300, four 450, scierie 350, composteur 400 et atelier 800. Chaque achat choisit un emplacement libre débloqué ; un bâtiment occupé bloque les déplacements.
+- **Vendre** : foin 1 or, blé 1, bois 3, carotte 5, citrouille 12, farine 8, pain 25, planche 12 et engrais 18. Seuls les stocks des dépôts sont vendus, jamais les soutes ni les machines. Les marchandises ne sont pas achetables et l’eau n’est pas vendable.
+- **Robots** : fermier 500 or (1 case/s, soute 20), transporteur 500 or (0,75 case/s, soute 100), drone 1 000 or (2 cases/s, soute 10). Les recherches Flotte, Transporteur et Drone débloquent les achats correspondants. Une case de départ libre dans le bon milieu est requise. Seul le fermier peut planter, récolter et labourer ; le drone peut transporter, arroser et appliquer de l’engrais. Le transporteur se limite aux transferts.
+- **Bâtiments** : dépôt 500 or, puits 150, citerne 120, moulin 300, four 450, scierie 350, composteur 400 et atelier 800. Chaque achat choisit un emplacement libre débloqué ; un bâtiment occupé bloque les déplacements.
 - **Consommables** : engrais 25 or après Consommables, livré aux dépôts s’ils ont de la place. L’effet demande aussi la recherche Engrais et un chargement dans la soute.
 - **Mon exploitation** : choisir un robot à programmer, inspecter les stocks et machines, revendre un achat intact à 50 % de son prix payé, déplacer un bâtiment vide pendant une pause, ou reconstruire une carcasse avec un atelier. Pour éviter une perte de ressources, il faut vider l’objet avant revente ou déplacement. Le dépôt initial est conservé pour éviter une impasse.
 

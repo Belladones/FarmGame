@@ -15,7 +15,7 @@ const { research } = require("../src/catalog.ts");
     p.on("pageerror", (e) => errors.push(e.message));
     const f = fresh();
     f.stock = 100;
-    f.resources.Hay = 20;
+    f.resources.Hay = 30;
     buy(f, "extension");
     f.unlocks = research.map((r) => r.id);
     f.gold = 3000;
@@ -35,14 +35,14 @@ const { research } = require("../src/catalog.ts");
       "inventory",
     );
     await p
-      .getByRole("button", { name: "Acheter Dépôt · 100 or", exact: true })
+      .getByRole("button", { name: "Acheter Dépôt · 500 or", exact: true })
       .click();
     let s = await p.evaluate(
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
     );
     assert.equal(s.buildings.length, 1);
     assert.equal(s.storedBuildings.length, 1);
-    assert.equal(s.gold, 2900);
+    assert.equal(s.gold, 2500);
     const depot = s.storedBuildings[0].id;
     await p
       .getByRole("button", { name: "Fermer le panneau", exact: true })
@@ -101,7 +101,7 @@ const { research } = require("../src/catalog.ts");
     await p.getByRole("button", { name: "Magasin", exact: true }).click();
     await p.getByRole("button", { name: "Robots", exact: true }).click();
     await p
-      .getByRole("button", { name: "Acheter Fermier · 250 or", exact: true })
+      .getByRole("button", { name: "Acheter Fermier · 500 or", exact: true })
       .click();
     s = await p.evaluate(
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
@@ -142,7 +142,7 @@ const { research } = require("../src/catalog.ts");
     );
     assert.equal(s.buildings.find((b) => b.id === depot).x, 0);
     assert.equal(s.sites.length, 2);
-    assert.equal(s.gold, 2650);
+    assert.equal(s.gold, 2000);
     await p
       .getByRole("button", { name: "Aménager les terrains", exact: true })
       .click();

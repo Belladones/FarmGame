@@ -6,7 +6,7 @@ import {
   stockCapacity,
   type Farm,
 } from "./engine";
-import { formatCost, type Item } from "./catalog";
+import { formatResearchCost, type Item } from "./catalog";
 import { Icon, ResourceIcon } from "./Icons";
 import { robotTrees } from "./robotTrees";
 import {
@@ -69,6 +69,7 @@ export function SkillTree({
   const prerequisiteMissing = !!blocker?.startsWith("Requis");
   const affordable =
     !!researchItem &&
+    farm.gold >= (researchItem.goldCost ?? 0) &&
     Object.entries(researchItem.materials).every(
       ([i, n]) => getStock(farm, i as Item) >= n,
     );
@@ -99,13 +100,13 @@ export function SkillTree({
           </h2>
         </div>
         <div className="skill-stock">
-          <ResourceIcon kind="wheat" />
+          <ResourceIcon kind="hay" />
           <div>
             <strong>
-              {farm.stock}
+              {getStock(farm, "Hay")}
               <small> / {stockCapacity(farm)}</small>
             </strong>
-            <span>blés disponibles</span>
+            <span>foins disponibles</span>
           </div>
         </div>
       </header>
@@ -198,7 +199,7 @@ export function SkillTree({
                     }
                     style={{ left: n.x, top: n.y }}
                     aria-pressed={n.id === node.id}
-                    aria-label={`${n.title} · ${owned ? "Acquis" : planned ? "À venir" : r ? formatCost(r.materials) : ""}`}
+                    aria-label={`${n.title} · ${owned ? "Acquis" : planned ? "À venir" : r ? formatResearchCost(r) : ""}`}
                     onClick={() => setSelected(n.id)}
                   >
                     <div className="node-art">
@@ -230,7 +231,7 @@ export function SkillTree({
                         ? "✓ Acquis"
                         : planned
                           ? "À venir"
-                          : `${r ? formatCost(r.materials) : ""}`}
+                          : `${r ? formatResearchCost(r) : ""}`}
                     </span>
                   </button>
                 );
@@ -308,7 +309,7 @@ export function SkillTree({
               {node.base
                 ? "Gratuit"
                 : researchItem
-                  ? formatCost(researchItem.materials)
+                  ? formatResearchCost(researchItem)
                   : node.cost}
             </strong>
           </div>
@@ -323,14 +324,17 @@ export function SkillTree({
                 ? "Disponible ultérieurement"
                 : prerequisiteMissing
                   ? node.research === "position"
-                    ? "Débloquez Trois parcelles"
+                    ? "Débloquez les prérequis"
                     : "Prérequis manquants"
                   : !affordable
-                    ? "Matériaux insuffisants"
+                    ? researchItem?.goldCost
+                      ? "Or insuffisant"
+                      : "Matériaux insuffisants"
                     : "Rechercher · " +
-                      (researchItem ? formatCost(researchItem.materials) : "")}
+                      (researchItem ? formatResearchCost(researchItem) : "")}
           </button>
-          {blocker?.startsWith("Capacité") && (
+          {(blocker?.startsWith("Capacité") ||
+            blocker?.startsWith("Or insuffisant")) && (
             <p className="capacity-warning" role="status">
               {blocker}
             </p>
@@ -344,8 +348,12 @@ export function SkillTree({
             <>
               <div className="skill-trade">
                 <span>◈ {farm.gold} or</span>
-                <button disabled={farm.stock < 10} onClick={onSell}>
-                  Vendre 10 blés · +10 or
+                <button
+                  disabled={getStock(farm, "Hay") < 10 && farm.stock < 10}
+                  onClick={onSell}
+                >
+                  Vendre 10 {getStock(farm, "Hay") >= 10 ? "foins" : "blés"} ·
+                  +10 or
                 </button>
               </div>
             </>

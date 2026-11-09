@@ -70,6 +70,22 @@ self.onmessage = async ({ data }) => {
             );
           if (
             ts.isCallExpression(node) &&
+            ts.isPropertyAccessExpression(node.expression) &&
+            ts.isIdentifier(node.expression.expression) &&
+            node.expression.expression.text === "console" &&
+            node.expression.name.text === "log"
+          )
+            return f.createAwaitExpression(
+              f.createCallExpression(
+                f.createIdentifier("print"),
+                undefined,
+                node.arguments.map(
+                  (arg) => ts.visitNode(arg, visit) as ts.Expression,
+                ),
+              ),
+            );
+          if (
+            ts.isCallExpression(node) &&
             ts.isIdentifier(node.expression) &&
             (api.includes(node.expression.text) ||
               functions.has(node.expression.text))
@@ -175,7 +191,7 @@ self.onmessage = async ({ data }) => {
         items.filter((i) => i !== "Fertilizer").map((k) => [k, k]),
       ),
       { North: "North", South: "South", East: "East", West: "West" },
-      { Hay: "Hay", Fertilizer: "Fertilizer" },
+      { Hay: "Hay", Water: "Water", Fertilizer: "Fertilizer" },
       { Grassland: "Grassland", Soil: "Soil" },
     );
     self.postMessage({ type: "done" });

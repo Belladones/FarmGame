@@ -3,6 +3,7 @@ import { fresh } from "../src/engine";
 export function legacyFarm() {
   const s = fresh();
   s.progressionVersion = 1;
+  s.researchRevision = 1;
   s.unlocks = [];
   s.tiles = [
     { planted: null, yield: 1, ground: "Grassland", water: 0, progress: 0 },

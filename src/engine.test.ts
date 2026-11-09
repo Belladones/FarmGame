@@ -30,7 +30,7 @@ test("research preserves planted yield and changes future plantings", () => {
 test("expansion preserves coordinates, blocks borders and distant deposit", () => {
   const s = fresh();
   s.stock = 25;
-  s.resources.Hay = 20;
+  s.resources.Hay = 30;
   buy(s, "extension");
   assert.equal(command(s, "move", ["West"]), false);
   assert.equal(command(s, "move", ["East"]), true);
@@ -60,7 +60,9 @@ test("locked sensors fail and research spends stock only once", () => {
   const s = fresh();
   assert.throws(() => command(s, "can_harvest", []));
   s.stock = 10;
-  s.resources.Hay = 5;
+  s.unlocks.push("conditions", "bush");
+  s.resources.Hay = 50;
+  s.resources.Wood = 10;
   assert.equal(buy(s, "sensor"), true);
   assert.equal(s.stock, 10);
   assert.equal(s.resources.Hay ?? 0, 0);

@@ -51,7 +51,9 @@ export function HelpPanel({
         </p>
         <p>
           Une récolte prématurée retire la culture sans donner de ressource.
-          Avant d’automatiser le blé, débloquez le capteur et attendez{" "}
+          Après While : Vitesse (20 foins), Expansion 1 (30 foins), move() (30
+          foins), puis plant() et Buisson (50 foins chacun). Avant d’automatiser
+          une culture, débloquez les conditions et le capteur, puis attendez{" "}
           <code>can_harvest()</code>.
         </p>
         <p>
@@ -156,7 +158,7 @@ export function HelpPanel({
         <summary>À savoir sur les programmes et les sauvegardes</summary>
         <p>
           Chaque robot possède son code. Les commandes du jeu sont attendues
-          automatiquement : écrivez simplement plant(Entities.Wheat). Les
+          automatiquement : écrivez simplement plant(Entities.Bush). Les
           callbacks, générateurs et imports ne sont pas encore pris en charge.
         </p>
         <p>

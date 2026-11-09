@@ -11,7 +11,7 @@ const { buy } = require("../src/engine.ts");
   try {
     const fixture = fresh();
     fixture.stock = 25;
-    fixture.resources.Hay = 20;
+    fixture.resources.Hay = 30;
     buy(fixture, "extension");
     fixture.stock = 135;
     fixture.resources = { Wood: 65 };

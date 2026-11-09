@@ -1,4 +1,4 @@
-import { research, formatCost, type Research } from "./catalog";
+import { research, formatResearchCost, type Research } from "./catalog";
 export interface ResearchNode {
   id: string;
   title: string;
@@ -54,12 +54,12 @@ const definitions = [
   {
     name: "Technologie",
     root: "technology-base",
-    title: "Fermier initial",
+    title: "harvest() · Fermier initial",
     symbol: "f1",
     caption:
       "Équipements, stockage et industrie, selon leurs véritables prérequis.",
     detail:
-      "Un fermier et un dépôt de 200 unités sont offerts. Augmentez le stockage avant les recherches coûteuses.",
+      "harvest() est disponible au départ : récolte la plante sous le fermier (200 ticks si retrait, 1 sinon). Le fermier de 20 unités et le dépôt de 200 unités sont offerts. Stockage 2 : 400 unités pour 500 or.",
   },
 ];
 export const researchTrees: ResearchTree[] = definitions.map((def) => {
@@ -109,18 +109,22 @@ export const researchTrees: ResearchTree[] = definitions.map((def) => {
                   : r.id === "variables"
                     ? "const / let"
                     : "⬡",
-        art: r.id.startsWith("wheat")
-          ? "wheat"
-          : r.id.startsWith("bush") || r.id.startsWith("tree")
-            ? "wood"
-            : r.id.startsWith("carrot")
-              ? "carrot"
-              : undefined,
+        art: r.id.startsWith("grass")
+          ? "hay"
+          : r.id.startsWith("watering")
+            ? "water"
+            : r.id.startsWith("wheat")
+              ? "wheat"
+              : r.id.startsWith("bush") || r.id.startsWith("tree")
+                ? "wood"
+                : r.id.startsWith("carrot")
+                  ? "carrot"
+                  : undefined,
         x: row.length === 1 ? 315 : 45 + (i % 3) * 220,
         y: y + Math.floor(i / 3) * 180,
         parents: local.length ? local : [def.root],
         detail: r.detail,
-        cost: formatCost(r.materials),
+        cost: formatResearchCost(r),
         prerequisite: r.prerequisites
           .map((id) => byId.get(id)!.name)
           .join(" + "),

@@ -25,13 +25,17 @@ export function robotCapabilities(farm: Farm, robot: Robot) {
   const list = [{ name: "Transport", enabled: true }];
   if (robot.model === "Farmer")
     list.push(
-      { name: "Planter", enabled: true },
+      { name: "Planter", enabled: farm.researchRevision !== 2 || has("plant") },
       { name: "Récolter", enabled: true },
       { name: "Labourer", enabled: has("till") },
     );
   if (robot.model !== "Transporter")
     list.push(
-      { name: "Arroser", enabled: has("tank") && has("watering") },
+      {
+        name: "Arroser",
+        enabled:
+          (farm.researchRevision === 2 || has("tank")) && has("watering"),
+      },
       { name: "Engrais", enabled: has("consumables") && has("fertilizer") },
     );
   list.push(

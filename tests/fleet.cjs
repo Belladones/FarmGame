@@ -64,10 +64,10 @@ const assert = require("node:assert/strict");
     const { buy } = require("../src/engine.ts");
     const fixture = fresh();
     fixture.stock = 100;
-    fixture.resources.Hay = 20;
+    fixture.resources.Hay = 30;
     buy(fixture, "extension");
     fixture.stock = 180;
-    fixture.resources = { Wood: 100 };
+    fixture.resources = { Wood: 100, Hay: 80 };
     fixture.unlocks.push("bush");
     await p.addInitScript((f) => {
       if (sessionStorage.getItem("fleet-upgrade-fixture")) return;

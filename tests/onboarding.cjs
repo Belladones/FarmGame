@@ -73,21 +73,35 @@ const { chromium } = require("playwright"),
     assert.equal(f.resources.Hay, 0);
     assert.equal(f.stock, 0);
     await claim();
-    await edit("while (true) { harvest(); deposit(); }");
-    await run();
-    await p.waitForFunction(
-      () =>
-        (JSON.parse(localStorage.getItem("farmscript-v1")).farm.depositedItems
-          .Hay ?? 0) >= 50,
-    );
-    await p
-      .getByRole("button", { name: "Arrêter le programme", exact: true })
-      .click();
+    const stop = () =>
+      p
+        .getByRole("button", { name: "Arrêter le programme", exact: true })
+        .click();
+    const produce = async (resource, target, code) => {
+      console.log(`Producing ${target} ${resource}...`);
+      await edit(code);
+      await run();
+      await p.waitForFunction(
+        ([resource, target]) =>
+          (JSON.parse(localStorage.getItem("farmscript-v1")).farm.resources[
+            resource
+          ] ?? 0) >= target,
+        [resource, target],
+        { timeout: 120000 },
+      );
+      await stop();
+      console.log(`Produced ${target} ${resource}.`);
+    };
+    const hayCode = "while (true) { harvest(); deposit(); }";
+    await produce("Hay", 20, hayCode);
     await claim();
-    console.log("While purchased and automated hay produced.");
-    await research("extension", "20 foins", "Agriculture");
+    await research("speed", "20 foins", "Technologie");
+    await claim();
+    await produce("Hay", 180, hayCode);
+    await research("extension", "30 foins", "Agriculture");
+    await research("move", "30 foins", "Technologie");
     await edit(
-      "move(Direction.East);\nmove(Direction.East);\nmove(Direction.West);\nmove(Direction.West);",
+      "move(Direction.West); move(Direction.East); move(Direction.East); move(Direction.East); move(Direction.East);",
     );
     await run();
     await p.waitForFunction(() => {
@@ -98,32 +112,54 @@ const { chromium } = require("playwright"),
       () => document.querySelector(".program-state").textContent === "Arrêté",
     );
     await claim();
-    assert.equal(
-      (await read()).stock,
-      0,
-      "Introductory rewards must not grant locked wheat",
+    await research("plant", "50 foins", "Technologie");
+    await research("bush", "50 foins", "Agriculture");
+    console.log(
+      "Paid While, Speed, Expansion, wrapped movement, plant and Bush passed.",
     );
-    await research("wheat-base", "10 foins", "Agriculture");
-    await research("sensor", "5 foins", "Technologie");
+    const woodWithoutSensor =
+      "while (true) { plant(Entities.Bush);" +
+      "deposit();".repeat(10) +
+      "harvest(); deposit(); }";
+    await produce("Wood", 20, woodWithoutSensor);
+    await claim();
+    await produce("Hay", 150, hayCode);
+    await research("conditions", "150 foins + 10 bois", "Programmation");
+    await produce("Hay", 50, hayCode);
+    await research("sensor", "50 foins + 10 bois", "Technologie");
+    await claim();
+    console.log(
+      "Real wood production funds Conditions and the maturity sensor without wheat.",
+    );
+    await produce("Hay", 10, hayCode);
+    await produce(
+      "Wood",
+      52,
+      "while (true) { plant(Entities.Bush); while(!can_harvest()) {} harvest(); deposit(); }",
+    );
+    await research("carrot", "50 bois", "Agriculture");
+    // Clear any crop left by a stopped loop, without silently discarding carried materials.
     await edit(
-      "plant(Entities.Wheat);\nwhile (!can_harvest()) {}\nharvest();\ndeposit();",
+      "harvest(); deposit(); load(Items.Hay,1); load(Resources.Wood,1); till(); plant(Entities.Carrot); while(!can_harvest()) {} harvest(); deposit();",
     );
     await run();
     await p.waitForFunction(
       () =>
         (JSON.parse(localStorage.getItem("farmscript-v1")).farm.depositedItems
-          .Wheat ?? 0) >= 1,
+          .Carrot ?? 0) >= 1,
     );
     await p.waitForFunction(
       () => document.querySelector(".program-state").textContent === "Arrêté",
     );
-    f = await read();
-    assert.ok(f.harvestedItems.Wheat >= 1);
-    assert.ok(f.depositedItems.Hay >= 50);
-    assert.ok(f.unlocks.includes("sensor"));
     await claim();
+    f = await read();
+    assert.equal(f.researchRevision, 2);
+    assert.equal(f.stock, 0);
+    assert.ok(f.harvestedItems.Carrot >= 1);
+    assert.ok(f.unlocks.includes("carrot"));
+    assert.equal(f.tiles[0].ground, "Soil");
     console.log(
-      "Extension, sensors, first mature wheat and chapter transition passed.",
+      "First carrot uses hay + wood; mature harvest, mission progression and no gifted wheat passed.",
     );
     await p.screenshot({ path: "/tmp/grass-progression.png" });
     await p.reload();
@@ -167,7 +203,7 @@ const { chromium } = require("playwright"),
     assert.equal(restoredBackup.previousProgram, oldProgram);
     assert.deepEqual(errors, []);
     console.log(
-      "Onboarding: grass -> five deposited hay -> locked/paid while -> automatic hay -> extension -> wheat and sensor -> first mature wheat -> save/reload and mobile passed",
+      "Onboarding: workbook hay -> While -> Speed -> plant/move -> Bush -> Conditions/sensor -> Carrot -> reload/mobile/reset passed",
     );
   } finally {
     await b.close();

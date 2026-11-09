@@ -53,7 +53,7 @@ const { buy } = require("../src/engine.ts");
       .click();
     const fixture = fresh();
     fixture.stock = 25;
-    fixture.resources.Hay = 20;
+    fixture.resources.Hay = 30;
     buy(fixture, "extension");
     fixture.unlocks.push("wheat", "bush");
     fixture.stock = 150;

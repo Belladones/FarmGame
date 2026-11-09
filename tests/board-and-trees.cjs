@@ -47,7 +47,9 @@ const { chromium } = require("playwright");
       if (!sessionStorage.getItem("test-stock-seeded")) {
         const s = JSON.parse(localStorage.getItem("farmscript-v1"));
         s.farm.stock = 100;
-        s.farm.resources.Hay = 20;
+        s.farm.resources.Hay = 180;
+        s.farm.resources.Wood = 10;
+        s.farm.unlocks.push("bush");
         s.farm.tiles[0].planted = s.farm.time;
         localStorage.setItem("farmscript-v1", JSON.stringify(s));
         sessionStorage.setItem("test-stock-seeded", "1");
@@ -59,7 +61,7 @@ const { chromium } = require("playwright");
     await p.locator('[data-skill="position"]').click();
     if (
       !(await p
-        .getByRole("button", { name: "Débloquez Trois parcelles" })
+        .getByRole("button", { name: "Débloquez les prérequis" })
         .isDisabled())
     )
       throw Error("Position prerequisite not enforced");
@@ -67,7 +69,7 @@ const { chromium } = require("playwright");
     await p.locator('[data-skill="extension"]').click();
     await p.screenshot({ path: "/tmp/farm-skill-tree.png" });
     await p
-      .getByRole("button", { name: "Rechercher · 20 foins", exact: true })
+      .getByRole("button", { name: "Rechercher · 30 foins", exact: true })
       .click();
     await p.waitForFunction(
       () => document.querySelector(".farm-scene").dataset.plotCount === "3",
@@ -78,13 +80,19 @@ const { chromium } = require("playwright");
     await p.getByRole("button", { name: "Page suivante →" }).click();
     await p.locator('[data-skill="conditions"]').click();
     await p
-      .getByRole("button", { name: "Rechercher · 10 blés", exact: true })
+      .getByRole("button", {
+        name: "Rechercher · 150 foins + 10 bois",
+        exact: true,
+      })
       .click();
     await p.getByRole("button", { name: "Page suivante →" }).click();
     await p.locator('[data-skill="position"]').click();
-    await p
-      .getByRole("button", { name: "Rechercher · 20 blés", exact: true })
-      .click();
+    if (
+      !(await p
+        .getByRole("button", { name: "Débloquez les prérequis", exact: true })
+        .isDisabled())
+    )
+      throw Error("Position still requires Carrots and sensor");
     await p.getByRole("button", { name: /Programmation/ }).click();
     await p.locator('[data-skill="functions"]').click();
     if (
@@ -99,7 +107,7 @@ const { chromium } = require("playwright");
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
     );
     if (
-      saved.stock !== 70 ||
+      saved.stock !== 100 ||
       saved.tiles.length !== 3 ||
       saved.tiles[0].planted === null ||
       saved.tiles[1].entity !== "Grass"

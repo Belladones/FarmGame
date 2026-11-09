@@ -118,17 +118,35 @@ const examples: Record<string, string> = {
   "Premier programme": starter,
   "Première boucle":
     "// Recherche : Boucle while (5 foins)\nwhile (true) {\n  harvest();\n  deposit();\n}\n",
+  "Premiers buissons":
+    "// Recherches : Vitesse + plant() + Buisson + Conditions + Capteur de maturité\nwhile (true) {\n  plant(Entities.Bush);\n  while (!can_harvest()) {}\n  harvest();\n  deposit();\n}\n",
   "Cultiver le blé":
     "// Recherches : Boucle while + Culture du blé + Capteur de maturité\nwhile (true) {\n  plant(Entities.Wheat);\n  while (!can_harvest()) {\n    // Attendre la maturité avant de récolter.\n  }\n  harvest();\n  deposit();\n}",
   "Avec un capteur":
     "// Recherches : Conditions + Capteur de maturité\nwhile (true) {\n  if (can_harvest()) {\n    harvest();\n    deposit();\n  }\n  plant(Entities.Wheat);\n}",
   "Explorer les parcelles":
-    "// Recherches : Trois parcelles + Positionnement\nfor (let x: number = 0; x < get_world_size().width; x++) {\n  plant(Entities.Wheat);\n  move(Direction.East);\n}\nwhile (get_pos_x() > 0) {\n  move(Direction.West);\n}\ndeposit();",
+    "// Recherches : Expansion 1 + move() + Coordonnées + Variables\nfor (let x: number = 0; x < get_world_size().width; x++) {\n  plant(Entities.Wheat);\n  move(Direction.East);\n}\nwhile (get_pos_x() > 0) {\n  move(Direction.West);\n}\ndeposit();",
 };
 const docs = [
   [
+    "plant(Entities.Bush)",
+    "plant() : 50 foins après Vitesse. Buisson : 50 foins. Gratuit à semer sur prairie ou terre, pousse en 3,2 à 4,8 s, donne 1 bois au niveau 1.",
+  ],
+  [
+    "plant(Entities.Carrot)",
+    "Carottes : 50 bois. Labourer puis semer coûte 1 foin + 1 bois dans la soute. Pousse en 4,8 à 7,2 s, donne 1 carotte. Les améliorations doublent le rendement.",
+  ],
+  [
+    "use_item(Items.Water, n)",
+    "Après Utilisation des objets et Eau : consomme jusqu’à n réservoirs passifs ; chacun ajoute 0,25 d’humidité. Eau 1 produit un réservoir toutes les 10 secondes, les niveaux suivants doublent le débit. Croissance jusqu’à ×5 ; humidité multipliée par 0,99 par seconde.",
+  ],
+  [
+    "console.log(...)",
+    "Recherche Journal : 150 foins + 50 bois. Affiche dans le journal du robot, comme print().",
+  ],
+  [
     "plant(Entities.Wheat)",
-    "Recherche Culture du blé : plante gratuitement sur une case vide ou remplace l’herbe. Pousse en 5 secondes.",
+    "Recherches plant() puis Culture du blé (branche après Carottes) : plante gratuitement sur une case vide ou remplace l’herbe. Pousse en 5 secondes.",
   ],
   [
     "Entities.Grass / Items.Hay",
@@ -150,16 +168,16 @@ const docs = [
     "deposit()",
     "Transfère la cargaison vers un dépôt adjacent, dans la limite de sa place disponible. Le dépôt initial est voisin de (0, 0).",
   ],
-  ["move(Direction.East)", "Avance sur une case accessible, sans rebouclage."],
+  [
+    "move(Direction.East)",
+    "Après la recherche move() : sur le champ, dépasser un bord rejoint le bord opposé. Les terrains constructibles gardent leurs limites et les collisions restent actives. Les anciennes parties gardent leurs bords bloqués.",
+  ],
   ["can_harvest()", "Retourne un boolean. Recherche : Capteur de maturité."],
   [
     "get_pos_x() / get_pos_y()",
-    "Retourne une coordonnée. Recherche : Positionnement.",
+    "Retourne une coordonnée. Recherche : Coordonnées.",
   ],
-  [
-    "get_world_size()",
-    "Retourne { width, height }. Recherche : Positionnement.",
-  ],
+  ["get_world_size()", "Retourne { width, height }. Recherche : Coordonnées."],
   ["get_stock(Resources.Wheat)", "Lit la quantité de blé dans le dépôt."],
   ["get_inventory(Resources.Wheat)", "Lit le blé dans la soute du robot."],
   ["get_capacity()", "Retourne la capacité actuelle de la soute."],
@@ -174,7 +192,7 @@ const docs = [
   ],
   [
     "watering() / refill_water()",
-    "Arrose avec le réservoir embarqué ; le remplit depuis un puits ou une citerne adjacente. L’eau est distincte de la soute.",
+    "Nouvelle partie : watering() consomme un réservoir d’eau passive, comme use_item(Items.Water). refill_water() remplit le réservoir embarqué depuis un puits adjacent ; ce circuit physique reste séparé de l’inventaire passif.",
   ],
   [
     "use_item(Items.Fertilizer)",
@@ -953,8 +971,16 @@ function App() {
               title="Eau dans le réservoir du robot sélectionné"
             >
               <ResourceIcon kind="water" />
-              <strong>{selectedRobot.water.toFixed(1)}</strong>
-              <span>EAU EMBARQUÉE</span>
+              <strong>
+                {s.researchRevision === 2
+                  ? resourceNumber(s.waterItems ?? 0)
+                  : selectedRobot.water.toFixed(1)}
+              </strong>
+              <span>
+                {s.researchRevision === 2
+                  ? "RÉSERVOIRS D’EAU"
+                  : "EAU EMBARQUÉE"}
+              </span>
             </div>
           </div>
           <button
@@ -1650,12 +1676,15 @@ function App() {
                     );
                   }}
                   onSell={() => {
-                    const ok = sell(farm.current);
+                    const ok =
+                      getStock(farm.current, "Hay") >= 10
+                        ? sellStock(farm.current, "Hay", 10) > 0
+                        : sell(farm.current);
                     refresh();
                     notify(
                       ok
                         ? "Vente effectuée. Votre solde d’or est à jour."
-                        : "Pas assez de blé dans les dépôts pour cette vente.",
+                        : "Pas assez de foin ou de blé dans les dépôts pour cette vente.",
                       !ok,
                     );
                   }}
@@ -1685,7 +1714,9 @@ function App() {
                           ? [
                               farm.current.unlocks.includes("wheat-base")
                                 ? "Wheat"
-                                : "Grass",
+                                : farm.current.unlocks.includes("bush")
+                                  ? "Bush"
+                                  : "Grass",
                             ]
                           : [],
                       );

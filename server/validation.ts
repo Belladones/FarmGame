@@ -35,6 +35,29 @@ export function validFarm(value: unknown): value is RecordValue {
     f.progressionVersion !== 2
   )
     return false;
+  if (
+    f.researchRevision !== undefined &&
+    f.researchRevision !== 1 &&
+    f.researchRevision !== 2
+  )
+    return false;
+  if (
+    f.legacyDepotCapacity !== undefined &&
+    !integer(f.legacyDepotCapacity, 0, 10000)
+  )
+    return false;
+  if (
+    f.waterItems !== undefined &&
+    !integer(f.waterItems, 0, Number.MAX_SAFE_INTEGER)
+  )
+    return false;
+  if (
+    f.waterRemainder !== undefined &&
+    (typeof f.waterRemainder !== "number" ||
+      f.waterRemainder < 0 ||
+      f.waterRemainder >= 1.000000001)
+  )
+    return false;
   if (f.companion !== undefined) {
     const c = f.companion;
     if (
@@ -48,8 +71,8 @@ export function validFarm(value: unknown): value is RecordValue {
       return false;
   }
   if (
-    !integer(f.width, 1, 7) ||
-    !integer(f.height, 1, 7) ||
+    !integer(f.width, 1, 10) ||
+    !integer(f.height, 1, 10) ||
     !Array.isArray(f.tiles) ||
     f.tiles.length !== (f.width as number) * (f.height as number)
   )
@@ -83,8 +106,8 @@ export function validFarm(value: unknown): value is RecordValue {
   ])
     if (typeof f[key] !== "number" || (f[key] as number) < 0) return false;
   if (
-    !integer(f.x, -1, 7) ||
-    !integer(f.y, -1, 7) ||
+    !integer(f.x, -1, 10) ||
+    !integer(f.y, -1, 10) ||
     !integer(f.nextId, 1, Number.MAX_SAFE_INTEGER) ||
     !integer(f.wheatLevel, 1, 5) ||
     !record(f.resources) ||
@@ -108,8 +131,8 @@ export function validFarm(value: unknown): value is RecordValue {
       !r.id ||
       ids.has(r.id) ||
       !["Farmer", "Transporter", "Drone"].includes(String(r.model)) ||
-      !integer(r.x, -1, 7) ||
-      !integer(r.y, -1, 7) ||
+      !integer(r.x, -1, 10) ||
+      !integer(r.y, -1, 10) ||
       !inventory(r.inventory) ||
       typeof r.code !== "string" ||
       typeof r.destroyed !== "boolean" ||
@@ -141,9 +164,16 @@ export function validFarm(value: unknown): value is RecordValue {
     for (const p of f.sites) {
       if (
         !record(p) ||
-        !integer(p.x, -1, 7) ||
-        !integer(p.y, -1, 7) ||
-        !(p.x === -1 || p.x === 7 || p.y === -1 || p.y === 7)
+        !integer(p.x, -1, 10) ||
+        !integer(p.y, -1, 10) ||
+        !(
+          p.x === -1 ||
+          p.x === 10 ||
+          p.y === -1 ||
+          p.y === 10 ||
+          p.x === 7 ||
+          p.y === 7
+        )
       )
         return false;
       const key = `${p.x},${p.y}`;
@@ -172,8 +202,8 @@ export function validFarm(value: unknown): value is RecordValue {
         "Composter",
         "Workshop",
       ].includes(String(b.kind)) ||
-      !integer(b.x, -1, 7) ||
-      !integer(b.y, -1, 7) ||
+      !integer(b.x, -1, 10) ||
+      !integer(b.y, -1, 10) ||
       !inventory(b.inventory) ||
       !inventory(b.input) ||
       !inventory(b.output) ||

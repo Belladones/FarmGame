@@ -1,4 +1,4 @@
-import { research, formatCost } from "./catalog";
+import { research, formatResearchCost } from "./catalog";
 export interface RobotSkillNode {
   id: string;
   title: string;
@@ -29,7 +29,7 @@ const node = (
     parents,
     research: id,
     detail: r.detail,
-    cost: formatCost(r.materials),
+    cost: formatResearchCost(r),
     prerequisite:
       r.prerequisites
         .map((p) => research.find((r) => r.id === p)?.name ?? p)
@@ -59,8 +59,8 @@ export const robotTrees = [
       root(
         "hold-base",
         "Soutes de base",
-        "10 / 100",
-        "Fermier et drone : 10 unités. Transporteur : 100. Les recherches Soute multiplient ces valeurs pour les robots actuels et futurs, sans modifier leurs spécialités.",
+        "20 / 100 / 10",
+        "Fermier : 20 unités. Transporteur : 100. Drone : 10. Les recherches Soute multiplient ces valeurs pour les robots actuels et futurs, sans modifier leurs spécialités.",
       ),
       node("hold", 315, 205, ["hold-base"], "×2"),
       node("hold2", 315, 385, ["hold"], "×4"),
@@ -105,10 +105,10 @@ export const robotTrees = [
       node("watering", 585, 565, ["tank"], "watering()"),
       node("fertilizer2", 45, 745, ["fertilizer"], "+35 %"),
       node("reservoir", 315, 745, ["construction"], "Puits"),
-      node("watering2", 585, 745, ["watering"], "×1,5"),
+      node("watering2", 585, 745, ["watering"], "0,2/s"),
       node("fertilizer3", 45, 925, ["fertilizer2"], "+50 %"),
       node("reservoir2", 315, 925, ["reservoir"], "×3"),
-      node("watering3", 585, 925, ["watering2"], "×2"),
+      node("watering3", 585, 925, ["watering2"], "0,4/s"),
     ],
   },
   {
@@ -144,13 +144,22 @@ export const robotTrees = [
         "200 unités au total dans le dépôt initial. Les recherches Stockage augmentent la capacité de chaque dépôt ; les emplacements constructibles permettent d’en acheter davantage.",
       ),
       node("construction", 315, 205, ["depot-base"], "⌂"),
-      node("storage2", 180, 385, ["construction"], "500"),
+      node("storage2", 180, 385, ["construction"], "400"),
       node("land", 455, 385, ["construction"], "2 sites"),
-      node("storage3", 180, 565, ["storage2"], "2 500"),
+      node("storage3", 180, 565, ["storage2"], "2 000"),
       node("land2", 455, 565, ["land"], "4 sites"),
       node("storage4", 180, 745, ["storage3"], "10 000"),
       node("land3", 455, 745, ["land2"], "8 sites"),
       node("land4", 455, 925, ["land3"], "16 sites"),
+      ...Array.from({ length: 6 }, (_, i) =>
+        node(
+          "storage" + (i + 5),
+          180,
+          925 + i * 180,
+          ["storage" + (i + 4)],
+          (50000 * 5 ** i).toLocaleString("fr-FR"),
+        ),
+      ),
     ],
   },
 ];

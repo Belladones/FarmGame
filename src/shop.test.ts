@@ -26,9 +26,13 @@ import { research, buildings, models, sum, constructionSlots } from "./catalog";
 function prepared() {
   const s = fresh();
   s.stock = 100;
-  s.resources.Hay = 20;
+  s.resources.Hay = 30;
   buy(s, "extension");
-  s.unlocks = research.map((r) => r.id);
+  s.unlocks = research
+    .map((r) => r.id)
+    .filter(
+      (id) => !/^(speed|milling[2-5]|bakery[2-5]|reservoir[3-5])$/.test(id),
+    );
   s.sites = structuredClone(constructionSlots);
   s.gold = 5000;
   s.stock = 100;
@@ -64,16 +68,16 @@ test("research consumes materials once; buildings consume gold only and require 
   s.stock = 100;
   s.resources = { Wood: 50 };
   assert.equal(buy(s, "construction"), true);
-  assert.equal(s.stock, 20);
-  assert.equal(getStock(s, "Wood"), 10);
-  s.gold = 200;
+  assert.equal(s.stock, 100);
+  assert.equal(getStock(s, "Wood"), 30);
+  s.gold = 600;
   assert.equal(purchase(s, "Depot"), false);
   s.unlocks.push("land");
   assert.equal(configureSite(s, { x: 0, y: -1 }, false, true), true);
   assert.equal(purchase(s, "Depot", 1, { x: 0, y: -1 }), true);
   assert.equal(s.gold, 100);
-  assert.equal(s.stock, 20);
-  assert.equal(getStock(s, "Wood"), 10);
+  assert.equal(s.stock, 100);
+  assert.equal(getStock(s, "Wood"), 30);
   assert.equal(stockCapacity(s), 400);
   assert.equal(purchase(s, "Depot", 1, { x: 0, y: -1 }), false);
   assert.equal(s.gold, 100);
@@ -163,7 +167,7 @@ test("workshop repairs one existing wreck for 40% of new price and retires the l
   selectRobot(s, loan.id);
   s.cargo = 3;
   assert.equal(repair(s, "f1"), true);
-  assert.equal(s.gold, before - 100);
+  assert.equal(s.gold, before - 200);
   assert.equal(s.robots.find((r) => r.id === "f1")?.destroyed, false);
   assert.equal(
     s.robots.some((r) => r.loan),
@@ -171,7 +175,7 @@ test("workshop repairs one existing wreck for 40% of new price and retires the l
   );
   assert.equal(s.cargo, 3);
   assert.equal(repair(s, "f1"), false);
-  assert.equal(s.gold, before - 100);
+  assert.equal(s.gold, before - 200);
 });
 test("intact purchased assets resell at 50% and nonempty cargo prevents accidental loss", () => {
   const s = prepared();
@@ -179,7 +183,7 @@ test("intact purchased assets resell at 50% and nonempty cargo prevents accident
   const r = s.robots[1];
   const before = s.gold;
   assert.equal(resellAsset(s, r.id), true);
-  assert.equal(s.gold, before + 125);
+  assert.equal(s.gold, before + 250);
   purchase(s, "Drone");
   const d = s.robots.find((r) => r.model === "Drone")!;
   d.inventory.Wood = 1;

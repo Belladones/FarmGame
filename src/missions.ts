@@ -400,19 +400,108 @@ const modernMissions: Mission[] = [
   firstDeposit,
   firstLoop,
   firstRoutine,
-  firstExplore,
-  firstWheat,
-  ...missions
-    .slice(4)
-    .map((m) =>
-      m.id === "hundred"
-        ? {
-            ...m,
-            progress: (s: Farm) => s.depositedItems.Wheat ?? 0,
-            hint: "Déposez 100 blés au total, même si vous en dépensez entre-temps. Blé · niveau 2 coûte 20 blés et multiplie le rendement des nouvelles plantations par cinq. Attendez can_harvest() avant chaque récolte.",
-          }
-        : m,
-    ),
+  milestone(
+    "first-speed",
+    0,
+    "Le bon rythme",
+    "Recherchez Vitesse d’exécution.",
+    1,
+    researched("speed"),
+    0,
+    25,
+    "Après While (5 foins), Vitesse coûte 20 foins et divise par deux la durée des actions. Les cultures immatures sont détruites par harvest().",
+    "Recherches",
+    "Améliorer la vitesse",
+  ),
+  {
+    ...firstExplore,
+    hint: "Expansion 1 coûte 30 foins après Vitesse. Recherchez ensuite move() pour 30 foins, puis visitez les trois parcelles. Un déplacement au-delà du bord rejoint le bord opposé.",
+    code: "move(Direction.East);\nmove(Direction.East);\nmove(Direction.East);\ndeposit();",
+  },
+  {
+    ...missions.find((m) => m.id === "wood")!,
+    chapter: 0,
+    gold: 0,
+    reward: 0,
+    text: "Recherchez plant() et Buisson, puis récoltez du bois.",
+    target: 3,
+    progress: (s) =>
+      researched("plant", "bush")(s) + Math.min(1, s.harvestedItems.Wood ?? 0),
+    hint: "plant() coûte 50 foins après Vitesse ; Buisson coûte 50 foins. Les buissons sont gratuits à planter et poussent en 3,2 à 4,8 secondes. Sans capteur, laissez plusieurs appels deposit() occuper le robot avant de récolter.",
+    code:
+      "plant(Entities.Bush);\n// Laisser passer au moins 4,8 secondes.\n" +
+      "deposit();\n".repeat(10) +
+      "harvest();\ndeposit();",
+  },
+  {
+    ...missions.find((m) => m.id === "observe")!,
+    hint: "Conditions et opérateurs : 150 foins + 10 bois. can_harvest() : 50 foins + 10 bois, après les conditions et plant(). Le capteur évite de détruire les plantes immatures.",
+  },
+  {
+    ...missions.find((m) => m.id === "soil")!,
+    chapter: 1,
+    text: "Débloquez les carottes et récoltez-en une.",
+    target: 2,
+    progress: (s) =>
+      researched("carrot")(s) + Math.min(1, s.harvestedItems.Carrot ?? 0),
+    hint: "Carottes coûte 50 bois. Chargez 1 foin et 1 bois dans la soute, labourez la prairie, puis semez. Ne labourez pas à nouveau une case déjà en terre.",
+    code: "load(Items.Hay, 1);\nload(Resources.Wood, 1);\ntill();\nplant(Entities.Carrot);\nwhile (!can_harvest()) {}\nharvest();\ndeposit();",
+  },
+  {
+    ...missions.find((m) => m.id === "coordinates")!,
+    hint: "Coordonnées : 50 bois + 50 carottes, après Carottes, can_harvest() et move(). Variables : 100 bois + 150 carottes. Stockage 2 (500 or, 400 unités) permet de réunir ce coût.",
+  },
+  {
+    ...missions.find((m) => m.id === "hundred")!,
+    title: "Une prairie productive",
+    text: "Déposez 100 foins au total.",
+    progress: (s) => s.depositedItems.Hay ?? 0,
+    hint: "Herbe 2 coûte 300 foins et double le rendement. Il faut d’abord Construction puis Stockage 2 (500 or). Vendez régulièrement les ressources au magasin pour réunir l’or sans saturer le dépôt.",
+    code: "if (can_harvest()) { harvest(); }\ndeposit();",
+  },
+  ...[
+    "hold-upgrade",
+    "construction",
+    "motor-upgrade",
+    "organize",
+    "fleet-license",
+    "second-robot",
+  ].map((id) => {
+    const m = missions.find((m) => m.id === id)!;
+    if (id === "construction")
+      return {
+        ...m,
+        hint: "Construction coûte 20 bois. Stockage 2 coûte 500 or et porte chaque dépôt à 400 unités. Les terrains constructibles accueillent les bâtiments.",
+      };
+    if (id === "fleet-license")
+      return {
+        ...m,
+        gold: 500,
+        hint: "Flotte autorise un fermier de 20 unités, vendu séparément 500 or. Cette récompense finance son achat.",
+      };
+    return m;
+  }),
+  {
+    ...firstWheat,
+    chapter: 3,
+    hint: "Le blé devient une branche de transformation après Carottes : Culture du blé coûte 200 foins + 50 bois. Il sert ensuite au moulin et au four. Stockage 2 est requis pour réunir les 250 ressources.",
+  },
+  ...["mill", "flour", "logistics", "thousand"].map((id) => {
+    const m = missions.find((m) => m.id === id)!;
+    if (id === "logistics")
+      return {
+        ...m,
+        hint: "Stockage 3 (2 000 unités) s’achète avec de l’or après Stockage 2. La recherche Transporteur prépare un robot à 500 or, réservé à la logistique.",
+      };
+    if (id === "thousand")
+      return {
+        ...m,
+        text: "Déposez 1 000 ressources au total.",
+        progress: (s: Farm) => s.deposited,
+        hint: "Combinez prairies, buissons, carottes et transformations. Les dépôts cumulés restent comptés même après vente ou recherche.",
+      };
+    return m;
+  }),
 ];
 export const missionsFor = (s: Farm): Mission[] =>
   s.progressionVersion === 2 ? modernMissions : missions;

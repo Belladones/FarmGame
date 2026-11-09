@@ -67,7 +67,7 @@ test("global upgrades and statuses reflect each model and garage state", () => {
   const s = fresh(),
     r = s.robots[0];
   s.unlocks.push("hold", "motor", "tools");
-  assert.equal(capacity(s, r), 20);
+  assert.equal(capacity(s, r), 40);
   assert.equal(robotSpeed(s, r), 1.25);
   assert.equal(actionDuration(s, r), 0.8);
   const transporter = { ...r, model: "Transporter" as const };

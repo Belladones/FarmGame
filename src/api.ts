@@ -33,14 +33,14 @@ export const apiNames = [
 export const declarations = `
 declare enum Entities { Grass="Grass", Wheat="Wheat", Bush="Bush", Carrot="Carrot", Tree="Tree", Pumpkin="Pumpkin" }
 declare enum Resources { Hay="Hay", Wheat="Wheat", Wood="Wood", Carrot="Carrot", Pumpkin="Pumpkin", Flour="Flour", Bread="Bread", Plank="Plank" }
-declare enum Items { Hay="Hay", Fertilizer="Fertilizer" }
+declare enum Items { Water="Water", Hay="Hay", Fertilizer="Fertilizer" }
 declare enum Grounds { Grassland="Grassland", Soil="Soil" }
 declare enum Direction { North="North", East="East", South="South", West="West" }
 declare function plant(entity:Entities):boolean;
 declare function harvest():boolean;
 declare function till():boolean;
 declare function watering():boolean;
-declare function use_item(item:Items):boolean;
+declare function use_item(item:Items,n?:number):boolean;
 declare function harvest_group():boolean;
 declare function deposit():number;
 declare function load(item:Resources|Items,quantity:number):number;

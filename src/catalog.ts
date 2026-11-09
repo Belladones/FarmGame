@@ -1,3 +1,4 @@
+import { balanceResearch, storageCapacities } from "./researchBalance";
 /** Values from docs/CONCEPTION.md, sections 1, 3, 6, 7 and 10. */
 export const itemNames = {
   Hay: "Foin",
@@ -16,7 +17,7 @@ export const salePrices: Record<Item, number> = {
   Hay: 1,
   Wheat: 1,
   Wood: 3,
-  Carrot: 6,
+  Carrot: 5,
   Pumpkin: 12,
   Flour: 8,
   Bread: 25,
@@ -27,9 +28,9 @@ export type Model = "Farmer" | "Transporter" | "Drone";
 export const models = {
   Farmer: {
     name: "Fermier",
-    price: 250,
+    price: 500,
     speed: 1,
-    capacity: 10,
+    capacity: 20,
     research: "fleet",
     medium: "ground",
     description:
@@ -37,7 +38,7 @@ export const models = {
   },
   Transporter: {
     name: "Transporteur",
-    price: 600,
+    price: 500,
     speed: 0.75,
     capacity: 100,
     research: "transporter",
@@ -68,10 +69,10 @@ export type BuildingKind =
 export const buildings = {
   Depot: {
     name: "Dépôt",
-    price: 100,
+    price: 500,
     research: "construction",
     description:
-      "Stocke 200 unités, puis 500 / 2 500 / 10 000 selon les recherches Stockage.",
+      "Stocke 200 unités ; Stockage 2 : 400, puis des capacités multipliées par cinq jusqu’au niveau 10.",
   },
   Well: {
     name: "Puits",
@@ -117,7 +118,7 @@ export const buildings = {
     price: 800,
     research: "maintenance",
     description:
-      "Reconstruit une carcasse pour 40 % du prix neuf : fermier 100 or, transporteur 240 or, drone 400 or.",
+      "Reconstruit une carcasse pour 40 % du prix neuf : fermier 200 or, transporteur 200 or, drone 400 or.",
   },
 } as const;
 export const recipes: Partial<
@@ -136,6 +137,7 @@ export const recipes: Partial<
   },
 };
 export interface Research {
+  goldCost?: number;
   id: string;
   name: string;
   cost: number;
@@ -163,7 +165,8 @@ const r = (
 const A = "Agriculture",
   T = "Technologie",
   P = "Programmation";
-export const research: Research[] = [
+/** The workbook overlay in researchBalance.ts is the current source of costs and tiers. */
+export const research: Research[] = balanceResearch([
   r(
     "loops",
     "Boucle while",
@@ -773,7 +776,7 @@ export const research: Research[] = [
     T,
     "Durée des cycles des machines ×0,5.",
   ),
-].map((entry): Research => {
+]).map((entry): Research => {
   const prerequisites = new Set(entry.prerequisites);
   const providers: Partial<Record<Item, string>> = {
     Wheat: "wheat-base",
@@ -801,33 +804,37 @@ export const research: Research[] = [
     (n, value) => n + (value ?? 0),
     0,
   );
-  // Each tier must itself be affordable using the preceding tier.
-  const storage =
-    total > 2500
-      ? "storage4"
-      : total > 500
-        ? "storage3"
-        : total > 200
-          ? "storage2"
-          : undefined;
-  if (storage && storage !== entry.id) prerequisites.add(storage);
-  const sites =
-    total > 80000
-      ? "land4"
-      : total > 40000
-        ? "land3"
-        : total > 20000
+  // Every resource cost must fit a reachable depot tier; gold is sold incrementally.
+  let tier = storageCapacities.findIndex((capacity) => capacity >= total);
+  if (tier < 0) {
+    tier = storageCapacities.length - 1;
+    const depots = Math.ceil(total / storageCapacities[tier]);
+    const land =
+      depots <= 2
+        ? "land"
+        : depots <= 4
           ? "land2"
-          : total > 10000
-            ? "land"
-            : undefined;
-  if (sites && sites !== entry.id) prerequisites.add(sites);
+          : depots <= 8
+            ? "land3"
+            : "land4";
+    if (depots > 16) throw new Error(`Coût hors capacité : ${entry.id}`);
+    prerequisites.add(land);
+  }
+  if (tier > 0 && entry.id !== "storage" + (tier + 1))
+    prerequisites.add("storage" + (tier + 1));
   return {
     ...entry,
     category: entry.id === "commerce" ? "Programmation" : entry.category,
     prerequisites: [...prerequisites],
   };
 });
+export const formatResearchCost = (r: Research) =>
+  [
+    Object.keys(r.materials).length ? formatCost(r.materials) : "",
+    r.goldCost ? `${r.goldCost.toLocaleString("fr-FR")} or` : "",
+  ]
+    .filter(Boolean)
+    .join(" + ") || "Gratuit";
 export const formatCost = (cost: Inventory) =>
   Object.entries(cost)
     .map(
@@ -863,7 +870,7 @@ export const cropData = {
     soil: "Any",
     cost: {},
     unlock: null,
-    yields: [1],
+    yields: Array.from({ length: 10 }, (_, i) => 2 ** i),
   },
   Wheat: {
     resource: "Wheat",
@@ -875,27 +882,27 @@ export const cropData = {
   },
   Bush: {
     resource: "Wood",
-    seconds: 8,
-    soil: "Grassland",
+    seconds: 4,
+    soil: "Any",
     cost: {},
     unlock: "bush",
-    yields: [1, 3, 8],
+    yields: Array.from({ length: 10 }, (_, i) => 2 ** i),
   },
   Carrot: {
     resource: "Carrot",
-    seconds: 10,
+    seconds: 6,
     soil: "Soil",
-    cost: { Wheat: 2, Wood: 1 },
+    cost: { Hay: 1, Wood: 1 },
     unlock: "carrot",
-    yields: [2, 6, 15, 40],
+    yields: Array.from({ length: 10 }, (_, i) => 2 ** i),
   },
   Tree: {
     resource: "Wood",
-    seconds: 20,
-    soil: "Grassland",
-    cost: { Wood: 1 },
+    seconds: 7,
+    soil: "Any",
+    cost: {},
     unlock: "tree",
-    yields: [5, 15, 40, 100],
+    yields: Array.from({ length: 10 }, (_, i) => 5 * 2 ** i),
   },
   Pumpkin: {
     resource: "Pumpkin",
@@ -903,7 +910,7 @@ export const cropData = {
     soil: "Soil",
     cost: { Carrot: 3, Wood: 2 },
     unlock: "pumpkin",
-    yields: [4, 12, 30],
+    yields: Array.from({ length: 10 }, (_, i) => 4 * 2 ** i),
   },
 } satisfies Record<
   string,

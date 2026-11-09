@@ -1,5 +1,6 @@
 import { freshCompanion, hydrateCompanion, type Companion } from "./companion";
 import { missions, missionsFor } from "./missions";
+import { storageCapacities } from "./researchBalance";
 import {
   buildings,
   constructionSlots,
@@ -72,6 +73,10 @@ export interface Building {
   cycle?: { ends: number };
 }
 export interface Farm {
+  researchRevision?: 1 | 2;
+  legacyDepotCapacity?: number;
+  waterItems?: number;
+  waterRemainder?: number;
   previousProgram?: string;
   progressionVersion: 1 | 2;
   companion: Companion;
@@ -150,6 +155,9 @@ const building = (
   water: 0,
 });
 export const fresh = (): Farm => ({
+  researchRevision: 2,
+  waterItems: 0,
+  waterRemainder: 0,
   progressionVersion: 2,
   companion: freshCompanion(),
   time: 0,
@@ -186,7 +194,7 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
   if (
     !Number.isInteger(v.width) ||
     v.width! < 1 ||
-    v.width! > 7 ||
+    v.width! > 10 ||
     !Array.isArray(v.tiles) ||
     v.tiles.length !== v.width! * (v.height ?? 1)
   )
@@ -194,6 +202,20 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
   const s = {
     ...fresh(),
     ...v,
+    researchRevision: v.researchRevision === 1 ? 1 : 2,
+    legacyDepotCapacity:
+      v.legacyDepotCapacity ??
+      (v.researchRevision === undefined
+        ? v.unlocks?.includes("storage4")
+          ? 10000
+          : v.unlocks?.includes("storage3")
+            ? 2500
+            : v.unlocks?.includes("storage2")
+              ? 500
+              : 200
+        : 0),
+    waterItems: v.waterItems ?? 0,
+    waterRemainder: v.waterRemainder ?? 0,
     previousProgram:
       typeof v.previousProgram === "string" ? v.previousProgram : undefined,
     progressionVersion: v.progressionVersion === 2 ? 2 : 1,
@@ -215,6 +237,8 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
       entity: t.planted !== null ? (t.entity ?? "Wheat") : t.entity,
     })),
   } as Farm;
+  if (v.researchRevision === undefined)
+    s.unlocks = [...new Set([...s.unlocks, "plant", "move"])];
   if (!Array.isArray(v.robots) || !v.robots.length) {
     s.robots = [robot("f1", "Farmer", s.x, s.y)];
     s.robots[0].inventory.Wheat = s.cargo;
@@ -251,14 +275,29 @@ export const activeRobot = (s: Farm) =>
   s.robots.find((r) => r.id === s.activeRobotId && !r.destroyed) ??
   s.robots.find((r) => !r.destroyed)!;
 export const capacity = (s: Farm, r: Robot = activeRobot(s)) =>
-  models[r.model].capacity * ([1, 2, 4, 8][level(s, "hold")] ?? 1);
+  (r.model === "Farmer" && s.researchRevision !== 2
+    ? 10
+    : models[r.model].capacity) * ([1, 2, 4, 8][level(s, "hold")] ?? 1);
 export const robotSpeed = (s: Farm, r: Robot = activeRobot(s)) =>
-  (models[r.model].speed * ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1)) /
+  (models[r.model].speed *
+    (s.unlocks.includes("speed") ? 2 : 1) *
+    ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1)) /
   (r.loan ? 2 : 1);
 export const actionDuration = (s: Farm, r: Robot = activeRobot(s)) =>
-  ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1) * (r.loan ? 2 : 1);
+  ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1) *
+  (s.unlocks.includes("speed") ? 0.5 : 1) *
+  (r.loan ? 2 : 1);
 export const depotCapacity = (s: Farm) =>
-  [200, 200, 500, 2500, 10000][level(s, "storage", 4)] ?? 200;
+  s.researchRevision === 2
+    ? Math.max(
+        s.legacyDepotCapacity ?? 0,
+        storageCapacities[Math.max(0, level(s, "storage", 10) - 1)],
+      )
+    : Math.max(
+        [200, 200, 500, 2500, 10000][Math.min(4, level(s, "storage", 10))] ??
+          200,
+        storageCapacities[Math.max(0, level(s, "storage", 10) - 1)],
+      );
 export const stockCapacity = (s: Farm) =>
   s.buildings.filter((b) => b.kind === "Depot").length * depotCapacity(s);
 export const getStock = (s: Farm, item: Item) =>
@@ -355,6 +394,7 @@ export function researchBlocker(s: Farm, id: string): string | null {
     (p) =>
       !s.unlocks.includes(p) &&
       !(s.progressionVersion === 1 && (p === "loops" || p === "wheat-base")) &&
+      !(s.researchRevision !== 2 && ["speed", "plant", "move"].includes(p)) &&
       !(p === "extension" && s.width >= 3),
   );
   if (missing.length)
@@ -362,6 +402,21 @@ export function researchBlocker(s: Farm, id: string): string | null {
       "Requis : " +
       missing.map((p) => research.find((r) => r.id === p)?.name ?? p).join(", ")
     );
+  if ((r.goldCost ?? 0) > s.gold)
+    return `Or insuffisant : ${r.goldCost!.toLocaleString("fr-FR")} or nécessaires.`;
+  const expansion =
+    id === "extension"
+      ? [3, 1]
+      : /^extension(?:[3-9]|10)$/.test(id)
+        ? [Number(id.slice(9)), Number(id.slice(9))]
+        : null;
+  if (
+    expansion &&
+    (s.sites ?? []).some(
+      (p) => p.x >= 0 && p.y >= 0 && p.x < expansion[0] && p.y < expansion[1],
+    )
+  )
+    return "Déplacez les terrains constructibles qui occupent les futures parcelles avant cette expansion.";
   const required = sum(r.materials);
   if (required > stockCapacity(s))
     return `Capacité insuffisante : ${required} unités nécessaires, ${stockCapacity(s)} disponibles. Améliorez le stockage ou construisez des dépôts supplémentaires.`;
@@ -375,12 +430,13 @@ export function buy(s: Farm, id: string): boolean {
   const r = research.find((r) => r.id === id)!;
   for (const [item, n] of Object.entries(r.materials))
     removeStock(s, item as Item, n);
+  s.gold -= r.goldCost ?? 0;
   s.unlocks.push(id);
   if (id === "wheat") s.wheatLevel = 2;
   else if (/^wheat[3-5]$/.test(id)) s.wheatLevel = Number(id.slice(-1));
   if (id === "extension") resizeFarm(s, 3, 1);
-  else if (/^extension[3-7]$/.test(id)) {
-    const n = Number(id.slice(-1));
+  else if (/^extension(?:[3-9]|10)$/.test(id)) {
+    const n = Number(id.slice("extension".length));
     resizeFarm(s, n, n);
   }
   sync(s);
@@ -397,11 +453,47 @@ function resizeFarm(s: Farm, w: number, h: number) {
       ? old[y * oldW + x]
       : s.progressionVersion === 1
         ? { ...tile(), planted: null, entity: undefined }
-        : tile(s.time);
+        : { ...tile(s.time), yield: grassYield(s) };
   });
   s.width = w;
   s.height = h;
   s.visited = s.visited.map((i) => Math.floor(i / oldW) * w + (i % oldW));
+}
+function cropSpec(
+  s: Farm,
+  kind: Crop,
+): {
+  seconds: number;
+  soil: string;
+  cost: Inventory;
+  yields: number[];
+  resource: Item;
+  unlock: string | null;
+} {
+  const spec = cropData[kind];
+  if (s.researchRevision === 2) return spec;
+  const old: Partial<Record<Crop, Partial<ReturnType<typeof cropSpec>>>> = {
+    Grass: { yields: [1] },
+    Bush: { seconds: 8, soil: "Grassland", yields: [1, 3, 8] },
+    Carrot: {
+      seconds: 10,
+      cost: { Wheat: 2, Wood: 1 },
+      yields: [2, 6, 15, 40],
+    },
+    Tree: {
+      seconds: 20,
+      soil: "Grassland",
+      cost: { Wood: 1 },
+      yields: [5, 15, 40, 100],
+    },
+    Pumpkin: { yields: [4, 12, 30] },
+  };
+  return { ...spec, ...old[kind] };
+}
+function grassYield(s: Farm) {
+  return s.researchRevision === 2
+    ? 2 ** Math.max(0, level(s, "grass", 10) - 1)
+    : 1;
 }
 function growth(s: Farm, t: Tile, index: number) {
   if (t.planted === null && (t.ground ?? "Grassland") === "Grassland") {
@@ -409,11 +501,19 @@ function growth(s: Farm, t: Tile, index: number) {
     t.planted = t.emptySince ?? s.time;
     t.updatedAt = t.planted;
     t.progress = 0;
-    t.yield = 1;
+    t.yield = grassYield(s);
   }
   if (t.planted === null) return;
   const kind = t.entity ?? "Wheat";
-  let duration = cropData[kind].seconds;
+  let duration = cropSpec(s, kind).seconds;
+  if (s.researchRevision === 2 && ["Bush", "Carrot", "Tree"].includes(kind)) {
+    // Stable variation per planting: save/reload never rerolls a crop.
+    const fraction =
+      Math.abs(
+        Math.sin((t.planted + 1) * 12.9898 + index * 78.233) * 43758.5453,
+      ) % 1;
+    duration *= 0.8 + fraction * 0.4;
+  }
   if (kind === "Tree") {
     const x = index % s.width,
       y = Math.floor(index / s.width);
@@ -429,13 +529,20 @@ function growth(s: Farm, t: Tile, index: number) {
         at(s, x + dx, y + dy)?.planted !== null
       )
         neighbors++;
-    duration *= 1 + 0.5 * neighbors;
+    duration *= s.researchRevision === 2 ? 2 ** neighbors : 1 + 0.5 * neighbors;
   }
   const dt = Math.max(0, s.time - (t.updatedAt ?? t.planted));
-  const bonus = [0, 0.25, 0.5, 1][level(s, "watering")] ?? 0;
+  const bonus =
+    s.researchRevision === 2
+      ? 4
+      : ([0, 0.25, 0.5, 1][level(s, "watering")] ?? 0);
+  const moisture =
+    s.researchRevision === 2 && dt > 0
+      ? ((t.water ?? 0) * (1 - 0.99 ** dt)) / (-Math.log(0.99) * dt)
+      : (t.water ?? 0);
   t.progress = Math.min(
     1,
-    (t.progress ?? 0) + (dt / duration) * (1 + bonus * (t.water ?? 0)),
+    (t.progress ?? 0) + (dt / duration) * (1 + bonus * moisture),
   );
   t.updatedAt = s.time;
 }
@@ -796,7 +903,8 @@ function waterGroup(s: Farm, first: Building) {
   return group;
 }
 const waterCapacity = (s: Farm, b: Building) =>
-  (b.kind === "Well" ? 100 : 400) * (s.unlocks.includes("reservoir2") ? 3 : 1);
+  (b.kind === "Well" ? 100 : 400) *
+  (level(s, "reservoir", 5) >= 2 ? 3 * 2 ** (level(s, "reservoir", 5) - 2) : 1);
 function setWater(s: Farm, group: Building[], n: number) {
   for (const b of group) {
     b.water = Math.min(n, waterCapacity(s, b));
@@ -840,7 +948,17 @@ function machine(s: Farm, b: Building, cursor: number) {
       : s.unlocks.includes("mechanization")
         ? 0.75
         : 1;
-    b.cycle = { ends: cursor + recipe.duration * multiplier };
+    const machineLevel =
+      b.kind === "Mill"
+        ? level(s, "milling", 5)
+        : b.kind === "Oven"
+          ? level(s, "bakery", 5)
+          : 1;
+    b.cycle = {
+      ends:
+        cursor +
+        (recipe.duration * multiplier) / 2 ** Math.max(0, machineLevel - 1),
+    };
     if (b.cycle.ends > s.time) return;
   }
 }
@@ -848,11 +966,21 @@ export function advance(s: Farm, delta: number) {
   syncBefore(s);
   const previous = s.time;
   s.time += Math.max(0, delta);
+  if (s.researchRevision === 2 && s.unlocks.includes("watering")) {
+    const produced =
+      (s.waterRemainder ?? 0) +
+      Math.max(0, delta) * 0.1 * 2 ** Math.max(0, level(s, "watering", 9) - 1);
+    const whole = Math.floor(produced + 1e-9);
+    s.waterItems = (s.waterItems ?? 0) + whole;
+    s.waterRemainder = Math.max(0, produced - whole);
+  }
   for (let i = 0; i < s.tiles.length; i++) {
     growth(s, s.tiles[i], i);
     s.tiles[i].water = Math.max(
       0,
-      (s.tiles[i].water ?? 0) - Math.max(0, delta) * 0.01,
+      s.researchRevision === 2
+        ? (s.tiles[i].water ?? 0) * 0.99 ** Math.max(0, delta)
+        : (s.tiles[i].water ?? 0) - Math.max(0, delta) * 0.01,
     );
   }
   const live = s.robots.filter((r) => !r.destroyed && r.deployed),
@@ -951,10 +1079,20 @@ export function command(
   if (current) growth(s, current, index);
   const ready =
     !!current && current.planted !== null && (current.progress ?? 0) >= 1;
-  const direction = (value: unknown) => {
+  const direction = (value: unknown, wrap = false) => {
     const d = offsets[String(value)];
     if (!d) throw new Error("Direction invalide.");
-    return { x: r.x + d[0], y: r.y + d[1] };
+    const p = { x: r.x + d[0], y: r.y + d[1] };
+    if (
+      wrap &&
+      s.researchRevision === 2 &&
+      at(s, r.x, r.y) &&
+      !walkable(s, p.x, p.y)
+    ) {
+      p.x = (p.x + s.width) % s.width;
+      p.y = (p.y + s.height) % s.height;
+    }
+    return p;
   };
   const targetBuilding = (value: unknown) => {
     const p = direction(value);
@@ -976,9 +1114,7 @@ export function command(
       "harvest_group",
     ].includes(name)
       ? actionDuration(s, r)
-      : r.loan
-        ? 2
-        : 1;
+      : (r.loan ? 2 : 1) * (s.unlocks.includes("speed") ? 0.5 : 1);
     return movement;
   };
   const actions = [
@@ -1003,7 +1139,8 @@ export function command(
       const kind = args[0] as Crop;
       if (!Object.hasOwn(cropData, String(kind)))
         throw new Error("Culture inconnue.");
-      const spec = cropData[kind];
+      if (s.researchRevision === 2) requireUnlock("plant");
+      const spec = cropSpec(s, kind);
       if (
         spec.unlock &&
         !(s.progressionVersion === 1 && spec.unlock === "wheat-base")
@@ -1036,6 +1173,7 @@ export function command(
       current.yield = spec.yields[Math.max(0, base - 1)] ?? spec.yields[0];
       current.grouped = false;
       s.planted++;
+      if (s.researchRevision === 2) r.readyAt = s.time + actionDuration(s, r);
       result = true;
       break;
     }
@@ -1131,7 +1269,8 @@ export function command(
       break;
     }
     case "move": {
-      const p = direction(args[0]);
+      if (s.researchRevision === 2) requireUnlock("move");
+      const p = direction(args[0], true);
       const reserved = s.robots.some(
         (other) =>
           other.id !== r.id &&
@@ -1176,6 +1315,22 @@ export function command(
       break;
     case "watering":
       requireUnlock("watering");
+      if (s.researchRevision === 2) {
+        if (
+          r.model === "Transporter" ||
+          !current ||
+          (current.water ?? 0) >= 1 ||
+          ((s.waterItems ?? 0) < 1 && r.water < 1)
+        ) {
+          result = false;
+          break;
+        }
+        if (r.water >= 1) r.water--;
+        else s.waterItems!--;
+        current.water = Math.min(1, (current.water ?? 0) + 0.25);
+        result = true;
+        break;
+      }
       requireUnlock("tank");
       if (
         r.model === "Transporter" ||
@@ -1192,6 +1347,25 @@ export function command(
       break;
     case "use_item": {
       requireUnlock("consumables");
+      if (args[0] === "Water") {
+        requireUnlock("watering");
+        const n = args[1] === undefined ? 1 : Number(args[1]);
+        if (!Number.isSafeInteger(n) || n < 1)
+          throw new Error("La quantité doit être un entier positif.");
+        const amount = Math.min(
+          n,
+          Math.ceil((1 - (current?.water ?? 0)) * 4),
+          s.waterItems ?? 0,
+        );
+        if (r.model === "Transporter" || !current || amount < 1) {
+          result = false;
+          break;
+        }
+        s.waterItems! -= amount;
+        current.water = Math.min(1, (current.water ?? 0) + amount * 0.25);
+        result = true;
+        break;
+      }
       requireUnlock("fertilizer");
       if (args[0] !== "Fertilizer")
         throw new Error("Utilisez Items.Fertilizer.");
@@ -1205,12 +1379,17 @@ export function command(
         result = false;
         break;
       }
-      r.inventory.Fertilizer!--;
-      current.progress = Math.min(
-        1,
-        (current.progress ?? 0) +
-          ([0, 0.2, 0.35, 0.5][level(s, "fertilizer")] ?? 0.2),
+      const n = args[1] === undefined ? 1 : Number(args[1]);
+      if (!Number.isSafeInteger(n) || n < 1)
+        throw new Error("La quantité doit être un entier positif.");
+      const gain = [0, 0.2, 0.35, 0.5][level(s, "fertilizer")] ?? 0.2;
+      const amount = Math.min(
+        n,
+        Math.ceil((1 - (current.progress ?? 0)) / gain),
+        r.inventory.Fertilizer!,
       );
+      r.inventory.Fertilizer! -= amount;
+      current.progress = Math.min(1, (current.progress ?? 0) + gain * amount);
       result = true;
       break;
     }
@@ -1296,7 +1475,10 @@ export function command(
       result = { width: s.width, height: s.height };
       break;
     case "get_inventory":
-      result = r.inventory[getItem(args[0])] ?? 0;
+      result =
+        args[0] === "Water"
+          ? (s.waterItems ?? 0)
+          : (r.inventory[getItem(args[0])] ?? 0);
       break;
     case "get_stock":
       result = getStock(s, getItem(args[0]));
@@ -1314,7 +1496,7 @@ export function command(
     case "is_occupied":
     case "reserve": {
       requireUnlock(name === "reserve" ? "traffic2" : "traffic");
-      const p = direction(args[0]);
+      const p = direction(args[0], true);
       const occupied = s.robots.some(
         (other) =>
           other.id !== r.id &&
@@ -1410,6 +1592,13 @@ export function command(
       throw new Error(`Commande inconnue : ${name}`);
   }
   sync(s);
+  if (
+    s.researchRevision === 2 &&
+    (!actions.includes(name) ||
+      (["plant", "move", "use_item", "watering"].includes(name) &&
+        result === false))
+  )
+    r.readyAt = s.time + TICK_SECONDS;
   return result;
 }
 export { missions } from "./missions";
@@ -1445,10 +1634,13 @@ const sameCell = (a: Site, b: Site) => a.x === b.x && a.y === b.y;
 export function placedSites(s: Farm): Site[] {
   return s.sites ?? constructionSlots.slice(0, slotCount(s));
 }
-export const siteCandidates: Site[] = Array.from({ length: 9 * 9 }, (_, i) => ({
-  x: (i % 9) - 1,
-  y: Math.floor(i / 9) - 1,
-})).filter((p) => p.x === -1 || p.x === 7 || p.y === -1 || p.y === 7);
+export const siteCandidates: Site[] = Array.from(
+  { length: 12 * 12 },
+  (_, i) => ({
+    x: (i % 12) - 1,
+    y: Math.floor(i / 12) - 1,
+  }),
+).filter((p) => p.x === -1 || p.x === 10 || p.y === -1 || p.y === 10);
 function siteOccupied(s: Farm, p: Site) {
   return s.robots.some(
     (r) =>
@@ -1501,7 +1693,8 @@ export function siteBlocker(s: Farm, p: Site, remove = false): string | null {
   if (
     !Number.isInteger(p.x) ||
     !Number.isInteger(p.y) ||
-    !siteCandidates.some((c) => sameCell(c, p))
+    (!siteCandidates.some((c) => sameCell(c, p)) &&
+      !(remove && placedSites(s).some((c) => sameCell(c, p))))
   )
     return "Choisissez une case du pourtour, hors des futures parcelles agricoles.";
   const sites = placedSites(s),

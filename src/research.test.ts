@@ -71,15 +71,14 @@ test("storage gates prevent impossible payments and old unlocks remain valid", (
   assert.equal(command(loaded, "plant", ["Wheat"]), true);
   assert.equal(loaded.tiles[0].yield, 12);
 });
-test("large research requires real depot capacity, not only a storage flag", () => {
+test("late research requires actual buildings, not only storage and land flags", () => {
   const s = fresh();
-  s.unlocks = [...ancestors("wheat5")];
-  s.stock = 15000;
-  s.resources = { Wood: 5000, Carrot: 2000 };
-  assert.match(researchBlocker(s, "wheat5")!, /Capacité insuffisante/);
-  assert.equal(buy(s, "wheat5"), false);
+  const target = research.find((r) => r.id === "pumpkin10")!;
+  s.unlocks = [...ancestors(target.id)];
+  s.resources = { ...target.materials };
+  assert.match(researchBlocker(s, target.id)!, /Capacité insuffisante/);
   const base = structuredClone(s.buildings[0]);
-  for (let i = 1; i < 3; i++)
+  for (let i = 1; i < 4; i++)
     s.buildings.push({
       ...structuredClone(base),
       inventory: {},
@@ -87,9 +86,8 @@ test("large research requires real depot capacity, not only a storage flag", () 
       x: -1,
       y: i,
     });
-  assert.equal(buy(s, "wheat5"), true);
-  assert.equal(s.stock, 0);
-  assert.equal(s.resources.Wood, 0);
+  assert.equal(buy(s, target.id), true);
+  assert.equal(s.resources.Carrot, 0);
 });
 test("orthographic framing keeps the screen aspect and is independent of orbit", () => {
   for (const [w, h] of [

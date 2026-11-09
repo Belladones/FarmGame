@@ -167,6 +167,8 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
           unlocked: ["pearl", "none", "ribbon", "rose", "flower"],
         };
         farm.resources.Hay = 17;
+        farm.waterItems = 7;
+        farm.waterRemainder = 0.3;
         farm.harvestedItems = { Hay: 23, Wheat: 4 };
         farm.depositedItems = { Hay: 17, Wheat: 3 };
         farm.harvested = 27;

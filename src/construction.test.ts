@@ -30,7 +30,7 @@ test("new purchases stay in inventory without free land and do not supply storag
   assert.equal(purchaseForInventory(s, "Depot"), true);
   assert.equal(s.storedBuildings.length, 1);
   assert.equal(stockCapacity(s), 200);
-  assert.equal(s.gold, 2900);
+  assert.equal(s.gold, 2500);
   assert.equal(purchaseForInventory(s, "Farmer"), true);
   assert.equal(s.robots[1].deployed, false);
   advance(s, 1);
@@ -62,7 +62,7 @@ test("buildings can be placed, stored and reinstalled without payment or identit
   assert.equal(configureSite(s, { x: 0, y: -1 }, true, true), false);
   assert.equal(storeBuilding(s, id, true), true);
   assert.equal(stockCapacity(s), 200);
-  assert.equal(s.storedBuildings[0].paid, 100);
+  assert.equal(s.storedBuildings[0].paid, 500);
   assert.equal(placeBuilding(s, id, { x: 0, y: -1 }, true), true);
   assert.equal(s.gold, gold);
   assert.equal(s.buildings[1].id, id);
@@ -123,7 +123,7 @@ test("legacy saves retain their original construction positions and buildings", 
 test("robots deploy on the chosen cell and honor reservations", () => {
   const s = equipped();
   s.stock = 25;
-  s.resources.Hay = 20;
+  s.resources.Hay = 30;
   buy(s, "extension");
   purchaseForInventory(s, "Farmer");
   const id = s.robots[1].id;

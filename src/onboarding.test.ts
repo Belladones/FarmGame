@@ -22,7 +22,7 @@ test("a new game starts with harvestable grass, no wheat or loop unlock and a si
   assert.equal(s.tiles[0].progress, 1);
   assert.equal(s.unlocks.includes("loops"), false);
   assert.ok(!/\bwhile\s*\(/.test(s.robots[0].code));
-  assert.throws(() => command(s, "plant", ["Wheat"]), /Culture du blé/);
+  assert.throws(() => command(s, "plant", ["Wheat"]), /plant/);
   assert.equal(command(s, "harvest", []), true);
   assert.equal(s.robots[0].inventory.Hay, 1);
   assert.equal(s.robots[0].readyAt, 200 * TICK_SECONDS);
@@ -43,6 +43,7 @@ test("grass regrows on prairie after half a second, but not automatically on soi
   assert.equal(s.tiles[0].planted, null);
   assert.equal(command(s, "harvest", []), false);
   assert.equal(s.robots[0].readyAt, s.time + TICK_SECONDS);
+  s.unlocks.push("plant");
   assert.equal(command(s, "plant", ["Grass"]), true);
   advance(s, 0.5);
   assert.equal(command(s, "harvest", []), true);
@@ -66,7 +67,7 @@ test("five deposited hay unlock the first loop exactly once without charging whe
 });
 test("an immature crop is removed without yield and a full hold preserves ripe crops", () => {
   const s = fresh();
-  s.unlocks.push("loops", "wheat-base");
+  s.unlocks.push("loops", "plant", "wheat-base");
   command(s, "plant", ["Wheat"]);
   assert.equal(command(s, "harvest", []), true);
   assert.equal(s.harvested, 0);
@@ -74,7 +75,7 @@ test("an immature crop is removed without yield and a full hold preserves ripe c
   assert.equal(s.robots[0].readyAt, s.time + 1);
   command(s, "plant", ["Wheat"]);
   advance(s, 5);
-  s.robots[0].inventory.Hay = 10;
+  s.robots[0].inventory.Hay = 20;
   assert.equal(command(s, "harvest", []), false);
   assert.equal(s.tiles[0].entity, "Wheat");
   assert.equal(s.robots[0].readyAt, s.time + TICK_SECONDS);

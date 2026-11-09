@@ -41,11 +41,12 @@ async function requestSave(page) {
       "wheat",
       "bush",
       "loops",
+      "speed",
       "wheat-base",
       "till",
     ];
     fixture.stock = 300;
-    fixture.resources = { Wood: 50, Hay: 20 };
+    fixture.resources = { Wood: 50, Hay: 30 };
     buy(fixture, "extension");
     assert.equal(buy(fixture, "extension3"), true);
     fixture.unlocks = research.map((r) => r.id);
