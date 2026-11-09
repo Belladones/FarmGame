@@ -334,6 +334,65 @@ export function createApp(
       updatedAt: query.rows[0].updated_at,
     });
   });
+  // Named snapshots are separate from the revision-protected active autosave.
+  app.get("/api/slots", authenticate, async (_req, res) => {
+    const result = await pool.query(
+      "SELECT id,name,created_at FROM farm_slots WHERE player_id=$1 ORDER BY created_at DESC",
+      [(res.locals.session as Session).playerId],
+    );
+    res.json({
+      slots: result.rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        createdAt: row.created_at,
+      })),
+    });
+  });
+  app.post("/api/slots", authenticate, async (req, res) => {
+    const { id, name, farm } = req.body ?? {};
+    if (
+      typeof id !== "string" ||
+      !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id) ||
+      typeof name !== "string" ||
+      !name.trim() ||
+      name.trim().length > 60 ||
+      !validFarm(farm)
+    ) {
+      res
+        .status(400)
+        .json({ error: "Nom ou sauvegarde invalide (60 caractères maximum)." });
+      return;
+    }
+    const player = (res.locals.session as Session).playerId;
+    // Immutable IDs make retries safe without overwriting another snapshot.
+    await pool.query(
+      "INSERT INTO farm_slots(player_id,id,name,state) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
+      [player, id, name.trim(), JSON.stringify(farm)],
+    );
+    res.status(201).json({ id });
+  });
+  app.get("/api/slots/:id", authenticate, async (req, res) => {
+    const result = await pool.query(
+      "SELECT state FROM farm_slots WHERE player_id=$1 AND id::text=$2",
+      [(res.locals.session as Session).playerId, req.params.id],
+    );
+    if (!result.rowCount) {
+      res.status(404).json({ error: "Sauvegarde introuvable." });
+      return;
+    }
+    res.json({ farm: result.rows[0].state });
+  });
+  app.delete("/api/slots/:id", authenticate, async (req, res) => {
+    const result = await pool.query(
+      "DELETE FROM farm_slots WHERE player_id=$1 AND id::text=$2",
+      [(res.locals.session as Session).playerId, req.params.id],
+    );
+    if (!result.rowCount) {
+      res.status(404).json({ error: "Sauvegarde introuvable." });
+      return;
+    }
+    res.sendStatus(204);
+  });
   app.use("/api", (_req, res) =>
     res.status(404).json({ error: "Route API inconnue." }),
   );

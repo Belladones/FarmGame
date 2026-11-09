@@ -351,6 +351,93 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
       },
     );
     await t.test(
+      "named saves persist independently, retry safely and remain private",
+      async () => {
+        const id = randomUUID();
+        const farm = fresh();
+        farm.resources.Hay = 37;
+        assert.equal((await req("/api/slots")).status, 401);
+        assert.equal(
+          (await req("/api/slots", "POST", { id, name: " ", farm }, cookieA))
+            .status,
+          400,
+        );
+        assert.equal(
+          (
+            await req(
+              "/api/slots",
+              "POST",
+              { id, name: "Ferme A", farm: {} },
+              cookieA,
+            )
+          ).status,
+          400,
+        );
+        assert.equal(
+          (
+            await req(
+              "/api/slots",
+              "POST",
+              { id, name: "Ferme A", farm },
+              cookieA,
+            )
+          ).status,
+          201,
+        );
+        // A repeated write cannot replace the original snapshot.
+        await req(
+          "/api/slots",
+          "POST",
+          { id, name: "Retry", farm: fresh() },
+          cookieA,
+        );
+        const list = await (
+          await req("/api/slots", "GET", undefined, cookieA)
+        ).json();
+        assert.equal(list.slots.length, 1);
+        assert.equal(list.slots[0].name, "Ferme A");
+        assert.equal(
+          (
+            await (
+              await req("/api/slots/" + id, "GET", undefined, cookieA)
+            ).json()
+          ).farm.resources.Hay,
+          37,
+        );
+        const other = await req("/api/auth/login", "POST", {
+          username: names[1],
+          password,
+        });
+        assert.equal(other.status, 200);
+        const otherCookie = capture(other);
+        assert.equal(
+          (
+            await (
+              await req("/api/slots", "GET", undefined, otherCookie)
+            ).json()
+          ).slots.length,
+          0,
+        );
+        assert.equal(
+          (await req("/api/slots/" + id, "GET", undefined, otherCookie)).status,
+          404,
+        );
+        assert.equal(
+          (await req("/api/slots/" + id, "DELETE", undefined, otherCookie))
+            .status,
+          404,
+        );
+        assert.equal(
+          (await req("/api/slots/" + id, "DELETE", undefined, cookieA)).status,
+          204,
+        );
+        assert.equal(
+          (await req("/api/slots/" + id, "GET", undefined, cookieA)).status,
+          404,
+        );
+      },
+    );
+    await t.test(
       "logout revokes one device session and preserves account data and other devices",
       async () => {
         assert.equal(

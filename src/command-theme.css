@@ -1907,3 +1907,68 @@ img.companion-avatar {
   place-items: center;
   text-align: center;
 }
+
+.save-slots {
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid #50636f;
+  background: #0b1720;
+}
+.save-slots h3 {
+  margin-top: 0;
+}
+.save-slots > small,
+.save-slots li small {
+  display: block;
+  color: #a9becb;
+}
+.save-slots form {
+  margin: 18px 0;
+  display: grid;
+  gap: 12px;
+}
+.save-slots input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.save-slots ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.save-slots li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #384d59;
+}
+.save-slots li > div {
+  flex: 1 1 180px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.save-slots button {
+  min-height: 42px;
+}
+.save-slots button {
+  background: #223642;
+  border: 1px solid #526b7b;
+  color: #e5eef3;
+  border-radius: 0;
+}
+.save-slots button:hover:not(:disabled) {
+  background: #304c5d;
+  border-color: #e4b28a;
+}
+.save-slots button.session-primary {
+  background: #ff7917;
+  border-color: #ffa15e;
+  color: white;
+}
+.save-slots button:focus-visible {
+  outline: 2px solid #ffab70;
+  outline-offset: 3px;
+}

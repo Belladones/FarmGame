@@ -139,6 +139,22 @@ export function hasLocalProgress(farm: Farm): boolean {
   );
 }
 
+export interface FarmSlot {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+interface LocalSlot extends FarmSlot {
+  farm: Farm;
+}
+const SLOTS = "farmscript-slots-v1";
+function localSlots(): LocalSlot[] {
+  const value = JSON.parse(localStorage.getItem(SLOTS) || "[]");
+  if (!Array.isArray(value))
+    throw new Error("La liste des sauvegardes locales est illisible.");
+  return value;
+}
+
 export class CloudSave {
   status: SyncStatus = {
     mode: "loading",
@@ -397,6 +413,84 @@ export class CloudSave {
     });
     this.storeMeta();
     await this.flush();
+  }
+  async listSlots(): Promise<FarmSlot[]> {
+    if (this.status.player)
+      return (await request<{ slots: FarmSlot[] }>("/slots")).slots;
+    return localSlots().map(({ id, name, createdAt }) => ({
+      id,
+      name,
+      createdAt,
+    }));
+  }
+  private async readyForSlotChange() {
+    if (!["guest", "saved", "saving"].includes(this.status.mode))
+      throw new Error(
+        "Attendez la connexion ou résolvez le conflit de sauvegarde avant de changer de partie.",
+      );
+    await this.flush();
+    if (this.status.dirty) await this.flush();
+    if (
+      this.status.player &&
+      (this.status.dirty || this.status.mode !== "saved")
+    )
+      throw new Error(
+        "La partie en cours n’a pas pu être synchronisée. Elle reste ouverte.",
+      );
+  }
+  async saveSlot(name: string): Promise<void> {
+    const cleanName = name.trim();
+    if (!cleanName || cleanName.length > 60)
+      throw new Error("Saisissez un nom de 1 à 60 caractères.");
+    await this.readyForSlotChange();
+    const slot: LocalSlot = {
+      id: writeIdentifier(),
+      name: cleanName,
+      createdAt: new Date().toISOString(),
+      farm: structuredClone(this.options.getFarm()),
+    };
+    if (this.status.player) await request("/slots", "POST", slot);
+    else localStorage.setItem(SLOTS, JSON.stringify([slot, ...localSlots()]));
+  }
+  async deleteSlot(id: string): Promise<void> {
+    if (this.status.player)
+      await request("/slots/" + encodeURIComponent(id), "DELETE");
+    else
+      localStorage.setItem(
+        SLOTS,
+        JSON.stringify(localSlots().filter((slot) => slot.id !== id)),
+      );
+  }
+  async openSlot(id: string | null): Promise<void> {
+    await this.readyForSlotChange();
+    let next: Farm;
+    if (id === null) next = fresh();
+    else if (this.status.player)
+      next = (await request<{ farm: Farm }>("/slots/" + encodeURIComponent(id)))
+        .farm;
+    else {
+      const slot = localSlots().find((slot) => slot.id === id);
+      if (!slot) throw new Error("Sauvegarde introuvable.");
+      next = structuredClone(slot.farm);
+    }
+    // Archive succeeds before replacing anything, including for a new game.
+    await this.saveSlot(
+      "Avant " +
+        (id === null ? "nouvelle partie" : "chargement") +
+        " · " +
+        new Date().toLocaleString("fr-FR"),
+    );
+    this.epoch++;
+    this.pendingWriteId = undefined;
+    this.backup(this.options.getFarm());
+    this.options.applyFarm(next);
+    this.markDirty();
+    this.storeMeta();
+    await this.flush();
+    if (this.status.player && this.status.mode !== "saved")
+      throw new Error(
+        "Partie chargée localement ; synchronisation à reprendre avant de continuer.",
+      );
   }
   async logout() {
     await this.flush();

@@ -12,16 +12,19 @@ export function SessionPanel({
   status,
   onAction,
   children,
+  disabled = false,
 }: {
   children?: ReactNode;
+  disabled?: boolean;
   status: SyncStatus;
   onAction: (action: SessionAction) => Promise<void>;
 }) {
   const [kind, setKind] = useState<"login" | "register">("login"),
     [username, setUsername] = useState(""),
     [password, setPassword] = useState(""),
-    [busy, setBusy] = useState(false),
+    [working, setBusy] = useState(false),
     [error, setError] = useState("");
+  const busy = working || disabled;
   const act = async (action: SessionAction) => {
     setBusy(true);
     setError("");

@@ -51,6 +51,10 @@ La sauvegarde automatique enregistre toutes les cinq secondes une photographie c
 
 Tables : `players` pour les comptes, `player_sessions` pour les sessions et `farm_saves` pour l’état complet en JSONB, sa révision et sa date de mise à jour. Les sauvegardes sont rattachées au compte, jamais à un identifiant de joueur fourni librement par le client. Les migrations sont versionnées dans `server/migrations/`. Les sauvegardes sont limitées à 2 Mo et la validation conserve les champs du jeu sans exécuter les programmes sauvegardés côté serveur.
 
+Dans **Compte → Mes parties**, « Sauvegarder cette partie » crée une copie nommée de la ferme, avec ses robots, programmes, recherches et missions. « Nouvelle partie » démarre le tutoriel après avoir conservé automatiquement la ferme actuelle. « Reprendre » conserve également la partie en cours avant le chargement. Les programmes chargés restent arrêtés. Ces copies sont des points de reprise : pour conserver une version plus récente sous un nom, créez une nouvelle sauvegarde. Supprimer une copie ne supprime pas la partie actuellement ouverte.
+
+Les copies d’un compte sont stockées dans `farm_slots` et accessibles sur ses autres appareils. Les copies créées en mode local restent dans ce navigateur, séparées de celles du compte ; elles ne sont pas importées automatiquement lors de la connexion. Un conflit ou une panne de synchronisation bloque le changement de partie pour protéger la ferme en cours. La migration `003_named_farm_slots.sql` est appliquée au démarrage de l’API (`npm run db:migrate` permet aussi de l’appliquer manuellement). Vérification navigateur : `npm run test:saves`.
+
 Le volume PostgreSQL doit être sauvegardé comme toute base applicative. Exemple de sauvegarde locale, sans inclure le mot de passe dans une commande :
 
 ```sh

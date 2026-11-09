@@ -59,6 +59,7 @@ import { FleetPanel, type FleetAction } from "./FleetPanel";
 import { FarmScene } from "./FarmScene";
 import { CloudSave, downloadFarm, type SyncStatus } from "./persistence";
 import { SessionPanel, type SessionAction } from "./SessionPanel";
+import { SaveSlotsPanel } from "./SaveSlotsPanel";
 import { Shop, type ShopAction } from "./Shop";
 import { declarations } from "./api";
 import { models, itemNames, sum, research } from "./catalog";
@@ -287,6 +288,7 @@ function App() {
   const cloud = useRef<CloudSave | null>(null);
   const syncReady = useRef(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [sessionBusy, setSessionBusy] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     mode: "loading",
     player: null,
@@ -723,6 +725,7 @@ function App() {
       downloadFarm(farm.current);
       return;
     }
+    setSessionBusy(true);
     const freeze = ["auth", "cloud", "local", "logout", "retry"].includes(
       action.type,
     );
@@ -745,7 +748,34 @@ function App() {
       else if (action.type === "logout") await client.logout();
     } finally {
       if (freeze) syncReady.current = true;
+      setSessionBusy(false);
     }
+  };
+  const slotOperation = async (operation: () => Promise<void>) => {
+    stopAll();
+    setSessionBusy(true);
+    syncReady.current = false;
+    try {
+      await operation();
+    } finally {
+      syncReady.current = true;
+      setSessionBusy(false);
+    }
+  };
+  const slotActions = {
+    list: () => cloud.current!.listSlots(),
+    save: (name: string) => slotOperation(() => cloud.current!.saveSlot(name)),
+    remove: (id: string) => slotOperation(() => cloud.current!.deleteSlot(id)),
+    open: (id: string | null) =>
+      slotOperation(async () => {
+        await cloud.current!.openSlot(id);
+        setExpanded(null);
+        setEditorOpen(true);
+        if (id === null) {
+          setShowStart(true);
+          localStorage.removeItem("farmscript-tips-dismissed");
+        }
+      }),
   };
   const active = currentMission(s);
   const rank = career(s);
@@ -1555,7 +1585,16 @@ function App() {
                 />
               )}
               {panel === "Session et sauvegarde" && (
-                <SessionPanel status={syncStatus} onAction={sessionAction}>
+                <SessionPanel
+                  disabled={sessionBusy}
+                  status={syncStatus}
+                  onAction={sessionAction}
+                >
+                  <SaveSlotsPanel
+                    disabled={sessionBusy}
+                    status={syncStatus}
+                    actions={slotActions}
+                  />
                   <CompanionPanel
                     farm={s}
                     onCustomize={(id) => {
