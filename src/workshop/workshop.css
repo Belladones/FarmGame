@@ -1,0 +1,45 @@
+.workshop-hero { display: flex; gap: 24px; align-items: center; padding: 24px; background: linear-gradient(110deg,#273d4a,#12212d); border: 1px solid #596879; border-top: 3px solid #ff8b3d; margin-bottom: 18px; }
+.workshop-hero h2 { margin: 8px 0; }
+.workshop-emblem { font-size: 54px; color: #ff9a55; padding: 16px; border: 1px solid #647986; background: #152630; }
+.workshop-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.workshop-chips span { padding: 6px 9px; color: #ffcb95; background: #111e27; font-size: 12px; }
+.workshop-layout { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 24px; }
+.workshop-robots button { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 14px; text-align: left; background: #152734; color: #dce8f1; border: 1px solid #3b5363; margin-bottom: 8px; }
+.workshop-robots button[aria-pressed="true"] { border-color: #ff8b3d; background: #44342b; }
+.workshop-robots small { color: #acc0cc; }
+.workshop-selected { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 12px 0; }
+.workshop-selected button { padding: 9px 12px; background: #55372a; color: #ffbf94; border: 1px solid #bc7445; }
+@media(max-width:700px) { .workshop-layout { grid-template-columns: minmax(0,1fr); } .workshop-hero { padding: 14px; gap: 12px; } .workshop-emblem { font-size: 30px; padding: 10px; } .workshop-robots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; } .workshop-robots h3 { grid-column: 1 / -1; } }
+
+
+.workshop-emblem .product-art { width: 110px; height: 84px; display: block; }
+@media(max-width:700px) { .workshop-emblem .product-art { width: 62px; height: 60px; } }
+
+.workshop-panel .asset-upgrade-grid button { background: #ff8b3d; color: #11212b; font-weight: 600; min-height: 40px; }
+.workshop-panel .asset-upgrade-grid button:disabled { background: #233744; color: #97adbc; opacity: .7; cursor: not-allowed; }
+
+/* This screen has long equipment lists: it must scroll, unlike the research canvas. */
+.skill-screen.workshop-window > .panel-content { overflow: auto; min-height: 0; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.workshop-window .workshop-panel { min-width: 0; max-width: 1280px; margin: 0 auto; padding: 12px 0 24px; }
+.workshop-window .workshop-hero { padding: 12px 16px; gap: 16px; margin-bottom: 10px; }
+.workshop-window .workshop-emblem { padding: 8px; flex-shrink: 0; }
+.workshop-window .workshop-emblem .product-art { width: 76px; height: 60px; }
+.workshop-window .workshop-hero h2 { font-size: 23px; margin: 4px 0; }
+.workshop-window .workshop-hero p { margin: 6px 0; font-size: 13px; }
+.workshop-window .workshop-layout { align-items: start; gap: 16px; }
+.workshop-window .workshop-robots { position: sticky; top: 0; max-height: 55dvh; overflow: auto; min-width: 0; }
+.workshop-window .workshop-layout > div { min-width: 0; }
+.workshop-window .workshop-selected { flex-wrap: wrap; }
+.workshop-window .asset-upgrades { padding: 12px; }
+.workshop-window .asset-upgrades h3 { margin: 4px 0 10px; }
+.workshop-window .fleet-nav { flex-wrap: wrap; }
+.workshop-window .asset-upgrade-grid article { overflow-wrap: anywhere; }
+@media(max-width:700px) {
+  .workshop-window .workshop-hero { padding: 10px; gap: 10px; }
+  .workshop-window .workshop-emblem .product-art { width: 46px; height: 44px; }
+  .workshop-window .workshop-hero h2 { font-size: 19px; }
+  .workshop-window .workshop-hero > div:last-child { min-width: 0; }
+  .workshop-window .workshop-chips span { padding: 4px 6px; font-size: 10px; }
+  .workshop-window .workshop-robots { position: static; max-height: 180px; }
+  .workshop-window .workshop-robots button { padding: 9px; margin-bottom: 0; }
+}

@@ -1,3 +1,4 @@
+import { attachBuildingPicking } from "./scene/buildingPicking";
 import { createWorkshopModel } from "./WorkshopModel";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
@@ -558,61 +559,12 @@ export function FarmScene({
       label(group, buildings[b.kind].name.toUpperCase(), 0, 0.85, 0.62);
       buildingObjects.set(b.id, entry);
     }
-    const raycaster = new THREE.Raycaster(),
-      pointer = new THREE.Vector2();
-    const workshops = [...buildingObjects.values()]
-      .map((entry) => entry.group)
-      .filter((g) => g.userData.workshopId);
-    let press: { x: number; y: number; drag: boolean } | undefined;
-    const pointerDown = (event: PointerEvent) => {
-      press =
-        event.isPrimary && event.button === 0
-          ? { x: event.clientX, y: event.clientY, drag: false }
-          : undefined;
-    };
-    const pointerMove = (event: PointerEvent) => {
-      if (
-        press &&
-        Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6
-      )
-        press.drag = true;
-    };
-    const pointerUp = (event: PointerEvent) => {
-      const tap = press;
-      press = undefined;
-      if (!tap || tap.drag) return;
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointer.set(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        (-(event.clientY - rect.top) / rect.height) * 2 + 1,
-      );
-      raycaster.setFromCamera(pointer, camera);
-      let hit: THREE.Object3D | undefined = raycaster.intersectObjects(
-        workshops,
-        true,
-      )[0]?.object;
-      while (hit && !hit.userData.workshopId) hit = hit.parent ?? undefined;
-      if (hit) state.current.onWorkshopClick?.(hit.userData.workshopId);
-    };
-    renderer.domElement.addEventListener("pointerdown", pointerDown);
-    renderer.domElement.addEventListener("pointermove", pointerMove);
-    renderer.domElement.addEventListener("pointerup", pointerUp);
-    const workshopButtons = workshops.map((group) => {
-      const button = document.createElement("button");
-      button.className = "workshop-hotspot";
-      button.textContent = "⚒ Atelier";
-      button.setAttribute(
-        "aria-label",
-        `Ouvrir l’atelier ${group.userData.workshopId}`,
-      );
-      button.dataset.workshopId = group.userData.workshopId;
-      button.onclick = (event) => {
-        event.stopPropagation();
-        state.current.onWorkshopClick?.(group.userData.workshopId);
-      };
-      container.appendChild(button);
-      return { group, button };
-    });
+    const disposePicking = attachBuildingPicking(
+      renderer.domElement,
+      camera,
+      island,
+      (id) => state.current.onWorkshopClick?.(id),
+    );
     function createRobot(model: Model) {
       const group = new THREE.Group(),
         wheels: THREE.Mesh[] = [],
@@ -896,20 +848,6 @@ export function FarmScene({
         renderer.shadowMap.needsUpdate = true;
         lastShadow = now;
       }
-      for (const { group, button } of workshopButtons) {
-        const point = group
-          .localToWorld(new THREE.Vector3(0, 0.91, 0))
-          .project(camera);
-        button.style.left = `${((point.x + 1) * container.clientWidth) / 2}px`;
-        button.style.top = `${((1 - point.y) * container.clientHeight) / 2}px`;
-        button.style.display =
-          point.z >= -1 &&
-          point.z <= 1 &&
-          Math.abs(point.x) <= 0.95 &&
-          Math.abs(point.y) <= 0.95
-            ? ""
-            : "none";
-      }
       renderer.render(scene, camera);
     };
     frame = requestAnimationFrame(draw);
@@ -917,10 +855,7 @@ export function FarmScene({
       disposed = true;
       cancelAnimationFrame(frame);
       observer.disconnect();
-      renderer.domElement.removeEventListener("pointerdown", pointerDown);
-      renderer.domElement.removeEventListener("pointermove", pointerMove);
-      renderer.domElement.removeEventListener("pointerup", pointerUp);
-      workshopButtons.forEach(({ button }) => button.remove());
+      disposePicking();
       controls.removeEventListener("change", syncCamera);
       controls.dispose();
       scene.traverse((o) => {

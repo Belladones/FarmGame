@@ -12,7 +12,7 @@ import {
   type Site,
 } from "./engine";
 import { buildings, models } from "./catalog";
-import { ProductArt } from "./Shop";
+import { ProductArt } from "./ui/ProductArt";
 export type InventoryAction =
   | { type: "pause" }
   | { type: "site-add" | "site-remove"; site: Site }

@@ -13,7 +13,7 @@ import {
   robotCapabilities,
   type RobotRuntime,
 } from "./fleet";
-import { ProductArt } from "./Shop";
+import { ProductArt } from "./ui/ProductArt";
 export type FleetAction =
   | { type: "deploy" | "recall" | "select" | "stop" | "repair"; id: string }
   | { type: "buy"; id: string }

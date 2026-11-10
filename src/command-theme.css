@@ -2031,24 +2031,5 @@ img.companion-avatar {
 .legendary-badge { align-self: center; color: #ffdd83; font-size: 10px; font-weight: 800; letter-spacing: .16em; padding: 4px 8px; border: 1px solid #ad8d4f; }
 .legendary-demon .legendary-badge { color: #ff7d9d; border-color: #a64462; }
 
-.workshop-hotspot { position: absolute; transform: translate(-50%,-100%); border: 1px solid #ea973e; background: #142630e8; color: #ffbd72; padding: 6px 10px; font-size: 11px; cursor: pointer; pointer-events: auto; border-radius: 3px; }
-.workshop-hotspot:hover, .workshop-hotspot:focus-visible { background: #334858; outline: 2px solid #ffc177; }
-.workshop-hero { display: flex; gap: 24px; align-items: center; padding: 24px; background: linear-gradient(110deg,#273d4a,#12212d); border: 1px solid #596879; border-top: 3px solid #ff8b3d; margin-bottom: 18px; }
-.workshop-hero h2 { margin: 8px 0; }
-.workshop-emblem { font-size: 54px; color: #ff9a55; padding: 16px; border: 1px solid #647986; background: #152630; }
-.workshop-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.workshop-chips span { padding: 6px 9px; color: #ffcb95; background: #111e27; font-size: 12px; }
-.workshop-layout { display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 24px; }
-.workshop-robots button { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 14px; text-align: left; background: #152734; color: #dce8f1; border: 1px solid #3b5363; margin-bottom: 8px; }
-.workshop-robots button[aria-pressed="true"] { border-color: #ff8b3d; background: #44342b; }
-.workshop-robots small { color: #acc0cc; }
-.workshop-selected { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 12px 0; }
-.workshop-selected button { padding: 9px 12px; background: #55372a; color: #ffbf94; border: 1px solid #bc7445; }
-@media(max-width:700px) { .workshop-layout { grid-template-columns: minmax(0,1fr); } .workshop-hero { padding: 14px; gap: 12px; } .workshop-emblem { font-size: 30px; padding: 10px; } .workshop-robots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; } .workshop-robots h3 { grid-column: 1 / -1; } }
 
 .farm-scene { overflow: hidden; }
-.workshop-emblem .product-art { width: 110px; height: 84px; display: block; }
-@media(max-width:700px) { .workshop-emblem .product-art { width: 62px; height: 60px; } }
-
-.workshop-panel .asset-upgrade-grid button { background: #ff8b3d; color: #11212b; font-weight: 600; min-height: 40px; }
-.workshop-panel .asset-upgrade-grid button:disabled { background: #233744; color: #97adbc; opacity: .7; cursor: not-allowed; }

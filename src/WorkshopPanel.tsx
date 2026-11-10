@@ -1,4 +1,5 @@
-import { ProductArt } from "./Shop";
+import "./workshop/workshop.css";
+import { ProductArt } from "./ui/ProductArt";
 import { useState } from "react";
 import { AssetUpgradesPanel } from "./AssetUpgradesPanel";
 import { models } from "./catalog";

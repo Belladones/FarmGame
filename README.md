@@ -333,4 +333,8 @@ Lors d’un redémarrage confirmé depuis le guide, le premier programme est rec
 
 ### Atelier de robotique
 
-Cliquez sur l’atelier construit dans la ferme (ou son bouton « Atelier ») pour ouvrir sa baie de maintenance. Les équipements individuels des robots se trouvent désormais ici : choisissez un robot, arrêtez son programme et installez ses améliorations. L’autre onglet améliore cet atelier. Le niveau du bâtiment ouvert limite les équipements accessibles (2, 4 puis 5). Les boutons de la flotte ouvrent cette interface au lieu d’afficher un second menu d’équipement. Les coûts et les sauvegardes existantes sont conservés ; aucun trajet physique du robot jusqu’au bâtiment n’est imposé.
+Cliquez sur l’atelier construit dans la ferme  pour ouvrir sa baie de maintenance. Les équipements individuels des robots se trouvent désormais ici : choisissez un robot, arrêtez son programme et installez ses améliorations. L’autre onglet améliore cet atelier. Le niveau du bâtiment ouvert limite les équipements accessibles (2, 4 puis 5). Les boutons de la flotte ouvrent cette interface au lieu d’afficher un second menu d’équipement. Les coûts et les sauvegardes existantes sont conservés ; aucun trajet physique du robot jusqu’au bâtiment n’est imposé.
+
+### Organisation du code
+
+Les modules métier d’équipement se trouvent dans `src/equipment/` et reçoivent leurs services de stock par injection ; ils ne dépendent pas de React ou de Three.js. Le moteur conserve ses exports publics pour les sauvegardes, les commandes et les tests. `src/scene/` isole les interactions de la scène (clic, glisser, annulation), `src/workshop/` les styles de l’atelier, `src/ui/` les illustrations partagées et `src/programming/` les contenus pédagogiques. Les composants d’interface ne passent plus par le magasin pour charger une illustration.

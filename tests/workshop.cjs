@@ -42,14 +42,43 @@ const { fresh } = require("../src/engine.ts"),
         );
     }, f);
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
-    const hotspot = p.getByRole("button", {
-      name: "Ouvrir l’atelier atelier",
-      exact: true,
-    });
-    await hotspot.waitFor();
-    const box = await hotspot.boundingBox();
-    // Click the actual roof below the floating label, exercising the scene raycast.
-    await p.mouse.click(box.x + box.width / 2, box.y + box.height + 14);
+    await p.locator(".farm-scene canvas").waitFor();
+    assert.equal(await p.locator(".workshop-hotspot").count(), 0);
+    const THREE = require("three"),
+      { farmViewport } = require("../src/camera.ts"),
+      { placedSites } = require("../src/engine.ts");
+    const sites = placedSites(f),
+      minX = Math.min(0, ...sites.map((s) => s.x)),
+      maxX = Math.max(f.width - 1, ...sites.map((s) => s.x)),
+      minY = Math.min(0, ...sites.map((s) => s.y)),
+      maxY = Math.max(f.height - 1, ...sites.map((s) => s.y));
+    const target = new THREE.Vector3(
+      ((minX + maxX) / 2 - (f.width - 1) / 2) * 1.28,
+      0,
+      ((f.height - 1) / 2 - (minY + maxY) / 2) * 1.28,
+    );
+    const view = farmViewport(
+      1440,
+      1000,
+      (maxX - minX + 1) * 1.28,
+      (maxY - minY + 1) * 1.28,
+      true,
+    );
+    const camera3D = new THREE.OrthographicCamera(
+      view.left,
+      view.right,
+      view.top,
+      view.bottom,
+      0.1,
+      100,
+    );
+    camera3D.position.copy(target).add(new THREE.Vector3(12, 14, 12));
+    camera3D.lookAt(target);
+    camera3D.setViewOffset(1440, 1000, view.offsetX, view.offsetY, 1440, 1000);
+    camera3D.updateMatrixWorld();
+    camera3D.updateProjectionMatrix();
+    const point = new THREE.Vector3(0, 0.82, 1.28).project(camera3D);
+    await p.mouse.click((point.x + 1) * 720, (1 - point.y) * 500);
     const dialog = p.getByRole("dialog", { name: "Atelier", exact: true });
     await dialog
       .getByRole("heading", { name: "Atelier de robotique", exact: true })
@@ -101,6 +130,33 @@ const { fresh } = require("../src/engine.ts"),
     await p
       .getByRole("region", { name: "Équipement f1", exact: true })
       .waitFor();
+    for (const size of [
+      { width: 1440, height: 650 },
+      { width: 390, height: 844 },
+      { width: 844, height: 390 },
+    ]) {
+      await p.setViewportSize(size);
+      const last = p
+        .getByRole("region", { name: "Équipement f1", exact: true })
+        .locator("[data-upgrade] button")
+        .last();
+      await last.scrollIntoViewIfNeeded();
+      assert.ok(await last.isVisible());
+      const reachable = await last.evaluate((el) => {
+        const r = el.getBoundingClientRect(),
+          pane = el.closest(".panel-content").getBoundingClientRect();
+        return r.top >= pane.top - 2 && r.bottom <= pane.bottom + 2;
+      });
+      assert.ok(
+        reachable,
+        `last upgrade clipped at ${size.width}x${size.height}`,
+      );
+      assert.ok(
+        await p.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      );
+    }
     await p.setViewportSize({ width: 390, height: 844 });
     assert.ok(
       await p.evaluate(
