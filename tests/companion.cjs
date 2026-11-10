@@ -142,10 +142,38 @@ const { fresh } = require("../src/engine.ts");
     await panel.getByRole("button", { name: "Stickers", exact: true }).click();
     await panel
       .getByRole("button", {
-        name: "Débloquer et équiper Fleur",
+        name: "Débloquer et ajouter Fleur",
         exact: true,
       })
       .click();
+    await panel
+      .getByRole("button", { name: "Ajouter Étoile", exact: true })
+      .click();
+    await panel.getByText("Stickers posés · 3 / 3", { exact: true }).waitFor();
+    assert.equal(
+      await panel
+        .getByRole("button", { name: "Ajouter Étoile", exact: true })
+        .isDisabled(),
+      true,
+    );
+    await p.waitForFunction(
+      () =>
+        JSON.parse(localStorage.getItem("farmscript-v1")).farm.companion
+          .stickers.length === 3,
+    );
+    await p.waitForFunction(() =>
+      document
+        .querySelector(".companion-intro .companion-avatar")
+        ?.getAttribute("src")
+        ?.startsWith("data:image/png"),
+    );
+    const savedPlacements = await p.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("farmscript-v1")).farm.companion
+          .stickers,
+    );
+    assert.equal(savedPlacements.length, 3);
+    assert.equal(new Set(savedPlacements.map((s) => s.slot)).size, 3);
     await panel.getByRole("button", { name: "Lentille", exact: true }).click();
     await panel
       .getByRole("button", { name: "Débloquer et équiper Cyan", exact: true })
@@ -156,7 +184,8 @@ const { fresh } = require("../src/engine.ts");
     await p.waitForFunction(
       () =>
         document.querySelector(".gui-companion").dataset.skin === "rose" &&
-        document.querySelector(".gui-companion").dataset.accessory === "flower",
+        JSON.parse(document.querySelector(".gui-companion").dataset.stickers)
+          .length === 3,
     );
     await p.reload();
     await p.waitForFunction(
@@ -164,7 +193,13 @@ const { fresh } = require("../src/engine.ts");
     );
     assert.equal(
       await p.locator(".gui-companion").getAttribute("data-accessory"),
-      "flower",
+      "ribbon",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await p.locator(".gui-companion").getAttribute("data-stickers"),
+      ),
+      savedPlacements,
     );
     assert.equal(
       await p.locator(".gui-companion").getAttribute("data-lens"),

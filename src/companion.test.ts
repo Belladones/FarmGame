@@ -54,6 +54,7 @@ test("cosmetic data is normalized and validated on loading", () => {
       skin: "pearl",
       accessory: "ribbon",
       lens: "lens-red",
+      stickers: [{ id: "ribbon", slot: 1, rotation: 0 }],
       unlocked: ["pearl", "none", "ribbon", "lens-red", "rose"],
     },
   );
@@ -95,5 +96,55 @@ test("lens, stickers and paint equip independently and legacy unlocks survive", 
   assert.equal(
     validFarm({ ...f, companion: { ...f.companion, lens: "missing" } }),
     false,
+  );
+});
+
+test("stickers are capped at three, placed independently, removable and stable across saves", () => {
+  const f = fresh();
+  f.claimed = missions.slice(0, 6).map((m) => m.id);
+  assert.ok(customizeCompanion(f, "flower"));
+  assert.ok(customizeCompanion(f, "halo"));
+  const placements = structuredClone(f.companion.stickers!);
+  assert.equal(placements.length, 3);
+  assert.equal(new Set(placements.map((s) => s.slot)).size, 3);
+  assert.equal(customizeCompanion(f, "ribbon"), false);
+  assert.deepEqual(f.companion.stickers, placements);
+  assert.deepEqual(
+    hydrateFarm(JSON.parse(JSON.stringify(f))).companion.stickers,
+    placements,
+  );
+  assert.ok(customizeCompanion(f, `sticker:remove:${placements[1].slot}`));
+  assert.equal(f.companion.stickers!.length, 2);
+  assert.ok(customizeCompanion(f, "ribbon"));
+  assert.equal(f.companion.stickers!.length, 3);
+  assert.equal(
+    validFarm({
+      ...f,
+      companion: { ...f.companion, stickers: [...placements, placements[0]] },
+    }),
+    false,
+  );
+  assert.equal(
+    validFarm({
+      ...f,
+      companion: {
+        ...f.companion,
+        stickers: [{ id: "ribbon", slot: 99, rotation: 0 }],
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    validFarm({
+      ...f,
+      companion: { ...f.companion, stickers: [placements[0], placements[0]] },
+    }),
+    false,
+  );
+  assert.ok(customizeCompanion(f, "none"));
+  assert.deepEqual(f.companion.stickers, []);
+  assert.deepEqual(
+    hydrateFarm(JSON.parse(JSON.stringify(f))).companion.stickers,
+    [],
   );
 });

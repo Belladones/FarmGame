@@ -1,3 +1,4 @@
+import { stickerMounts, type StickerPlacement } from "./stickerPlacements";
 import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
 function stickerTexture(id: string) {
@@ -57,51 +58,98 @@ function stickerTexture(id: string) {
   texture.needsUpdate = true;
   return texture;
 }
-/** Project onto the actual head panels, then keep the decal in the head pivot's space. */
+/** Reproject only when saved placements change; no random choices happen while rendering. */
 export function createRobotStickers(
   head: THREE.Object3D | undefined,
-  parent: THREE.Group,
+  headParent: THREE.Group,
+  body: THREE.Group,
+  asset: THREE.Object3D,
 ) {
-  const stickers = new Map<string, THREE.Object3D>();
-  if (!head) return stickers;
-  parent.updateWorldMatrix(true, false);
-  const position = parent.parent!.localToWorld(
-    new THREE.Vector3(0.23, 0.88, 0.14),
-  );
-  const inverse = parent.matrixWorld.clone().invert();
-  for (const id of ["ribbon", "flower", "halo"]) {
-    const group = new THREE.Group();
-    group.name = `Luma.sticker.${id}`;
-    const material = new THREE.MeshStandardMaterial({
-      map: stickerTexture(id),
-      transparent: true,
-      roughness: 0.8,
-      depthWrite: false,
-      polygonOffset: true,
-      polygonOffsetFactor: -4,
-    });
-    head.traverse((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
-      const geometry = new DecalGeometry(
-        object,
-        position,
-        new THREE.Euler(),
-        new THREE.Vector3(0.13, 0.13, 0.3),
-      );
-      if (!geometry.attributes.position.count) {
-        geometry.dispose();
-        return;
-      }
-      geometry.applyMatrix4(inverse);
-      group.add(new THREE.Mesh(geometry, material));
-    });
-    if (!group.children.length) {
-      material.map!.dispose();
-      material.dispose();
-      continue;
+  let signature = "";
+  const groups: THREE.Group[] = [],
+    textures = new Map<string, THREE.Texture>();
+  const clear = () => {
+    for (const group of groups) {
+      group.removeFromParent();
+      group.traverse((o) => {
+        if (o instanceof THREE.Mesh) {
+          o.geometry.dispose();
+          (o.material as THREE.Material).dispose();
+        }
+      });
     }
-    parent.add(group);
-    stickers.set(id, group);
-  }
-  return stickers;
+    groups.length = 0;
+  };
+  return {
+    update(placements: readonly StickerPlacement[]) {
+      const key = JSON.stringify(placements);
+      if (signature === key) return;
+      signature = key;
+      clear();
+      body.updateWorldMatrix(true, true);
+      for (const placement of placements.slice(0, 3)) {
+        const mount = stickerMounts[placement.slot];
+        if (!mount || !["ribbon", "flower", "halo"].includes(placement.id))
+          continue;
+        const parent = mount.part === "head" ? headParent : body;
+        const source = mount.part === "head" ? head : asset;
+        if (!source) continue;
+        const point = new THREE.Vector3(...mount.position);
+        if (mount.part === "head") point.sub(headParent.position);
+        const position = parent.localToWorld(point);
+        const orientation = new THREE.Euler().setFromQuaternion(
+          parent
+            .getWorldQuaternion(new THREE.Quaternion())
+            .multiply(
+              new THREE.Quaternion().setFromAxisAngle(
+                new THREE.Vector3(0, 0, 1),
+                placement.rotation,
+              ),
+            ),
+        );
+        const inverse = parent.matrixWorld.clone().invert();
+        let texture = textures.get(placement.id);
+        if (!texture) {
+          texture = stickerTexture(placement.id);
+          textures.set(placement.id, texture);
+        }
+        const material = new THREE.MeshStandardMaterial({
+          map: texture,
+          transparent: true,
+          roughness: 0.8,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -4,
+        });
+        const group = new THREE.Group();
+        group.name = `Luma.sticker.${placement.id}.${placement.slot}`;
+        source.traverse((object) => {
+          if (!(object instanceof THREE.Mesh)) return;
+          const geometry = new DecalGeometry(
+            object,
+            position,
+            orientation,
+            new THREE.Vector3(mount.size, mount.size, 0.3),
+          );
+          if (!geometry.attributes.position.count) {
+            geometry.dispose();
+            return;
+          }
+          geometry.applyMatrix4(inverse);
+          group.add(new THREE.Mesh(geometry, material));
+        });
+        if (!group.children.length) {
+          material.dispose();
+          continue;
+        }
+        parent.add(group);
+        groups.push(group);
+      }
+    },
+    dispose() {
+      clear();
+      textures.forEach((t) => t.dispose());
+      textures.clear();
+    },
+  };
 }

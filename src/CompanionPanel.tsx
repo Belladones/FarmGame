@@ -1,19 +1,40 @@
-import { useState } from "react";
+import type { StickerPlacement } from "./stickerPlacements";
+import { stickerMounts, MAX_STICKERS } from "./stickerPlacements";
+import { useEffect, useState } from "react";
 import type { Farm } from "./engine";
 import { cosmetics, companionMissionCount } from "./companion";
 export function CompanionAvatar({
   skin = "pearl",
   accessory = "ribbon",
   lens = "lens-red",
+  stickers,
 }: {
   skin?: string;
   accessory?: string;
   lens?: string;
+  stickers?: StickerPlacement[];
 }) {
+  const [image, setImage] = useState<string>();
+  const placementKey = JSON.stringify(stickers);
+  useEffect(() => {
+    let active = true;
+    setImage(undefined);
+    import("./companionPortrait")
+      .then((m) =>
+        m.companionPortrait({ skin, accessory, lens, stickers, unlocked: [] }),
+      )
+      .then((url) => {
+        if (active) setImage(url);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [skin, accessory, lens, placementKey]);
   return (
     <img
       className="companion-avatar"
-      src={`/models/luma/previews/${skin}-${accessory}-${lens}.png`}
+      src={image ?? `/models/luma/previews/${skin}-none-${lens}.png`}
       alt="Luma, votre robot compagne"
       style={{ objectFit: "contain" }}
     />
@@ -37,8 +58,8 @@ export function CompanionPanel({
           <span className="overline">VOTRE COMPAGNE</span>
           <h3>Luma</h3>
           <p>
-            Choisissez la peinture de sa coque, ajoutez un sticker et
-            personnalisez la couleur de sa lentille.
+            Choisissez la peinture de sa coque, ajoutez jusqu’à trois stickers
+            et personnalisez la couleur de sa lentille.
           </p>
           <small>
             Cosmétiques sans bonus de production · {count} mission
@@ -70,19 +91,70 @@ export function CompanionPanel({
           Lentille
         </button>
       </div>
+      {tab === "accessory" && (
+        <div className="sticker-loadout">
+          <strong>
+            Stickers posés · {farm.companion.stickers?.length ?? 0} /{" "}
+            {MAX_STICKERS}
+          </strong>
+          <p>
+            L’emplacement et l’inclinaison sont tirés au sort à l’ajout, puis
+            conservés dans la sauvegarde.
+          </p>
+          {(farm.companion.stickers ?? []).map((sticker) => (
+            <div key={sticker.slot}>
+              <span>
+                {cosmetics.find((c) => c.id === sticker.id)?.name} ·{" "}
+                {stickerMounts[sticker.slot]?.name}
+              </span>
+              <button
+                aria-label={`Retirer le sticker ${sticker.slot + 1}`}
+                onClick={() => onCustomize(`sticker:remove:${sticker.slot}`)}
+              >
+                Retirer
+              </button>
+            </div>
+          ))}
+          <button
+            disabled={!farm.companion.stickers?.length}
+            onClick={() => onCustomize("sticker:shuffle")}
+          >
+            Redistribuer les stickers
+          </button>
+        </div>
+      )}
       <div className="cosmetic-grid">
         {cosmetics
           .filter((c) => c.kind === tab)
           .map((c) => {
             const owned = farm.companion.unlocked.includes(c.id),
-              equipped = farm.companion[c.kind] === c.id,
-              available = count >= c.missions;
+              equipped =
+                c.kind === "accessory"
+                  ? c.id === "none" && !farm.companion.stickers?.length
+                  : farm.companion[c.kind] === c.id,
+              full =
+                c.kind === "accessory" &&
+                c.id !== "none" &&
+                (farm.companion.stickers?.length ?? 0) >= MAX_STICKERS,
+              available = count >= c.missions,
+              verb = c.kind === "accessory" ? "Ajouter" : "Équiper",
+              unlockVerb =
+                c.kind === "accessory"
+                  ? "Débloquer et ajouter"
+                  : "Débloquer et équiper";
             return (
               <article
                 className={"cosmetic-card " + (equipped ? "equipped" : "")}
                 key={c.id}
               >
                 <CompanionAvatar
+                  stickers={
+                    c.kind === "accessory"
+                      ? c.id === "none"
+                        ? []
+                        : [{ id: c.id, slot: 1, rotation: 0 }]
+                      : farm.companion.stickers
+                  }
                   lens={c.kind === "lens" ? c.id : farm.companion.lens}
                   skin={c.kind === "skin" ? c.id : farm.companion.skin}
                   accessory={
@@ -97,17 +169,19 @@ export function CompanionPanel({
                     : `${Math.min(count, c.missions)} / ${c.missions} missions récompensées`}
                 </small>
                 <button
-                  disabled={equipped || (!owned && !available)}
-                  aria-label={`${equipped ? "Équipé" : owned ? "Équiper" : available ? "Débloquer et équiper" : "Verrouillé"} ${c.name}`}
+                  disabled={full || equipped || (!owned && !available)}
+                  aria-label={`${equipped ? "Équipé" : owned ? verb : available ? unlockVerb : "Verrouillé"} ${c.name}`}
                   onClick={() => onCustomize(c.id)}
                 >
-                  {equipped
-                    ? "Équipé"
-                    : owned
-                      ? "Équiper"
-                      : available
-                        ? "Débloquer et équiper"
-                        : `Encore ${c.missions - count} mission${c.missions - count > 1 ? "s" : ""}`}
+                  {full
+                    ? "Maximum 3 stickers"
+                    : equipped
+                      ? "Équipé"
+                      : owned
+                        ? verb
+                        : available
+                          ? unlockVerb
+                          : `Encore ${c.missions - count} mission${c.missions - count > 1 ? "s" : ""}`}
                 </button>
               </article>
             );

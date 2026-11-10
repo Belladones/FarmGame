@@ -48,12 +48,12 @@ export function GuiCompanion({
     element.dataset.model = "loading";
     scene.add(companion.group);
     const disposeModel = (model: typeof companion) => {
+      model.dispose();
       const geometries = new Set<THREE.BufferGeometry>();
       model.group.traverse((o) => {
         if (o instanceof THREE.Mesh) geometries.add(o.geometry);
       });
       geometries.forEach((geometry) => geometry.dispose());
-      model.dispose();
     };
     loadCyberCompanion()
       .then((model) => {
@@ -236,6 +236,7 @@ export function GuiCompanion({
         skin: latest.current.appearance.skin,
         accessory: latest.current.appearance.accessory,
         lens: latest.current.appearance.lens ?? "lens-red",
+        stickers: JSON.stringify(latest.current.appearance.stickers ?? []),
         space: "gui",
       });
       renderer.render(scene, camera);

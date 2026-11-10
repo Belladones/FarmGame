@@ -66,7 +66,7 @@ export function createCyberCompanion(
       body.worldToLocal(head.getWorldPosition(new THREE.Vector3())),
     );
   }
-  const accessories = createRobotStickers(head, headAccessories);
+  const accessories = createRobotStickers(head, headAccessories, body, asset);
   const mixer = new THREE.AnimationMixer(asset),
     clip =
       gltf.animations.find((c) => /idle|hover|float/i.test(c.name)) ??
@@ -93,7 +93,12 @@ export function createCyberCompanion(
       uniforms.lumaLensEnabled.value = lens && lens.id !== "lens-red" ? 1 : 0;
       if (lens && "color" in lens) uniforms.lumaLens.value.set(lens.color);
     }
-    for (const [id, o] of accessories) o.visible = id === appearance.accessory;
+    accessories.update(
+      appearance.stickers ??
+        (appearance.accessory === "none"
+          ? []
+          : [{ id: appearance.accessory, slot: 1, rotation: 0 }]),
+    );
     const delta = Math.max(0, Math.min(dt, 0.1));
     if (!reduced.matches) {
       time += delta;
@@ -140,6 +145,7 @@ export function createCyberCompanion(
     missingTextures: (gltf.parser?.json?.extras?.missingTextures ??
       []) as string[],
     dispose() {
+      accessories.dispose();
       mixer.stopAllAction();
       mixer.uncacheRoot(asset);
       const materials = new Set<THREE.Material>(),

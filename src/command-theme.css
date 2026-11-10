@@ -2016,3 +2016,9 @@ img.companion-avatar {
 .building-upgrade-menu summary { padding: 12px; cursor: pointer; color: #ffb27a; }
 .fleet-skill-view > label { display: flex; gap: 12px; padding: 16px; flex-wrap: wrap; }
 .asset-card:has(.building-upgrade-menu[open]) { grid-column: 1/-1; align-items: flex-start; }
+
+.sticker-loadout { padding: 16px; margin: 12px 0; border: 1px solid #344653; background: #111d27; }
+.sticker-loadout > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 8px 0; }
+.sticker-loadout p { color: #9db0be; font-size: 12px; }
+.sticker-loadout button { padding: 8px 12px; border: 1px solid #405561; background: #1a2c38; color: #e7eef4; }
+.sticker-loadout button:disabled { opacity: .45; }

@@ -28,3 +28,9 @@ Le shader `src/robotPaint.ts` remplace uniquement les pixels de peinture jaune. 
 `src/robotStickers.ts` projette de vrais décalques sur les panneaux de la tête avec `DecalGeometry`. Ils restent collés à leur support et accompagnent le mouvement de tête ; les anciens objets ruban, fleur et halo ne sont plus affichés. Les trois choix se cumulent : peinture, sticker et lentille. Les 64 portraits utilisent les mêmes shaders et les mêmes décalques que le personnage.
 
 Les identifiants historiques sont conservés pour préserver les déblocages : `pearl` correspond à Jaune, `rose` à Rose, `mint` à Rouge et `cosmic` à Noir ; `ribbon`, `flower`, `halo` correspondent aux stickers Étoile, Fleur et Circuit. Les seuils de missions restent inchangés. Une ancienne sauvegarde sans champ `lens` reçoit la lentille rouge d’origine. Les couleurs de lentille cyan/violet/vert se débloquent à 1/3/5 missions récompensées, indépendamment de la coque et du sticker.
+
+## Trois stickers et placements persistants
+
+`companion.stickers` contient au maximum trois entrées `{ id, slot, rotation }`. Cinq panneaux sûrs sont disponibles : quatre zones de la tête autour de la lentille et le torse. Les slots sont uniques. L’emplacement et l’angle sont tirés au sort lors de l’ajout, jamais pendant le rendu ou le chargement ; une ancienne sauvegarde migre son sticker unique vers la zone historique en haut à droite. Le menu permet d’ajouter plusieurs exemplaires, de retirer chaque entrée et de redistribuer les positions. La validation serveur protège la limite, les indices, les doublons et les angles.
+
+Les portraits sont désormais calculés avec le même modèle et les mêmes placements que le personnage. Un seul moteur hors écran et un seul modèle sont partagés ; les images sont mises en cache, sans boucle d’animation pour les portraits. Les PNG existants servent uniquement de secours pendant leur chargement.
