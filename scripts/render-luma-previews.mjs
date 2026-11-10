@@ -49,12 +49,28 @@ try {
     });
     document.body.appendChild(renderer.domElement);
     window.renderLumaPreview = (skin, accessory, lens) => {
+      const legendary = skin.startsWith("legend-");
+      camera.left = legendary ? -0.46 : -0.4;
+      camera.right = -camera.left;
+      camera.top = legendary ? 0.69 : 0.6;
+      camera.bottom = -camera.top;
+      camera.lookAt(0, legendary ? 0.87 : 0.83, 0);
+      camera.updateProjectionMatrix();
       model.update(0, { skin, accessory, lens, unlocked: [] }, camera.position);
       renderer.render(scene, camera);
     };
   });
-  for (const skin of ["pearl", "rose", "mint", "cosmic"])
-    for (const accessory of ["none", "ribbon", "flower", "halo"])
+  for (const skin of [
+    "pearl",
+    "rose",
+    "mint",
+    "cosmic",
+    "legend-angel",
+    "legend-demon",
+  ])
+    for (const accessory of skin.startsWith("legend-")
+      ? ["none"]
+      : ["none", "ribbon", "flower", "halo"])
       for (const lens of [
         "lens-red",
         "lens-cyan",
@@ -73,7 +89,7 @@ try {
       }
   if (errors.length) throw new Error(errors.join("\n"));
   console.log(
-    "Rendered 64 cosmetic previews from the supplied utility robot mesh.",
+    "Rendered 72 cosmetic previews from the supplied utility robot mesh.",
   );
 } finally {
   await browser.close();

@@ -44,6 +44,13 @@ export function companionPortrait(appearance: Companion) {
         throw error;
       });
       const { renderer, scene, camera, model } = await ready;
+      const legendary = snapshot.skin.startsWith("legend-");
+      camera.left = legendary ? -0.46 : -0.4;
+      camera.right = -camera.left;
+      camera.top = legendary ? 0.69 : 0.6;
+      camera.bottom = -camera.top;
+      camera.lookAt(0, legendary ? 0.87 : 0.83, 0);
+      camera.updateProjectionMatrix();
       model.update(0, snapshot, camera.position);
       renderer.render(scene, camera);
       return renderer.domElement.toDataURL("image/png");

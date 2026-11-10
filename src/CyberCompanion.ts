@@ -1,3 +1,4 @@
+import { createLegendaryEffects } from "./legendaryEffects";
 import { loadStickerAtlas } from "./stickerAtlasTexture";
 import { robotPaint } from "./robotPaint";
 import { createRobotStickers } from "./robotStickers";
@@ -49,6 +50,10 @@ export function createCyberCompanion(
     -center.z * scale,
   );
   const head = asset.getObjectByName("LumaHeadJoint");
+  const finishes = new Map<
+    THREE.MeshStandardMaterial,
+    { roughness: number; metalness: number }
+  >();
   const glowLevels = new Map<THREE.MeshStandardMaterial, number>();
   const paints = new Map<
     THREE.MeshStandardMaterial,
@@ -61,6 +66,7 @@ export function createCyberCompanion(
         if (m instanceof THREE.MeshStandardMaterial) {
           if (!paints.has(m)) paints.set(m, robotPaint(m));
           glowLevels.set(m, m.emissiveIntensity);
+          finishes.set(m, { roughness: m.roughness, metalness: m.metalness });
         }
     }
   });
@@ -72,6 +78,7 @@ export function createCyberCompanion(
       body.worldToLocal(head.getWorldPosition(new THREE.Vector3())),
     );
   }
+  const effects = createLegendaryEffects(body, headAccessories);
   const accessories = createRobotStickers(
     head,
     headAccessories,
@@ -99,7 +106,24 @@ export function createCyberCompanion(
     const lens = cosmetics.find(
       (c) => c.kind === "lens" && c.id === appearance.lens,
     );
+    const legendary = skin && "legendary" in skin ? skin.legendary : undefined;
+    for (const [material, base] of finishes) {
+      material.roughness = legendary ? 0.18 : base.roughness;
+      material.metalness =
+        legendary === "angel"
+          ? 0.22
+          : legendary === "demon"
+            ? 0.5
+            : base.metalness;
+    }
     for (const uniforms of paints.values()) {
+      uniforms.lumaLegendary.value =
+        legendary === "angel" ? 1 : legendary === "demon" ? 2 : 0;
+      uniforms.lumaTime.value = time;
+      uniforms.lumaShimmer.value = legendary && !reduced.matches ? 1 : 0;
+      uniforms.lumaLegendAccent.value.set(
+        legendary === "angel" ? "#ffd464" : "#ff354f",
+      );
       uniforms.lumaPaintEnabled.value = appearance.skin === "pearl" ? 0 : 1;
       if (skin && "color" in skin) uniforms.lumaPaint.value.set(skin.color);
       uniforms.lumaLensEnabled.value = lens && lens.id !== "lens-red" ? 1 : 0;
@@ -116,6 +140,7 @@ export function createCyberCompanion(
       time += delta;
       mixer.update(delta);
     }
+    effects.update(legendary, delta, reduced.matches);
     const life = companionLife(time, motion, reduced.matches);
     const easing = reduced.matches ? 1 : 1 - Math.exp(-6 * delta);
     body.position.y = life.height;
@@ -157,6 +182,7 @@ export function createCyberCompanion(
     missingTextures: (gltf.parser?.json?.extras?.missingTextures ??
       []) as string[],
     dispose() {
+      effects.dispose();
       accessories.dispose();
       mixer.stopAllAction();
       mixer.uncacheRoot(asset);

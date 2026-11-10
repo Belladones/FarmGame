@@ -40,3 +40,9 @@ Les portraits sont désormais calculés avec le même modèle et les mêmes plac
 La planche envoyée dans le chat a été détourée avec l’outil d’image, puis enregistrée dans `public/models/luma/stickers/atlas.png`. `src/stickerLibrary.ts` définit les 35 découpes individuelles. Les proportions des dessins sont conservées sur les vignettes et les décalques 3D. Les trois régions dont les rectangles touchent un dessin voisin ont un contour de sélection supplémentaire (`stickerContours.ts`), utilisé à la fois pour les vignettes et pour le masque des décalques.
 
 Les 35 stickers sont disponibles sans coût ni mission supplémentaire. Les anciens stickers et déblocages restent conservés. L’atlas transparent est chargé avant le modèle et réutilisé par les portraits ; les découpes utilisent des textures partageant la même image, sans charger 35 fichiers. La limite de trois stickers, les emplacements distincts, le retrait et la sauvegarde des inclinaisons restent identiques.
+
+## Skins légendaires
+
+Ange (`legend-angel`) et Démon (`legend-demon`) se débloquent tous deux à 10 missions récompensées, sans dépense de ressources ni bonus de production. Ange combine peinture blanc nacré, détails et néons dorés, halo et filaments de plumes. Démon combine obsidienne et carmin, cornes et néons rouges. La peinture et les reflets utilisent le matériau d’origine ; les réglages de brillance sont rétablis en revenant à une coque ordinaire.
+
+`src/legendaryEffects.ts` gère les ornements et un seul nuage de 28 particules par modèle. Les particules et le reflet mobile s’arrêtent avec la réduction des mouvements ; la tenue et ses ornements restent visibles. Les bras et jambes restent fixes. Les stickers et la lentille sont indépendants des skins légendaires et restent sélectionnés lors d’un changement de coque. Les portraits partagés et les images de secours incluent ces deux skins, avec un cadrage adapté au halo et aux cornes.

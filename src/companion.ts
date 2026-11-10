@@ -45,6 +45,30 @@ export const cosmetics = [
     description: "Coque noire avec ses reliefs et marquages conservés.",
   },
   {
+    id: "legend-angel",
+    kind: "skin",
+    name: "Ange",
+    missions: 10,
+    color: "#f5f1e5",
+    accent: "#ffd464",
+    rarity: "legendary",
+    legendary: "angel",
+    description:
+      "Coque blanc nacré et or, halo et plumes lumineuses, néons dorés et poussière de lumière.",
+  },
+  {
+    id: "legend-demon",
+    kind: "skin",
+    name: "Démon",
+    missions: 10,
+    color: "#211421",
+    accent: "#ff354f",
+    rarity: "legendary",
+    legendary: "demon",
+    description:
+      "Coque obsidienne et carmin, cornes, néons rouges et braises lumineuses.",
+  },
+  {
     id: "none",
     kind: "accessory",
     name: "Sans sticker",

@@ -175,7 +175,13 @@ export function CompanionPanel({
                   : "Débloquer et équiper";
             return (
               <article
-                className={"cosmetic-card " + (equipped ? "equipped" : "")}
+                className={
+                  "cosmetic-card " +
+                  (equipped ? "equipped " : "") +
+                  ("legendary" in c
+                    ? `legendary-card legendary-${c.legendary}`
+                    : "")
+                }
                 key={c.id}
               >
                 {stickerArt(c.id) ? (
@@ -195,6 +201,9 @@ export function CompanionPanel({
                       c.kind === "accessory" ? c.id : farm.companion.accessory
                     }
                   />
+                )}
+                {"rarity" in c && c.rarity === "legendary" && (
+                  <span className="legendary-badge">LÉGENDAIRE</span>
                 )}
                 <strong>{c.name}</strong>
                 <p>{c.description}</p>
