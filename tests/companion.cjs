@@ -45,6 +45,19 @@ const { fresh } = require("../src/engine.ts");
       (x) => document.querySelector(".gui-companion").dataset.x !== x,
       initial,
     );
+    const mascotRect = await mascot.boundingBox();
+    await p.mouse.move(
+      mascotRect.x + mascotRect.width / 2 + 45,
+      mascotRect.y + mascotRect.height / 2,
+    );
+    await p.waitForFunction(
+      () =>
+        Number(document.querySelector(".gui-companion").dataset.attention) >
+        0.5,
+    );
+    await p.waitForFunction(
+      () => Number(document.querySelector(".gui-companion").dataset.wave) > 0.2,
+    );
     assert.equal(
       await mascot.evaluate((el) => getComputedStyle(el).position),
       "fixed",

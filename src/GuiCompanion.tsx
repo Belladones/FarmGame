@@ -1,3 +1,4 @@
+import { companionFlight, restMotion } from "./companionMotion";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createCompanion } from "./Companion3D";
@@ -76,7 +77,23 @@ export function GuiCompanion({
       nextPlan = 0,
       lastFrame = 0,
       frame = 0,
-      wasHidden = false;
+      wasHidden = false,
+      speed = 0,
+      settled = false,
+      nextObstacleCheck = 0;
+    const motion = { ...restMotion };
+    const pointer = { x: 0, y: 0, active: false };
+    const trackPointer = (event: PointerEvent) => {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      pointer.active = event.pointerType !== "touch";
+    };
+    const forgetPointer = () => {
+      pointer.active = false;
+    };
+    window.addEventListener("pointermove", trackPointer, { passive: true });
+    window.addEventListener("blur", forgetPointer);
+    document.addEventListener("pointerleave", forgetPointer);
     const blockers = () =>
       Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -125,6 +142,7 @@ export function GuiCompanion({
           nextPlan = now + 1000;
           return;
         }
+        speed = 0;
         rect = { ...spots[Math.floor(Math.random() * spots.length)] };
         target = { ...rect };
         initialized = true;
@@ -145,7 +163,8 @@ export function GuiCompanion({
           ? candidates[Math.floor(Math.random() * candidates.length)]
           : rect),
       };
-      nextPlan = now + 1800;
+      settled = false;
+      nextPlan = Infinity;
     };
     const draw = (now: number) => {
       frame = requestAnimationFrame(draw);
@@ -161,29 +180,58 @@ export function GuiCompanion({
         nextPlan = 0;
         wasHidden = false;
       }
-      if (now >= nextPlan) plan(now);
-      if (!initialized) return;
-      if (!reduced.matches) {
-        const dx = target.x - rect.x,
-          dy = target.y - rect.y,
-          distance = Math.hypot(dx, dy),
-          step = Math.min(distance, dt * 32);
-        if (distance > 0) {
-          rect.x += (dx / distance) * step;
-          rect.y += (dy / distance) * step;
+      if (now >= nextObstacleCheck) {
+        nextObstacleCheck = now + 400;
+        if (initialized && !guiPathClear(rect, target, blockers())) {
+          speed = 0;
+          nextPlan = 0;
         }
       }
+      if (now >= nextPlan) plan(now);
+      if (!initialized) return;
+      const dx = target.x - rect.x,
+        dy = target.y - rect.y;
+      const distance = Math.hypot(dx, dy);
+      const flight = companionFlight(distance, speed, dt, reduced.matches);
+      speed = flight.speed;
+      motion.vx = distance ? ((dx / distance) * flight.step) / dt : 0;
+      motion.vy = distance ? ((dy / distance) * flight.step) / dt : 0;
+      if (distance > 0) {
+        rect.x += (dx / distance) * flight.step;
+        rect.y += (dy / distance) * flight.step;
+      }
+      if ((distance < 0.5 || reduced.matches) && !settled) {
+        settled = true;
+        nextPlan = now + 1800 + Math.random() * 2200;
+      }
+      const px = pointer.x - rect.x - rect.width / 2,
+        py = pointer.y - rect.y - rect.height / 2;
+      const attention =
+        pointer.active && Math.hypot(px, py) < 240 && !reduced.matches ? 1 : 0;
+      motion.attention +=
+        (attention - motion.attention) * (1 - Math.exp(-5 * dt));
+      motion.gazeX = Math.max(-1, Math.min(1, px / 200));
+      motion.gazeY = Math.max(-1, Math.min(1, py / 200));
       element.style.transform = `translate3d(${rect.x}px,${rect.y}px,0)`;
       const pose = companion.update(
         dt,
         latest.current.appearance,
         camera.position,
+        motion,
       );
       Object.assign(element.dataset, {
         x: String(rect.x),
         y: String(rect.y),
         blink: String(pose.blink),
         wave: String(pose.wave),
+        motion: reduced.matches
+          ? "rest"
+          : speed > 0.5
+            ? "flying"
+            : motion.attention > 0.5
+              ? "curious"
+              : "idle",
+        attention: String(motion.attention),
         skin: latest.current.appearance.skin,
         accessory: latest.current.appearance.accessory,
         space: "gui",
@@ -200,6 +248,9 @@ export function GuiCompanion({
       disposed = true;
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", relayout);
+      window.removeEventListener("pointermove", trackPointer);
+      window.removeEventListener("blur", forgetPointer);
+      document.removeEventListener("pointerleave", forgetPointer);
       reduced.removeEventListener("change", relayout);
       disposeModel(companion);
       renderer.dispose();

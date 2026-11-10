@@ -87,3 +87,61 @@ test("empty imported scenes are rejected so the GUI can keep its fallback", () =
     /géométrie visible/,
   );
 });
+
+test("rigid head and limb joints animate, cosmetics follow the head and reduced motion resets the pose", () => {
+  const previous = globalThis.matchMedia;
+  let reducedMotion = false;
+  globalThis.matchMedia = (query) => ({
+    ...media(query),
+    get matches() {
+      return reducedMotion;
+    },
+  });
+  const scene = new THREE.Group();
+  const head = new THREE.Group();
+  head.name = "LumaHeadJoint";
+  head.position.y = 1;
+  head.add(
+    new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 1, 0.6),
+      new THREE.MeshStandardMaterial(),
+    ),
+  );
+  scene.add(head);
+  const arm = new THREE.Group();
+  arm.name = "LumaArmLeftJoint";
+  scene.add(arm);
+  const leg = new THREE.Group();
+  leg.name = "LumaLegLeftJoint";
+  scene.add(leg);
+  const model = createCyberCompanion({ scene, animations: [] });
+  try {
+    for (let i = 0; i < 20; i++)
+      model.update(0.05, freshCompanion(), new THREE.Vector3(0, 1.2, 6), {
+        vx: 25,
+        vy: 5,
+        gazeX: 1,
+        gazeY: -0.5,
+        attention: 1,
+      });
+    assert.ok(head.rotation.y > 0.1);
+    assert.ok(Math.abs(arm.rotation.z) > 0.05);
+    assert.ok(Math.abs(leg.rotation.x) > 0.01);
+    reducedMotion = true;
+    const pose = model.update(
+      0.05,
+      freshCompanion(),
+      new THREE.Vector3(0, 1.2, 6),
+    );
+    assert.equal(head.rotation.y, 0);
+    assert.equal(arm.rotation.z, 0);
+    assert.equal(leg.rotation.x, 0);
+    assert.equal(pose.wave, 0);
+  } finally {
+    model.group.traverse((o) => {
+      if (o instanceof THREE.Mesh) o.geometry.dispose();
+    });
+    model.dispose();
+    globalThis.matchMedia = previous;
+  }
+});

@@ -1,3 +1,8 @@
+import {
+  companionLife,
+  restMotion,
+  type CompanionMotion,
+} from "./companionMotion";
 import * as THREE from "three";
 import {
   GLTFLoader,
@@ -35,13 +40,25 @@ export function createCyberCompanion(
     -bounds.min.y * scale,
     -center.z * scale,
   );
+  const head = asset.getObjectByName("LumaHeadJoint");
+  const arms = [
+    asset.getObjectByName("LumaArmLeftJoint"),
+    asset.getObjectByName("LumaArmRightJoint"),
+  ];
+  const legs = [
+    asset.getObjectByName("LumaLegLeftJoint"),
+    asset.getObjectByName("LumaLegRightJoint"),
+  ];
+  const glowLevels = new Map<THREE.MeshStandardMaterial, number>();
   const originals = new Map<THREE.MeshStandardMaterial, THREE.Color>();
   asset.traverse((o) => {
     if (o instanceof THREE.Mesh) {
       o.name ||= "Luma.cyber.mesh";
       for (const m of Array.isArray(o.material) ? o.material : [o.material])
-        if (m instanceof THREE.MeshStandardMaterial)
+        if (m instanceof THREE.MeshStandardMaterial) {
           originals.set(m, m.color.clone());
+          glowLevels.set(m, m.emissiveIntensity);
+        }
     }
   });
   const accent = new THREE.MeshStandardMaterial({
@@ -56,10 +73,19 @@ export function createCyberCompanion(
       emissive: 0xd99430,
       emissiveIntensity: 0.2,
     });
+  const headAccessories = new THREE.Group();
+  body.add(headAccessories);
+  if (head) {
+    group.updateMatrixWorld(true);
+    headAccessories.position.copy(
+      body.worldToLocal(head.getWorldPosition(new THREE.Vector3())),
+    );
+  }
   const accessories = new Map<string, THREE.Object3D>();
   const ribbon = new THREE.Group();
   ribbon.position.set(-0.22, 1.01, 0.26);
-  body.add(ribbon);
+  headAccessories.add(ribbon);
+  ribbon.position.sub(headAccessories.position);
   for (const side of [-1, 1]) {
     const petal = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), white);
     petal.scale.set(0.65, 1.5, 0.3);
@@ -70,7 +96,8 @@ export function createCyberCompanion(
   accessories.set("ribbon", ribbon);
   const flower = new THREE.Group();
   flower.position.set(0.24, 0.96, 0.26);
-  body.add(flower);
+  headAccessories.add(flower);
+  flower.position.sub(headAccessories.position);
   for (let i = 0; i < 5; i++) {
     const petal = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 8), gold),
       a = (i * Math.PI * 2) / 5;
@@ -96,7 +123,12 @@ export function createCyberCompanion(
   let time = 0,
     lastSkin = "";
   body.position.y = 0.29;
-  function update(dt: number, appearance: Companion, camera: THREE.Vector3) {
+  function update(
+    dt: number,
+    appearance: Companion,
+    camera: THREE.Vector3,
+    motion: CompanionMotion = restMotion,
+  ) {
     if (appearance.skin !== lastSkin) {
       const palette = cosmetics.find(
           (c) => c.kind === "skin" && c.id === appearance.skin,
@@ -109,24 +141,50 @@ export function createCyberCompanion(
       lastSkin = appearance.skin;
     }
     for (const [id, o] of accessories) o.visible = id === appearance.accessory;
+    const delta = Math.max(0, Math.min(dt, 0.1));
     if (!reduced.matches) {
-      time += dt;
-      mixer.update(dt);
-      body.position.y = 0.29 + Math.sin(time * 1.7) * 0.04;
+      time += delta;
+      mixer.update(delta);
     }
+    const life = companionLife(time, motion, reduced.matches);
+    const easing = reduced.matches ? 1 : 1 - Math.exp(-6 * delta);
+    body.position.y = life.height;
     body.rotation.y = Math.atan2(
       camera.x - body.position.x,
       camera.z - body.position.z,
     );
-    body.rotation.z = reduced.matches ? 0 : Math.sin(time * 1.1) * 0.035;
+    body.rotation.z += (life.roll - body.rotation.z) * easing;
+    body.rotation.x += (life.pitch - body.rotation.x) * easing;
+    if (head) {
+      head.rotation.y += (life.headYaw - head.rotation.y) * easing;
+      head.rotation.x += (life.headPitch - head.rotation.x) * easing;
+      headAccessories.rotation.copy(head.rotation);
+    }
+    arms.forEach((arm, index) => {
+      if (!arm) return;
+      const target =
+        (index ? 1 : -1) * (life.limb + (index === 0 ? life.wave * 0.32 : 0));
+      arm.rotation.z += (target - arm.rotation.z) * easing;
+      arm.rotation.x += (-life.wave * 0.08 - arm.rotation.x) * easing;
+    });
+    legs.forEach((leg, index) => {
+      if (!leg) return;
+      const target = reduced.matches
+        ? 0
+        : life.limb * (index ? -1 : 1) +
+          (Math.hypot(motion.vx, motion.vy) / 38) * 0.055;
+      leg.rotation.x += (target - leg.rotation.x) * easing;
+    });
+    for (const [material, base] of glowLevels)
+      material.emissiveIntensity = base * life.glow;
     return {
       x: body.position.x,
       y: body.position.y,
       z: body.position.z,
-      moving: false,
+      moving: !reduced.matches && Math.hypot(motion.vx, motion.vy) > 0.5,
       facing: body.rotation.y,
       blink: 1,
-      wave: 0,
+      wave: life.wave,
     };
   }
   return {

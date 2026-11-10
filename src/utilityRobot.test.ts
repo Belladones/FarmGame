@@ -13,6 +13,16 @@ test("active utility robot is a complete textured GLB with no external dependenc
   const asset = JSON.parse(
     bytes.toString("utf8", 20, 20 + bytes.readUInt32LE(12)),
   );
+  for (const name of [
+    "LumaHeadJoint",
+    "LumaArmLeftJoint",
+    "LumaArmRightJoint",
+    "LumaLegLeftJoint",
+    "LumaLegRightJoint",
+  ]) {
+    const joint = asset.nodes.find((n: { name: string }) => n.name === name);
+    assert.ok(joint?.children?.length, `${name} must control real geometry`);
+  }
   assert.ok(asset.meshes.length > 0);
   assert.ok(asset.meshes[0].primitives[0].attributes.TEXCOORD_0 !== undefined);
   assert.ok(asset.images.length >= 3);

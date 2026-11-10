@@ -1,3 +1,4 @@
+import type { CompanionMotion } from "./companionMotion";
 import { createLumaHeadShape } from "./lumaHead";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
@@ -282,7 +283,12 @@ export function createCompanion() {
   let time = 0,
     lastSkin = "";
   body.position.set(0, 0.48, 0);
-  function update(dt: number, appearance: Companion, camera: THREE.Vector3) {
+  function update(
+    dt: number,
+    appearance: Companion,
+    camera: THREE.Vector3,
+    _motion?: CompanionMotion,
+  ) {
     if (appearance.skin !== lastSkin) {
       const c = cosmetics.find(
         (c) => c.kind === "skin" && c.id === appearance.skin,
