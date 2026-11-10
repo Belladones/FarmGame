@@ -92,9 +92,16 @@ const base = process.env.FARM_URL || "http://localhost:5173";
       .getByRole("button", { name: "Fermer le panneau", exact: true })
       .click();
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p.getByRole("button", { name: "Équipement", exact: true }).click();
-    assert.equal(await p.locator('[data-upgrade="hold"]').count(), 1);
-    assert.equal(await p.locator('[data-upgrade="hold2"]').count(), 0);
+    assert.equal(
+      await p.getByRole("button", { name: "Équipement", exact: true }).count(),
+      0,
+    );
+    assert.equal(
+      await p
+        .getByRole("button", { name: "Ouvrir l’atelier", exact: true })
+        .isDisabled(),
+      true,
+    );
     const max = fresh();
     max.width = 9;
     max.height = 9;

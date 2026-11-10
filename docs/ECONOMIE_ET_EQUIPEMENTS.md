@@ -18,7 +18,7 @@ Pour l’arbre : niveau 9 = 25 600 %, niveau 10 = 51 200 %. Le passage coûte ex
 
 ## Robots
 
-Robots → Équiper [identifiant], ou onglet Équipement puis sélection du robot. Les recherches Technologie autorisent les familles d’équipements ; les installations sont payées pour **un robot précis**, jamais pour toute la flotte. Les capteurs doivent aussi être installés individuellement après leur recherche.
+Atelier → Améliorer un robot : cliquez sur l’atelier posé dans la ferme, puis sélectionnez le robot. Les recherches Technologie autorisent les familles d’équipements ; les installations sont payées pour **un robot précis**, jamais pour toute la flotte. Les capteurs doivent aussi être installés individuellement après leur recherche.
 
 | Équipement | Premier prix | Effet par niveau | Modèles |
 |---|---|---|---|

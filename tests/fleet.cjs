@@ -34,14 +34,16 @@ const assert = require("node:assert/strict");
     assert.equal(await p.locator(".fleet-card").count(), 0);
     await p.getByLabel("Rechercher un robot").fill("");
     await p.screenshot({ path: "/tmp/farm-fleet.png" });
-    await p.getByRole("button", { name: "Équipement", exact: true }).click();
-    assert.ok((await p.locator(".asset-upgrade-grid article").count()) > 0);
     assert.equal(
-      await p.getByLabel("Robot à équiper", { exact: true }).inputValue(),
-      "f1",
+      await p.getByRole("button", { name: "Équipement", exact: true }).count(),
+      0,
     );
-    await p.screenshot({ path: "/tmp/farm-fleet-upgrades.png" });
-    await p.getByRole("button", { name: "Mes robots", exact: true }).click();
+    assert.equal(
+      await p
+        .getByRole("button", { name: "Ouvrir l’atelier", exact: true })
+        .isDisabled(),
+      true,
+    );
     await p.setViewportSize({ width: 390, height: 844 });
     await p.screenshot({ path: "/tmp/farm-fleet-mobile.png" });
     assert.equal(
@@ -68,10 +70,12 @@ const assert = require("node:assert/strict");
     }, fixture);
     await p.reload();
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p.getByRole("button", { name: "Équiper f1", exact: true }).click();
-    const gear = p.getByRole("region", { name: "Équipement f1", exact: true });
-    assert.equal(await gear.locator('[data-upgrade="hold"]').count(), 1);
-    assert.match(await gear.innerText(), /atelier/);
+    assert.equal(
+      await p
+        .getByRole("button", { name: "Améliorer f1 à l’atelier", exact: true })
+        .isDisabled(),
+      true,
+    );
     assert.deepEqual(errors, []);
     console.log(
       "Fleet: garage, deployment, save, filters, individual equipment and mobile passed",

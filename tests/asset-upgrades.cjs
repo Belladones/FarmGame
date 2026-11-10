@@ -50,7 +50,9 @@ const { research } = require("../src/catalog.ts");
       p.evaluate(() => JSON.parse(localStorage.getItem("farmscript-v1")).farm);
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p.getByRole("button", { name: "Équiper f1", exact: true }).click();
+    await p
+      .getByRole("button", { name: "Améliorer f1 à l’atelier", exact: true })
+      .click();
     const gear = p.getByRole("region", { name: "Équipement f1", exact: true });
     assert.match(
       await gear.locator('[data-upgrade="hold"] h4').innerText(),
@@ -70,7 +72,7 @@ const { research } = require("../src/catalog.ts");
       await gear.locator('[data-upgrade="hold"]').innerText(),
       /atelier/,
     );
-    await p.getByLabel("Robot à équiper", { exact: true }).selectOption("f2");
+    await p.getByRole("button", { name: /^f2 ·/ }).click();
     assert.match(
       await p
         .getByRole("region", { name: "Équipement f2", exact: true })
@@ -109,7 +111,9 @@ const { research } = require("../src/catalog.ts");
     );
     await p.reload();
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p.getByRole("button", { name: "Équiper f1", exact: true }).click();
+    await p
+      .getByRole("button", { name: "Améliorer f1 à l’atelier", exact: true })
+      .click();
     assert.match(
       await p
         .getByRole("region", { name: "Équipement f1", exact: true })

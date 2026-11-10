@@ -64,9 +64,10 @@ export function HelpPanel({
         </p>
         <p>
           Les recherches débloquent des possibilités. Construisez un atelier,
-          puis ouvrez Robots → Équiper pour installer un capteur ou améliorer un
-          robot à l’arrêt. Ces équipements concernent seulement ce robot. Pour
-          améliorer un bâtiment, ouvrez Magasin → Mon exploitation → Améliorer.
+          puis ouvrez Atelier → Améliorer un robot pour installer un capteur ou
+          améliorer un robot à l’arrêt. Ces équipements concernent seulement ce
+          robot. Pour améliorer un bâtiment, ouvrez Magasin → Mon exploitation →
+          Améliorer.
         </p>
       </section>
       <div className="help-start">

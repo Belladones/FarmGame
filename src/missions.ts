@@ -453,7 +453,7 @@ const modernMissions: Mission[] = [
       Number(
         s.robots.some((r) => !r.destroyed && (r.equipment?.sensor ?? 0) > 0),
       ),
-    hint: "Conditions et opérateurs : 150 foins + 10 bois. can_harvest() : 50 foins + 10 bois, après les conditions et plant(). Puis installez le capteur sur votre fermier dans Robots → Équipement (50 foins + 10 bois), avec un atelier construit. Le capteur évite les récoltes immatures.",
+    hint: "Conditions et opérateurs : 150 foins + 10 bois. can_harvest() : 50 foins + 10 bois, après les conditions et plant(). Puis installez le capteur sur votre fermier dans Atelier → Améliorer un robot (50 foins + 10 bois), avec un atelier construit. Le capteur évite les récoltes immatures.",
   },
   {
     ...missions.find((m) => m.id === "soil")!,
@@ -512,7 +512,7 @@ const modernMissions: Mission[] = [
         progress: (s: Farm) =>
           Number(s.robots.some((r) => (r.equipment?.motor ?? 1) >= 2)) +
           Number(s.robots.some((r) => (r.equipment?.tools ?? 1) >= 2)),
-        hint: "Débloquez les familles d’équipements, puis améliorez le moteur et les outils du fermier dans Robots → Équipement. Les coûts et effets sont propres à chaque unité.",
+        hint: "Débloquez les familles d’équipements, puis améliorez le moteur et les outils du fermier dans Atelier → Améliorer un robot. Les coûts et effets sont propres à chaque unité.",
       };
     if (id === "fleet-license")
       return {

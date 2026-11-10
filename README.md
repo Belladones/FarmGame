@@ -330,3 +330,7 @@ Pour ces nouvelles parties, récolter une culture immature la retire sans donner
 `npm run test:onboarding` parcourt une vraie partie neuve : premier programme, boucle refusée puis achetée avec 5 foins, production automatique, agrandissement, capteur, premier blé mûr et rechargement de la sauvegarde. Les scénarios avancés de l’ancienne économie utilisent des fixtures de sauvegardes établies ; les tests du nouveau départ utilisent directement `fresh()`.
 
 Lors d’un redémarrage confirmé depuis le guide, le premier programme est rechargé pour le nouveau départ. Le code précédemment sélectionné reste accessible dans l’exemple **Mon programme précédent** et dans la sauvegarde du compte ; il n’est pas effacé pour installer le tutoriel.
+
+### Atelier de robotique
+
+Cliquez sur l’atelier construit dans la ferme (ou son bouton « Atelier ») pour ouvrir sa baie de maintenance. Les équipements individuels des robots se trouvent désormais ici : choisissez un robot, arrêtez son programme et installez ses améliorations. L’autre onglet améliore cet atelier. Le niveau du bâtiment ouvert limite les équipements accessibles (2, 4 puis 5). Les boutons de la flotte ouvrent cette interface au lieu d’afficher un second menu d’équipement. Les coûts et les sauvegardes existantes sont conservés ; aucun trajet physique du robot jusqu’au bâtiment n’est imposé.

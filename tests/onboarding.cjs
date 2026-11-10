@@ -178,7 +178,9 @@ const { chromium } = require("playwright"),
     await produce("Wood", 10, woodWithoutSensor);
     await produce("Hay", 50, hayCode);
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p.getByRole("button", { name: "Équiper f1", exact: true }).click();
+    await p
+      .getByRole("button", { name: "Améliorer f1 à l’atelier", exact: true })
+      .click();
     await p
       .getByRole("region", { name: "Équipement f1", exact: true })
       .locator('[data-upgrade="sensor"] button')

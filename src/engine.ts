@@ -1671,7 +1671,7 @@ export function command(
       requireUnlock("sensor");
       if (s.assetProgression === 1 && equipmentLevel(s, r, "sensor") < 1)
         throw new Error(
-          `Installez un capteur de maturité sur ${r.id} dans Robots → Équipement.`,
+          `Installez un capteur de maturité sur ${r.id} dans Atelier → Améliorer un robot.`,
         );
       result = ready;
       break;
@@ -1679,7 +1679,7 @@ export function command(
       requireUnlock("analysis");
       if (s.assetProgression === 1 && equipmentLevel(s, r, "analysis") < 1)
         throw new Error(
-          "Équipez ce robot du capteur correspondant dans Robots → Équipement.",
+          "Équipez ce robot du capteur correspondant dans Atelier → Améliorer un robot.",
         );
       result = current?.planted !== null ? (current?.entity ?? null) : null;
       break;
@@ -1687,7 +1687,7 @@ export function command(
       requireUnlock("analysis");
       if (s.assetProgression === 1 && equipmentLevel(s, r, "analysis") < 1)
         throw new Error(
-          "Équipez ce robot du capteur correspondant dans Robots → Équipement.",
+          "Équipez ce robot du capteur correspondant dans Atelier → Améliorer un robot.",
         );
       result = current?.ground ?? null;
       break;
@@ -1695,7 +1695,7 @@ export function command(
       requireUnlock("humidity");
       if (s.assetProgression === 1 && equipmentLevel(s, r, "humidity") < 1)
         throw new Error(
-          "Équipez ce robot du capteur correspondant dans Robots → Équipement.",
+          "Équipez ce robot du capteur correspondant dans Atelier → Améliorer un robot.",
         );
       result = current?.water ?? 0;
       break;
@@ -2126,6 +2126,7 @@ export function assetUpgradeBlocker(
   kind: "robot" | "building",
   id: string,
   upgrade: string,
+  workshopId?: string,
 ): string | null {
   const item = assetUpgradeSpec(s, kind, id, upgrade);
   if (!item) return "Équipement incompatible ou objet indisponible.";
@@ -2137,7 +2138,9 @@ export function assetUpgradeBlocker(
       return "Équipez un robot permanent en état de marche.";
     if (r.moving || r.readyAt > s.time)
       return "Arrêtez le robot et attendez la fin de son action.";
-    const workshops = s.buildings.filter((b) => b.kind === "Workshop");
+    const workshops = s.buildings.filter(
+      (b) => b.kind === "Workshop" && (!workshopId || b.id === workshopId),
+    );
     if (!workshops.length)
       return "Construisez un atelier pour installer cet équipement.";
     const max = Math.max(
@@ -2168,9 +2171,10 @@ export function upgradeAsset(
   kind: "robot" | "building",
   id: string,
   upgrade: string,
+  workshopId?: string,
 ): boolean {
   syncBefore(s);
-  if (assetUpgradeBlocker(s, kind, id, upgrade)) return false;
+  if (assetUpgradeBlocker(s, kind, id, upgrade, workshopId)) return false;
   const { asset, spec, current } = assetUpgradeSpec(s, kind, id, upgrade)!;
   const cost = upgradeCost(spec, current);
   for (const [id, n] of Object.entries(cost.materials))

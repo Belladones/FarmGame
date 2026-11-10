@@ -1,3 +1,4 @@
+import { WorkshopPanel } from "./WorkshopPanel";
 import { upgradeAsset, assetUpgradeBlocker } from "./engine";
 import { GuiCompanion } from "./GuiCompanion";
 import { CompanionPanel, CompanionAvatar } from "./CompanionPanel";
@@ -178,7 +179,7 @@ const docs = [
   ],
   [
     "can_harvest()",
-    "Retourne un boolean. Recherchez Capteur de maturité puis installez-le sur ce robot dans Robots → Équipement, avec un atelier construit.",
+    "Retourne un boolean. Recherchez Capteur de maturité puis installez-le sur ce robot dans Atelier → Améliorer un robot, avec un atelier construit.",
   ],
   [
     "get_pos_x() / get_pos_y()",
@@ -273,6 +274,10 @@ function App() {
     () => activeRobot(farm.current).code || starter,
   );
   const [panel, setPanel] = useState<string | null>(null);
+  const [workshopSelection, setWorkshopSelection] = useState({
+    id: "",
+    robotId: "",
+  });
   const [garageEditorId, setGarageEditorId] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
     null,
@@ -689,6 +694,33 @@ function App() {
   };
   const fleetAction = (action: FleetAction): boolean => {
     let result = false;
+    if (action.type === "workshop") {
+      if (
+        action.id &&
+        !farm.current.robots.some(
+          (r) => r.id === action.id && !r.destroyed && !r.loan,
+        )
+      ) {
+        notify("Sélectionnez un robot permanent en état de marche.", true);
+        return false;
+      }
+      const workshop = farm.current.buildings.find(
+        (b) => b.kind === "Workshop",
+      );
+      if (!workshop) {
+        notify(
+          "Construisez et posez un atelier pour améliorer vos robots.",
+          true,
+        );
+        return false;
+      }
+      setWorkshopSelection({
+        id: workshop.id,
+        robotId: action.id ?? farm.current.activeRobotId,
+      });
+      setPanel("Atelier");
+      return true;
+    }
     if (action.type === "shop") {
       setPanel("Magasin");
       return true;
@@ -706,8 +738,15 @@ function App() {
         "robot",
         action.id,
         action.upgrade,
+        action.workshopId,
       );
-      result = upgradeAsset(farm.current, "robot", action.id, action.upgrade);
+      result = upgradeAsset(
+        farm.current,
+        "robot",
+        action.id,
+        action.upgrade,
+        action.workshopId,
+      );
       refresh();
       notify(
         result
@@ -949,6 +988,10 @@ function App() {
         zoom={1}
         resetView={0}
         editorOpen={editorOpen}
+        onWorkshopClick={(id) => {
+          setWorkshopSelection({ id, robotId: farm.current.activeRobotId });
+          setPanel("Atelier");
+        }}
       />
       <div className="command-masthead">
         farm<span>script</span>
@@ -1600,7 +1643,8 @@ function App() {
             panel === "Robots" ||
             panel === "Missions" ||
             panel === "API & aide" ||
-            panel === "Session et sauvegarde"
+            panel === "Session et sauvegarde" ||
+            panel === "Atelier"
               ? "skills-backdrop"
               : "")
           }
@@ -1627,7 +1671,8 @@ function App() {
               panel === "Robots" ||
               panel === "Missions" ||
               panel === "API & aide" ||
-              panel === "Session et sauvegarde"
+              panel === "Session et sauvegarde" ||
+              panel === "Atelier"
                 ? "skill-screen"
                 : "")
             }
@@ -1666,6 +1711,29 @@ function App() {
             </div>
             <WorkspaceNav current={panel} onNavigate={setPanel} />
             <div className="panel-content">
+              {panel === "Atelier" && (
+                <WorkshopPanel
+                  key={workshopSelection.id}
+                  farm={s}
+                  workshopId={workshopSelection.id}
+                  robotId={workshopSelection.robotId}
+                  paused={paused}
+                  runtimes={Object.fromEntries(
+                    [...runtimes.current].map(([id, rt]) => [
+                      id,
+                      rt.worker ? "running" : "starting",
+                    ]),
+                  )}
+                  onAction={fleetAction}
+                  onBuildingUpgrade={(upgrade) =>
+                    shopAction({
+                      type: "upgrade",
+                      id: workshopSelection.id,
+                      upgrade,
+                    })
+                  }
+                />
+              )}
               {panel === "Inventaire" && (
                 <InventoryPanel
                   farm={s}

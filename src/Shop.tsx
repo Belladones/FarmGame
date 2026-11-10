@@ -42,6 +42,35 @@ export type ShopAction =
   | { type: "resell" | "repair" | "select"; id: string }
   | { type: "relocate"; id: string; site: { x: number; y: number } };
 export function ProductArt({ kind }: { kind: string }) {
+  if (kind === "Workshop")
+    return (
+      <svg className="product-art" viewBox="0 0 160 120" aria-hidden="true">
+        <ellipse cx="82" cy="103" rx="59" ry="9" fill="#13232d" opacity=".25" />
+        <path d="M17 81 78 54l68 31-59 29Z" fill="#80939e" />
+        <path d="M28 77V33l57-22 48 24v49l-48 22Z" fill="#bbcbd2" />
+        <path d="M31 36 83 17v79L31 75Z" fill="#334f61" />
+        <path d="m85 18 45 20v45L85 103Z" fill="#d5e0e4" />
+        <path d="M38 44 77 28v60L38 73Z" fill="#122733" />
+        <path d="m19 28 66-23 58 29-10 10-49-22-56 22Z" fill="#314b5e" />
+        <path d="m28 34 56-20 51 25-5 6-46-21-56 20Z" fill="#f18a38" />
+        <path d="m42 79 35-14 39 18-33 19Z" fill="#213843" />
+        <path
+          d="M47 76V49l26-10v26m-29-13 32-13"
+          fill="none"
+          stroke="#ed953e"
+          strokeWidth="5"
+        />
+        <path d="m54 80 25-10m-16 16 26-10" stroke="#93acb7" strokeWidth="5" />
+        <path d="m107 49 13 6v13l-13-6Z" fill="#69e1dc" />
+        <path
+          d="m31 82 47 20"
+          stroke="#e7c358"
+          strokeWidth="5"
+          strokeDasharray="5 4"
+        />
+      </svg>
+    );
+
   if (["Wheat", "Wood", "Carrot"].includes(kind))
     return (
       <ResourceIcon kind={kind.toLowerCase() as "wheat" | "wood" | "carrot"} />

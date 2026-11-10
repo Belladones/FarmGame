@@ -18,11 +18,13 @@ export function AssetUpgradesPanel({
   kind,
   id,
   onUpgrade,
+  workshopId,
 }: {
   farm: Farm;
   kind: "robot" | "building";
   id: string;
   onUpgrade: (upgrade: string) => void;
+  workshopId?: string;
 }) {
   const robot =
     kind === "robot" ? farm.robots.find((r) => r.id === id) : undefined;
@@ -62,7 +64,7 @@ export function AssetUpgradesPanel({
             ),
             max = current >= spec.max;
           const cost = upgradeCost(spec, current),
-            blocker = assetUpgradeBlocker(farm, kind, id, spec.id);
+            blocker = assetUpgradeBlocker(farm, kind, id, spec.id, workshopId);
           const price = [
             Object.keys(cost.materials).length
               ? formatCost(cost.materials)
