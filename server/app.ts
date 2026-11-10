@@ -250,14 +250,25 @@ export function createApp(
       save: await getSave(row.id),
     });
   });
-  app.get("/api/session", authenticate, async (_req, res) => {
-    const s = res.locals.session as Session;
-    res.json({
-      player: { id: s.playerId, username: s.username },
-      expiresAt: s.expiresAt,
-      save: await getSave(s.playerId),
-    });
-  });
+  app.get(
+    "/api/session",
+    (req, res, next) => {
+      // Discovering a guest session is normal; protected save routes still use 401.
+      if (!token(req)) {
+        res.status(204).end();
+        return;
+      }
+      return authenticate(req, res, next);
+    },
+    async (_req, res) => {
+      const s = res.locals.session as Session;
+      res.json({
+        player: { id: s.playerId, username: s.username },
+        expiresAt: s.expiresAt,
+        save: await getSave(s.playerId),
+      });
+    },
+  );
   app.post("/api/auth/logout", async (req, res) => {
     const raw = token(req);
     if (raw)

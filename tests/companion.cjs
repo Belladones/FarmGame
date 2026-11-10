@@ -21,6 +21,14 @@ const { fresh } = require("../src/engine.ts");
         assetErrors.push(r.url());
     });
     p.on("pageerror", (e) => errors.push(e.message));
+    p.on("console", (message) => {
+      if (
+        /Content Security Policy|GLTFLoader:.*load texture|PCFSoftShadowMap/.test(
+          message.text(),
+        )
+      )
+        assetErrors.push(message.text());
+    });
     await p.goto(process.env.FARM_URL || "http://localhost:5173");
     const mascot = p.locator(".gui-companion");
     await mascot.locator("canvas").waitFor();

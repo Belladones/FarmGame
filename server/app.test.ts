@@ -56,6 +56,7 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
       "health performs a real PostgreSQL query and writes require authentication",
       async () => {
         assert.equal((await req("/api/health")).status, 200);
+        assert.equal((await req("/api/session")).status, 204);
         assert.equal((await req("/api/save")).status, 401);
         assert.equal(
           (

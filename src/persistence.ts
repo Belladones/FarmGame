@@ -232,8 +232,16 @@ export class CloudSave {
   }
   async bootstrap() {
     try {
-      const result = await request<SessionResponse>("/session");
-      if (!this.disposed) await this.accept(result, false);
+      const result = await request<SessionResponse | undefined>("/session");
+      if (this.disposed) return;
+      if (result) await this.accept(result, false);
+      else
+        this.emit({
+          mode: "guest",
+          player: null,
+          message:
+            "Mode local. Connectez-vous pour sauvegarder sur votre compte.",
+        });
     } catch (error) {
       if ((error as ApiError).status === 401)
         this.emit({
