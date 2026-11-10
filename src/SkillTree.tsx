@@ -68,13 +68,6 @@ export function SkillTree({
     null,
   );
   const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) {
-      el.scrollLeft = Math.max(0, (740 - el.clientWidth) / 2);
-      el.scrollTop = 0;
-    }
-  }, [page]);
   const pages: Tree[] = focus === "robots" ? robotTrees : trees;
   const tree = pages[page],
     node = tree.nodes.find((n) => n.id === selected) ?? tree.nodes[0];
@@ -158,7 +151,8 @@ export function SkillTree({
         <div className="skill-map-section">
           <div className="skill-map-heading">
             <span>
-              {tree.caption} Parcours linéaire · prérequis dans le détail.
+              {tree.caption} Branches par thème · prérequis complets dans le
+              détail.
             </span>
             <span className="skill-legend">
               <i /> Acquis <i /> À rechercher <i /> À venir
@@ -169,28 +163,31 @@ export function SkillTree({
             ref={scrollRef}
             key={page}
             tabIndex={0}
-            aria-label={`Arbre ${tree.name}, défilement vertical`}
+            aria-label={`Arbre ${tree.name}, défilement horizontal et vertical`}
           >
             <div
               className="skill-map"
-              style={{ height: Math.max(...tree.nodes.map((n) => n.y)) + 150 }}
+              style={{
+                width: tree.width,
+                height: Math.max(...tree.nodes.map((n) => n.y)) + 150,
+              }}
             >
               <svg
                 className="skill-links"
-                width="740"
+                width={tree.width}
                 height="100%"
                 aria-hidden="true"
               >
                 {tree.nodes
-                  .filter((n) => n.previous)
+                  .filter((n) => n.branchParent)
                   .map((n) => {
                     const previous = tree.nodes.find(
-                      (p) => p.id === n.previous,
+                      (p) => p.id === n.branchParent,
                     )!;
                     return (
                       <path
                         key={`${previous.id}-${n.id}`}
-                        d={`M${n.x + 57} ${previous.y + 92}V${n.y}`}
+                        d={`M${previous.x + 57} ${previous.y + 92}V${previous.y + 130}H${n.x + 57}V${n.y}`}
                         className={isLearned(n, farm) ? "unlocked" : ""}
                       />
                     );

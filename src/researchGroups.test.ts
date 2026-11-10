@@ -79,14 +79,41 @@ test("global trees do not expose retired building or gear levels", () => {
   );
 });
 
-test("all research pages have a single straight reading path in dependency order", () => {
+test("thematic branches have real parents, disjoint subtree lanes and ordered tiers", () => {
   for (const tree of [...researchTrees, ...robotTrees]) {
-    assert.equal(new Set(tree.nodes.map((n) => n.x)).size, 1, tree.name);
-    tree.nodes.forEach((node, index) => {
-      assert.equal(node.previous, tree.nodes[index - 1]?.id);
-      if (index) assert.equal(node.y - tree.nodes[index - 1].y, 180);
+    const descendants = (id: string): typeof tree.nodes =>
+      tree.nodes
+        .filter((n) => n.branchParent === id)
+        .flatMap((n) => [n, ...descendants(n.id)]);
+    for (const node of tree.nodes) {
+      if (node.branchParent)
+        assert.ok(node.parents.includes(node.branchParent));
       for (const parent of node.parents)
-        assert.ok(tree.nodes.findIndex((n) => n.id === parent) < index);
-    });
+        assert.ok(tree.nodes.find((n) => n.id === parent)!.y < node.y);
+      assert.ok(node.x >= 0 && node.x + 114 <= tree.width);
+      const children = tree.nodes.filter((n) => n.branchParent === node.id);
+      for (let i = 1; i < children.length; i++) {
+        const left = [children[i - 1], ...descendants(children[i - 1].id)];
+        const right = [children[i], ...descendants(children[i].id)];
+        assert.ok(
+          Math.max(...left.map((n) => n.x + 114)) <
+            Math.min(...right.map((n) => n.x)),
+          `${tree.name}: overlapping sibling branches`,
+        );
+      }
+    }
   }
+  const programming = researchTrees.find((t) => t.name === "Programmation")!;
+  assert.equal(
+    programming.nodes.find((n) => n.id === "lists")!.branchParent,
+    "for",
+  );
+  assert.equal(
+    programming.nodes.find((n) => n.id === "functions")!.branchParent,
+    "variables",
+  );
+  assert.ok(
+    programming.nodes.filter((n) => n.branchParent === "conditions").length >=
+      2,
+  );
 });

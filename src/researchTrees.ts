@@ -12,8 +12,8 @@ export interface ResearchNode {
   x: number;
   y: number;
   parents: string[];
-  /** Previous card in the reading path; not an additional purchase prerequisite. */
-  previous?: string;
+  /** Main thematic prerequisite drawn on the map; all others stay in parents. */
+  branchParent?: string;
   research?: string;
   group?: ResearchGroup;
   base?: boolean;
@@ -24,6 +24,7 @@ export interface ResearchNode {
 export interface ResearchTree {
   name: string;
   caption: string;
+  width: number;
   nodes: ResearchNode[];
 }
 const byId = new Map(research.map((r) => [r.id, r]));
@@ -153,17 +154,82 @@ export function buildGroupedTree(
     depths.set(id, d);
     return d;
   }
-  // A single topological reading path. Keep actual parents for the detail
-  // panel and navigation; the visible line never invents an unlock requirement.
-  const ordered = [...nodes.values()].filter((node) => node !== root);
-  ordered.sort((a, b) => depth(a.id) - depth(b.id));
-  const path = [root, ...ordered];
-  path.forEach((node, index) => {
-    node.x = 315;
-    node.y = 25 + index * 180;
-    node.previous = path[index - 1]?.id;
-  });
-  return { name, caption, nodes: path };
+  // Choose one real prerequisite per card to form a readable thematic tree.
+  // Secondary requirements are still enforced and linked in the detail panel.
+  const preferred: Record<string, string> = {
+    tree: "bush",
+    pumpkin: "tree",
+    "wheat-base": "carrot",
+    watering: "carrot",
+    fertilizer: "carrot",
+    group: "pumpkin",
+    for: "conditions",
+    variables: "conditions",
+    functions: "variables",
+    lists: "for",
+    dictionaries: "lists",
+    imports: "dictionaries",
+    commerce: "functions",
+    land: "construction",
+    workshop: "construction",
+    reservoir: "land",
+    milling: "land",
+    sawmill: "land",
+    bakery: "milling",
+    composting: "land",
+    tank: "workshop",
+    motor: "workshop",
+    hold: "workshop",
+    tools: "workshop",
+    handling: "workshop",
+    plant: "speed",
+    move: "speed",
+    sensor: "plant",
+    position: "sensor",
+    analysis: "position",
+    traffic: "sensor",
+    fleet: "traffic",
+    transporter: "fleet",
+    drone: "fleet",
+    consumables: "plant",
+    humidity: "consumables",
+  };
+  const children = new Map<string, ResearchNode[]>();
+  for (const node of nodes.values()) {
+    if (node === root) continue;
+    const parent = node.parents.includes(preferred[node.id])
+      ? preferred[node.id]
+      : [...node.parents].sort((a, b) => depth(b) - depth(a))[0];
+    node.branchParent = parent;
+    children.set(parent, [...(children.get(parent) ?? []), node]);
+  }
+  // Reserve a disjoint horizontal interval for every subtree. No branch can
+  // intrude into a sibling's interval, even when secondary requirements add tiers.
+  const widths = new Map<string, number>();
+  const measure = (node: ResearchNode): number => {
+    const width = Math.max(
+      170,
+      (children.get(node.id) ?? []).reduce(
+        (total, child) => total + measure(child),
+        0,
+      ),
+    );
+    widths.set(node.id, width);
+    return width;
+  };
+  const contentWidth = measure(root),
+    width = Math.max(740, contentWidth + 80);
+  const place = (node: ResearchNode, left: number) => {
+    node.x = left + widths.get(node.id)! / 2 - 57;
+    node.y = 25 + depth(node.id) * 180;
+    let offset = left;
+    for (const child of children.get(node.id) ?? []) {
+      place(child, offset);
+      offset += widths.get(child.id)!;
+    }
+  };
+  place(root, (width - contentWidth) / 2);
+  return { name, caption, width, nodes: [...nodes.values()] };
 }
 export const researchTrees: ResearchTree[] = definitions.map((def) =>
   buildGroupedTree(
