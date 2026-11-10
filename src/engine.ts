@@ -1,3 +1,10 @@
+import {
+  robotEquipment,
+  buildingUpgrades,
+  upgradeCost,
+  upgradeLevel,
+  type UpgradeLevels,
+} from "./assetProgression";
 import { freshCompanion, hydrateCompanion, type Companion } from "./companion";
 import { missions, missionsFor } from "./missions";
 import { storageCapacities } from "./researchBalance";
@@ -37,6 +44,9 @@ export interface Tile {
   grouped?: boolean;
 }
 export interface Robot {
+  equipment?: UpgradeLevels;
+  baseCapacity?: number;
+  actionFloor?: number;
   id: string;
   model: Model;
   x: number;
@@ -61,6 +71,10 @@ export interface Robot {
   reservation?: { x: number; y: number; expires: number };
 }
 export interface Building {
+  upgrades?: UpgradeLevels;
+  capacityFloor?: number;
+  productionFloor?: number;
+  waterCapacityFloor?: number;
   id: string;
   kind: BuildingKind;
   x: number;
@@ -73,6 +87,7 @@ export interface Building {
   cycle?: { ends: number };
 }
 export interface Farm {
+  assetProgression?: 1;
   researchRevision?: 1 | 2;
   legacyDepotCapacity?: number;
   waterItems?: number;
@@ -155,6 +170,7 @@ const building = (
   water: 0,
 });
 export const fresh = (): Farm => ({
+  assetProgression: 1,
   researchRevision: 2,
   waterItems: 0,
   waterRemainder: 0,
@@ -262,6 +278,114 @@ export function hydrateFarm(raw: unknown, legacyCode?: string | null): Farm {
     }
     return next;
   });
+  if (v.assetProgression !== 1) {
+    const tier = (id: string, max = 10) => {
+      let result = s.unlocks.includes(id) ? 1 : 0;
+      for (let n = 2; n <= max; n++) if (s.unlocks.includes(id + n)) result = n;
+      return result;
+    };
+    const oldStorage = Math.max(
+      s.legacyDepotCapacity ?? 0,
+      [
+        200, 400, 2000, 10000, 50000, 250000, 1250000, 6250000, 31250000,
+        156250000,
+      ][Math.max(0, tier("storage") - 1)],
+    );
+    s.robots.forEach((r) => {
+      r.baseCapacity ??=
+        r.model === "Farmer" && s.researchRevision === 1
+          ? 10
+          : models[r.model].capacity;
+      r.equipment = {
+        ...Object.fromEntries(
+          robotEquipment
+            .filter((e) => e.models?.includes(r.model))
+            .map((e) => [e.id, e.initial]),
+        ),
+        hold: 1 + tier("hold", 3),
+        motor: Math.min(
+          5,
+          1 +
+            Math.ceil(
+              Math.log([1, 1.25, 1.5, 2][tier("motor", 3)]) / Math.log(1.25),
+            ),
+        ),
+        tools: Math.min(
+          5,
+          1 +
+            Math.ceil(
+              Math.log(1 / [1, 0.8, 0.6, 0.4][tier("tools", 3)]) /
+                Math.log(1.25),
+            ),
+        ),
+        sensor: tier("sensor", 1),
+        analysis: tier("analysis", 1),
+        humidity: tier("humidity", 1),
+        traffic: tier("traffic", 1),
+        ...r.equipment,
+      };
+      r.actionFloor = [1, 0.8, 0.6, 0.4][tier("tools", 3)];
+    });
+    [...s.buildings, ...s.storedBuildings].forEach((b) => {
+      b.upgrades = { ...b.upgrades };
+      if (b.kind === "Depot") {
+        b.upgrades.storage = Math.min(
+          10,
+          1 + Math.ceil(Math.log(oldStorage / 200) / Math.log(4)),
+        );
+        b.capacityFloor = Math.max(oldStorage, b.capacityFloor ?? 0);
+      }
+      if (recipes[b.kind]) {
+        const oldRate =
+          (b.kind === "Mill" || b.kind === "Oven"
+            ? 2 **
+              Math.max(0, tier(b.kind === "Mill" ? "milling" : "bakery", 5) - 1)
+            : 1) *
+          (s.unlocks.includes("mechanization2")
+            ? 2
+            : s.unlocks.includes("mechanization")
+              ? 1 / 0.75
+              : 1);
+        b.productionFloor = Math.max(b.productionFloor ?? 1, oldRate);
+        b.upgrades.production = Math.max(
+          b.upgrades.production ?? 1,
+          Math.min(5, 1 + Math.ceil(Math.log2(b.productionFloor))),
+        );
+      }
+      if (b.kind === "Well" || b.kind === "Cistern") {
+        b.waterCapacityFloor = Math.max(
+          b.waterCapacityFloor ?? 0,
+          (b.kind === "Well" ? 100 : 400) *
+            (tier("reservoir", 5) >= 2
+              ? 3 * 2 ** (tier("reservoir", 5) - 2)
+              : 1),
+        );
+        if (b.kind === "Cistern")
+          b.upgrades.waterStorage = Math.max(
+            b.upgrades.waterStorage ?? 1,
+            Math.min(
+              5,
+              1 + Math.ceil(Math.log(b.waterCapacityFloor / 400) / Math.log(4)),
+            ),
+          );
+      }
+    });
+    for (const id of [
+      "hold",
+      "motor",
+      "tools",
+      "milling",
+      "bakery",
+      "reservoir",
+    ])
+      if (tier(id) > 0 && !s.unlocks.includes(id)) s.unlocks.push(id);
+    if (
+      s.unlocks.includes("maintenance") ||
+      [...s.buildings, ...s.storedBuildings].some((b) => b.kind === "Workshop")
+    )
+      s.unlocks = [...new Set([...s.unlocks, "workshop"])];
+    s.assetProgression = 1;
+  }
   syncBefore(s);
   sync(s);
   return s;
@@ -274,32 +398,61 @@ export const level = (s: Farm, id: string, max = 3) => {
 export const activeRobot = (s: Farm) =>
   s.robots.find((r) => r.id === s.activeRobotId && !r.destroyed) ??
   s.robots.find((r) => !r.destroyed)!;
+export const equipmentLevel = (s: Farm, r: Robot, id: string) =>
+  r.equipment?.[id] ?? robotEquipment.find((e) => e.id === id)?.initial ?? 0;
+export const tankCapacity = (s: Farm, r: Robot) =>
+  10 *
+  2 **
+    Math.max(
+      0,
+      (s.assetProgression === 1 ? equipmentLevel(s, r, "tank") : 1) - 1,
+    );
 export const capacity = (s: Farm, r: Robot = activeRobot(s)) =>
-  (r.model === "Farmer" && s.researchRevision !== 2
-    ? 10
-    : models[r.model].capacity) * ([1, 2, 4, 8][level(s, "hold")] ?? 1);
+  (s.assetProgression === 1
+    ? (r.baseCapacity ?? models[r.model].capacity)
+    : r.model === "Farmer" && s.researchRevision !== 2
+      ? 10
+      : models[r.model].capacity) *
+  (s.assetProgression === 1
+    ? 2 ** Math.max(0, equipmentLevel(s, r, "hold") - 1)
+    : ([1, 2, 4, 8][level(s, "hold")] ?? 1));
 export const robotSpeed = (s: Farm, r: Robot = activeRobot(s)) =>
   (models[r.model].speed *
     (s.unlocks.includes("speed") ? 2 : 1) *
-    ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1)) /
+    (s.assetProgression === 1
+      ? 1.25 ** Math.max(0, equipmentLevel(s, r, "motor") - 1)
+      : ([1, 1.25, 1.5, 2][level(s, "motor")] ?? 1))) /
   (r.loan ? 2 : 1);
 export const actionDuration = (s: Farm, r: Robot = activeRobot(s)) =>
-  ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1) *
+  (s.assetProgression === 1
+    ? Math.min(
+        r.actionFloor ?? 1,
+        1 / 1.25 ** Math.max(0, equipmentLevel(s, r, "tools") - 1),
+      )
+    : ([1, 0.8, 0.6, 0.4][level(s, "tools")] ?? 1)) *
   (s.unlocks.includes("speed") ? 0.5 : 1) *
   (r.loan ? 2 : 1);
-export const depotCapacity = (s: Farm) =>
-  s.researchRevision === 2
+export const depotCapacity = (
+  s: Farm,
+  b: Building = s.buildings.find((b) => b.kind === "Depot")!,
+) =>
+  s.assetProgression === 1
     ? Math.max(
-        s.legacyDepotCapacity ?? 0,
-        storageCapacities[Math.max(0, level(s, "storage", 10) - 1)],
+        b?.capacityFloor ?? 0,
+        200 * 4 ** Math.max(0, (b?.upgrades?.storage ?? 1) - 1),
       )
     : Math.max(
         [200, 200, 500, 2500, 10000][Math.min(4, level(s, "storage", 10))] ??
           200,
-        storageCapacities[Math.max(0, level(s, "storage", 10) - 1)],
+        [
+          200, 400, 2000, 10000, 50000, 250000, 1250000, 6250000, 31250000,
+          156250000,
+        ][Math.max(0, level(s, "storage", 10) - 1)],
       );
 export const stockCapacity = (s: Farm) =>
-  s.buildings.filter((b) => b.kind === "Depot").length * depotCapacity(s);
+  s.buildings
+    .filter((b) => b.kind === "Depot")
+    .reduce((total, b) => total + depotCapacity(s, b), 0);
 export const getStock = (s: Farm, item: Item) =>
   item === "Wheat" ? s.stock : (s.resources[item] ?? 0);
 export const totalStock = (s: Farm) => s.stock + sum(s.resources);
@@ -376,7 +529,7 @@ function addStock(s: Farm, inventory: Inventory): boolean {
     for (const b of depots(s)) {
       const amount = Math.min(
         left,
-        Math.max(0, depotCapacity(s) - sum(b.inventory)),
+        Math.max(0, depotCapacity(s, b) - sum(b.inventory)),
       );
       b.inventory[item] = (b.inventory[item] ?? 0) + amount;
       left -= amount;
@@ -389,6 +542,8 @@ function addStock(s: Farm, inventory: Inventory): boolean {
 export function researchBlocker(s: Farm, id: string): string | null {
   const r = research.find((r) => r.id === id);
   if (!r) return "Recherche inconnue";
+  if (s.assetProgression === 1 && r.localOnly)
+    return "Cette amélioration se trouve désormais dans la fiche du robot ou du bâtiment.";
   if (s.unlocks.includes(id)) return "Compétence déjà acquise";
   const missing = r.prerequisites.filter(
     (p) =>
@@ -648,7 +803,9 @@ export function deployRobot(
   );
   if (
     loan &&
-    (loan.moving || loan.readyAt > s.time || loan.water + r.water > 10)
+    (loan.moving ||
+      loan.readyAt > s.time ||
+      loan.water + r.water > tankCapacity(s, r))
   )
     return false;
   if (loan) {
@@ -902,9 +1059,23 @@ function waterGroup(s: Farm, first: Building) {
         group.push(b);
   return group;
 }
-const waterCapacity = (s: Farm, b: Building) =>
-  (b.kind === "Well" ? 100 : 400) *
-  (level(s, "reservoir", 5) >= 2 ? 3 * 2 ** (level(s, "reservoir", 5) - 2) : 1);
+export const waterCapacity = (s: Farm, b: Building) =>
+  s.assetProgression === 1
+    ? Math.max(
+        b.waterCapacityFloor ?? 0,
+        b.kind === "Well"
+          ? 100
+          : 400 * 4 ** Math.max(0, (b.upgrades?.waterStorage ?? 1) - 1),
+      )
+    : (b.kind === "Well" ? 100 : 400) *
+      (level(s, "reservoir", 5) >= 2
+        ? 3 * 2 ** (level(s, "reservoir", 5) - 2)
+        : 1);
+export const machineRate = (b: Building) =>
+  Math.max(
+    b.productionFloor ?? 1,
+    2 ** Math.max(0, (b.upgrades?.production ?? 1) - 1),
+  );
 function setWater(s: Farm, group: Building[], n: number) {
   for (const b of group) {
     b.water = Math.min(n, waterCapacity(s, b));
@@ -957,7 +1128,10 @@ function machine(s: Farm, b: Building, cursor: number) {
     b.cycle = {
       ends:
         cursor +
-        (recipe.duration * multiplier) / 2 ** Math.max(0, machineLevel - 1),
+        (s.assetProgression === 1
+          ? recipe.duration / machineRate(b)
+          : (recipe.duration * multiplier) /
+            2 ** Math.max(0, machineLevel - 1)),
     };
     if (b.cycle.ends > s.time) return;
   }
@@ -971,7 +1145,10 @@ export function advance(s: Farm, delta: number) {
       (s.waterRemainder ?? 0) +
       Math.max(0, delta) * 0.1 * 2 ** Math.max(0, level(s, "watering", 9) - 1);
     const whole = Math.floor(produced + 1e-9);
-    s.waterItems = (s.waterItems ?? 0) + whole;
+    s.waterItems =
+      s.assetProgression === 1
+        ? Math.max(s.waterItems ?? 0, Math.min(10, (s.waterItems ?? 0) + whole))
+        : (s.waterItems ?? 0) + whole;
     s.waterRemainder = Math.max(0, produced - whole);
   }
   for (let i = 0; i < s.tiles.length; i++) {
@@ -1037,7 +1214,17 @@ export function advance(s: Farm, delta: number) {
       g.forEach((b) => seen.add(b.id));
       const amount =
         g.reduce((n, b) => n + b.water, 0) +
-        g.filter((b) => b.kind === "Well").length * Math.max(0, delta);
+        g
+          .filter((b) => b.kind === "Well")
+          .reduce(
+            (n, b) =>
+              n +
+              (s.assetProgression === 1
+                ? 2 ** Math.max(0, (b.upgrades?.waterRate ?? 1) - 1)
+                : 1),
+            0,
+          ) *
+          Math.max(0, delta);
       setWater(
         s,
         g,
@@ -1105,6 +1292,14 @@ export function command(
   const farmerOnly = () => r.model === "Farmer";
   const consumeTime = () => {
     if (name === "move") return 1 / robotSpeed(s, r);
+    if (
+      s.assetProgression === 1 &&
+      ["deposit", "load", "deliver", "collect"].includes(name)
+    )
+      return (
+        ((r.loan ? 2 : 1) * (s.unlocks.includes("speed") ? 0.5 : 1)) /
+        2 ** Math.max(0, equipmentLevel(s, r, "handling") - 1)
+      );
     const movement = [
       "plant",
       "harvest",
@@ -1228,7 +1423,7 @@ export function command(
         for (const item of items) {
           const n = Math.min(
             r.inventory[item] ?? 0,
-            Math.max(0, depotCapacity(s) - sum(b.inventory)),
+            Math.max(0, depotCapacity(s, b) - sum(b.inventory)),
           );
           b.inventory[item] = (b.inventory[item] ?? 0) + n;
           r.inventory[item] = (r.inventory[item] ?? 0) - n;
@@ -1316,18 +1511,31 @@ export function command(
     case "watering":
       requireUnlock("watering");
       if (s.researchRevision === 2) {
+        const waterCost =
+          s.assetProgression === 1
+            ? 0.8 ** Math.max(0, equipmentLevel(s, r, "application") - 1)
+            : 1;
         if (
           r.model === "Transporter" ||
           !current ||
           (current.water ?? 0) >= 1 ||
-          ((s.waterItems ?? 0) < 1 && r.water < 1)
+          ((s.waterItems ?? 0) < 1 && r.water <= 0)
         ) {
           result = false;
           break;
         }
-        if (r.water >= 1) r.water--;
-        else s.waterItems!--;
-        current.water = Math.min(1, (current.water ?? 0) + 0.25);
+        if (r.water > 0) {
+          const drawn = Math.min(r.water, waterCost);
+          r.water -= drawn;
+          if (r.water < 1e-9) r.water = 0;
+          current.water = Math.min(
+            1,
+            (current.water ?? 0) + (0.25 * drawn) / waterCost,
+          );
+        } else {
+          s.waterItems!--;
+          current.water = Math.min(1, (current.water ?? 0) + 0.25 / waterCost);
+        }
         result = true;
         break;
       }
@@ -1354,7 +1562,13 @@ export function command(
           throw new Error("La quantité doit être un entier positif.");
         const amount = Math.min(
           n,
-          Math.ceil((1 - (current?.water ?? 0)) * 4),
+          Math.ceil(
+            (1 - (current?.water ?? 0)) *
+              4 *
+              (s.assetProgression === 1
+                ? 0.8 ** Math.max(0, equipmentLevel(s, r, "application") - 1)
+                : 1),
+          ),
           s.waterItems ?? 0,
         );
         if (r.model === "Transporter" || !current || amount < 1) {
@@ -1362,7 +1576,14 @@ export function command(
           break;
         }
         s.waterItems! -= amount;
-        current.water = Math.min(1, (current.water ?? 0) + amount * 0.25);
+        current.water = Math.min(
+          1,
+          (current.water ?? 0) +
+            (amount * 0.25) /
+              (s.assetProgression === 1
+                ? 0.8 ** Math.max(0, equipmentLevel(s, r, "application") - 1)
+                : 1),
+        );
         result = true;
         break;
       }
@@ -1434,13 +1655,13 @@ export function command(
       const b = s.buildings.find(
         (b) => (b.kind === "Well" || b.kind === "Cistern") && adjacent(r, b),
       );
-      if (!b || r.model === "Transporter" || r.water >= 10) {
+      if (!b || r.model === "Transporter" || r.water >= tankCapacity(s, r)) {
         result = false;
         break;
       }
       const g = waterGroup(s, b),
         available = g.reduce((n, b) => n + b.water, 0),
-        n = Math.min(10 - r.water, available);
+        n = Math.min(tankCapacity(s, r) - r.water, available);
       r.water += n;
       setWater(s, g, available - n);
       result = n > 0;
@@ -1448,18 +1669,34 @@ export function command(
     }
     case "can_harvest":
       requireUnlock("sensor");
+      if (s.assetProgression === 1 && equipmentLevel(s, r, "sensor") < 1)
+        throw new Error(
+          `Installez un capteur de maturité sur ${r.id} dans Robots → Équipement.`,
+        );
       result = ready;
       break;
     case "get_entity_type":
       requireUnlock("analysis");
+      if (s.assetProgression === 1 && equipmentLevel(s, r, "analysis") < 1)
+        throw new Error(
+          "Équipez ce robot du capteur correspondant dans Robots → Équipement.",
+        );
       result = current?.planted !== null ? (current?.entity ?? null) : null;
       break;
     case "get_ground_type":
       requireUnlock("analysis");
+      if (s.assetProgression === 1 && equipmentLevel(s, r, "analysis") < 1)
+        throw new Error(
+          "Équipez ce robot du capteur correspondant dans Robots → Équipement.",
+        );
       result = current?.ground ?? null;
       break;
     case "get_water":
       requireUnlock("humidity");
+      if (s.assetProgression === 1 && equipmentLevel(s, r, "humidity") < 1)
+        throw new Error(
+          "Équipez ce robot du capteur correspondant dans Robots → Équipement.",
+        );
       result = current?.water ?? 0;
       break;
     case "get_pos_x":
@@ -1496,6 +1733,8 @@ export function command(
     case "is_occupied":
     case "reserve": {
       requireUnlock(name === "reserve" ? "traffic2" : "traffic");
+      if (s.assetProgression === 1 && equipmentLevel(s, r, "traffic") < 1)
+        throw new Error("Installez la détection d’obstacles sur ce robot.");
       const p = direction(args[0], true);
       const occupied = s.robots.some(
         (other) =>
@@ -1842,8 +2081,108 @@ export function robotPlacementBlocker(
   );
   if (
     loan &&
-    (loan.moving || loan.readyAt > s.time || loan.water + r.water > 10)
+    (loan.moving ||
+      loan.readyAt > s.time ||
+      loan.water + r.water > tankCapacity(s, r))
   )
     return "Terminez l’action du fermier de secours et videz son réservoir si nécessaire.";
   return null;
+}
+
+export function assetUpgradeSpec(
+  s: Farm,
+  kind: "robot" | "building",
+  id: string,
+  upgrade: string,
+) {
+  const asset =
+    kind === "robot"
+      ? s.robots.find((r) => r.id === id)
+      : s.buildings.find((b) => b.id === id);
+  if (!asset) return undefined;
+  const spec =
+    kind === "robot"
+      ? robotEquipment.find(
+          (e) => e.id === upgrade && e.models?.includes((asset as Robot).model),
+        )
+      : buildingUpgrades.find(
+          (e) =>
+            e.id === upgrade && e.kinds?.includes((asset as Building).kind),
+        );
+  if (!spec) return undefined;
+  return {
+    asset,
+    spec,
+    current: upgradeLevel(
+      kind === "robot"
+        ? (asset as Robot).equipment
+        : (asset as Building).upgrades,
+      spec,
+    ),
+  };
+}
+export function assetUpgradeBlocker(
+  s: Farm,
+  kind: "robot" | "building",
+  id: string,
+  upgrade: string,
+): string | null {
+  const item = assetUpgradeSpec(s, kind, id, upgrade);
+  if (!item) return "Équipement incompatible ou objet indisponible.";
+  const { asset, spec, current } = item;
+  if (current >= spec.max) return "Niveau maximum atteint.";
+  if (kind === "robot") {
+    const r = asset as Robot;
+    if (r.destroyed || r.loan)
+      return "Équipez un robot permanent en état de marche.";
+    if (r.moving || r.readyAt > s.time)
+      return "Arrêtez le robot et attendez la fin de son action.";
+    const workshops = s.buildings.filter((b) => b.kind === "Workshop");
+    if (!workshops.length)
+      return "Construisez un atelier pour installer cet équipement.";
+    const max = Math.max(
+      ...workshops.map((b) => Math.min(5, 2 * (b.upgrades?.workshop ?? 1))),
+    );
+    if (current + 1 > max)
+      return "Améliorez votre atelier pour installer ce niveau d’équipement.";
+  }
+  if (spec.research && !s.unlocks.includes(spec.research))
+    return (
+      "Recherchez d’abord : " +
+      (research.find((r) => r.id === spec.research)?.name ?? spec.research)
+    );
+  const cost = upgradeCost(spec, current);
+  if (s.gold < cost.gold) return "Or insuffisant.";
+  if (sum(cost.materials) > stockCapacity(s))
+    return "Capacité de stockage insuffisante : améliorez ou ajoutez des dépôts.";
+  if (
+    Object.entries(cost.materials).some(
+      ([id, n]) => getStock(s, id as Item) < n!,
+    )
+  )
+    return "Ressources déposées insuffisantes.";
+  return null;
+}
+export function upgradeAsset(
+  s: Farm,
+  kind: "robot" | "building",
+  id: string,
+  upgrade: string,
+): boolean {
+  syncBefore(s);
+  if (assetUpgradeBlocker(s, kind, id, upgrade)) return false;
+  const { asset, spec, current } = assetUpgradeSpec(s, kind, id, upgrade)!;
+  const cost = upgradeCost(spec, current);
+  for (const [id, n] of Object.entries(cost.materials))
+    removeStock(s, id as Item, n!);
+  s.gold -= cost.gold;
+  if (kind === "robot") {
+    const r = asset as Robot;
+    r.equipment = { ...r.equipment, [upgrade]: current + 1 };
+  } else {
+    const b = asset as Building;
+    b.upgrades = { ...b.upgrades, [upgrade]: current + 1 };
+  }
+  sync(s);
+  return true;
 }

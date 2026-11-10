@@ -48,17 +48,15 @@ test("Expansion updates the next purchase in place using its nine existing IDs a
 });
 test("base levels, sparse legacy saves and maximum tiers have consistent counters", () => {
   const grass = researchGroupFor("grass2")!,
-    storage = researchGroupFor("storage2")!,
     bush = researchGroupFor("bush")!;
   assert.equal(groupProgress(grass, []).level, 1);
   assert.equal(groupProgress(grass, []).max, 10);
-  assert.equal(groupProgress(storage, []).level, 1);
   assert.equal(groupProgress(bush, []).level, 0);
   assert.equal(groupProgress(bush, ["bush"]).level, 1);
-  const sparse = groupProgress(storage, ["storage4"]);
+  const sparse = groupProgress(bush, ["bush4"]);
   assert.equal(sparse.level, 4);
-  assert.equal(sparse.next?.id, "storage5");
-  assert.equal(hasResearchLevel(["storage4"], "storage2"), true);
+  assert.equal(sparse.next?.id, "bush5");
+  assert.equal(hasResearchLevel(["bush4"], "bush2"), true);
   for (const group of researchGroups) {
     const max = groupProgress(group, group.steps);
     assert.equal(max.level, max.max);
@@ -66,13 +64,17 @@ test("base levels, sparse legacy saves and maximum tiers have consistent counter
     assert.equal(max.current?.id, group.steps.at(-1));
   }
 });
-test("a prerequisite for a later tier still maps to its shared card", () => {
-  const pumpkin10 = research.find((r) => r.id === "pumpkin10")!;
-  assert.ok(pumpkin10.prerequisites.includes("storage10"));
-  assert.equal(researchGroupFor("storage10")?.id, "storage2");
+test("global trees do not expose retired building or gear levels", () => {
+  const represented = researchTrees.flatMap((t) =>
+    t.nodes.flatMap((n) => n.group?.steps ?? (n.research ? [n.research] : [])),
+  );
+  assert.ok(!represented.includes("storage2"));
+  assert.ok(!represented.includes("hold2"));
+  assert.ok(represented.includes("hold"));
+  assert.ok(represented.includes("workshop"));
   assert.ok(
-    researchTrees
-      .find((t) => t.name === "Technologie")!
-      .nodes.some((n) => n.group?.steps.includes("storage10")),
+    research
+      .find((r) => r.id === "tree10")!
+      .prerequisites.includes("construction"),
   );
 });

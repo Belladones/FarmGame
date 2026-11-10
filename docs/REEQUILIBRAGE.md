@@ -1,5 +1,7 @@
 # Rééquilibrage du 9 novembre 2026
 
+> Historique : les coûts ×5 et les améliorations partagées décrits ci-dessous ont été remplacés le 10 novembre par [Économie et équipements](ECONOMIE_ET_EQUIPEMENTS.md).
+
 Source de conception : [amelioration.xlsx](sources/amelioration.xlsx), fourni par le joueur. Le code de référence est `src/researchBalance.ts`. Les coûts remplis dans le classeur sont repris tels quels ; les colonnes « précédent » et « prérequis » sont cumulées et les dépendances de production / stockage sont ajoutées automatiquement.
 
 ## Progression retenue

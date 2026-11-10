@@ -17,6 +17,8 @@ import {
   depotCapacity,
   hydrateFarm,
   researchBlocker,
+  upgradeAsset,
+  assetUpgradeBlocker,
 } from "./engine";
 import { researchDepth } from "./researchTrees";
 import { validFarm } from "../server/validation";
@@ -38,7 +40,7 @@ test("explicit workbook costs and category dependencies are respected", () => {
     tree: { Wood: 50, Carrot: 70 },
     grass2: { Hay: 300 },
     carrot2: { Wood: 250 },
-    carrot3: { Wood: 1250 },
+    carrot3: { Wood: 1000 },
     watering: { Wood: 50 },
     watering2: { Wood: 200 },
     watering3: { Wood: 800 },
@@ -88,12 +90,15 @@ test("a real fresh farm can advance from hay to wood and buy storage without whe
   fund(s, "construction");
   assert.equal(buy(s, "construction"), true);
   s.gold = 499;
-  assert.match(researchBlocker(s, "storage2")!, /Or insuffisant/);
+  assert.match(
+    assetUpgradeBlocker(s, "building", "b1", "storage")!,
+    /Or insuffisant/,
+  );
   s.gold = 500;
-  assert.equal(buy(s, "storage2"), true);
+  assert.equal(upgradeAsset(s, "building", "b1", "storage"), true);
   assert.equal(s.gold, 0);
-  assert.equal(depotCapacity(s), 400);
-  assert.equal(buy(s, "storage2"), false);
+  assert.equal(depotCapacity(s), 800);
+  assert.equal(upgradeAsset(s, "building", "b1", "storage"), false);
 });
 test("carrot seeds consume exactly one hay and one wood, and trees are free on either soil", () => {
   const s = fresh();
@@ -108,10 +113,11 @@ test("carrot seeds consume exactly one hay and one wood, and trees are free on e
   assert.equal(command(s, "plant", ["Tree"]), true);
   assert.equal(s.tiles[0].yield, 5);
 });
-test("blank crop tiers double yields and continue research prices by five, without instant changing existing crops", () => {
+test("blank crop tiers double yields and continue research prices by four, without instant changing existing crops", () => {
   const s = fresh();
   const before = s.tiles[0].yield;
-  s.unlocks.push("loops", "construction", "storage2");
+  s.unlocks.push("loops", "construction");
+  s.buildings[0].upgrades = { storage: 2 };
   fund(s, "grass2");
   assert.equal(buy(s, "grass2"), true);
   assert.equal(s.tiles[0].yield, before);
@@ -122,7 +128,7 @@ test("blank crop tiers double yields and continue research prices by five, witho
     for (let n = 3; n <= 10; n++)
       assert.equal(
         sum(entry(base + n).materials),
-        5 * sum(entry(base + (n - 1)).materials),
+        4 * sum(entry(base + (n - 1)).materials),
       );
   assert.equal(cropData.Grass.yields[9], 512);
   assert.equal(cropData.Tree.yields[9], 2560);
@@ -167,6 +173,7 @@ test("watering growth is invariant to simulation step size", () => {
 test("all nine expansion steps reach a valid 10x10 farm without losing a crop", () => {
   const s = fresh();
   const first = s.tiles[0];
+  s.buildings[0].upgrades = { storage: 10 };
   s.unlocks = research
     .filter((r) => !r.id.startsWith("extension"))
     .map((r) => r.id);
@@ -217,6 +224,7 @@ test("wrapping occupancy and reservations inspect the same destination as move",
   s.width = 3;
   s.tiles = Array.from({ length: 3 }, () => structuredClone(s.tiles[0]));
   s.unlocks.push("move", "traffic", "traffic2");
+  s.robots[0].equipment = { traffic: 1 };
   const other = structuredClone(s.robots[0]);
   other.id = "f2";
   other.x = 2;
@@ -236,6 +244,7 @@ test("machine tier upgrades shorten cycles without giving free ingredients or ou
     ...structuredClone(s.buildings[0]),
     id: "mill",
     kind: "Mill",
+    upgrades: { production: 2 },
     x: 0,
     y: -1,
     inventory: {},
@@ -258,13 +267,14 @@ test("machine tier upgrades shorten cycles without giving free ingredients or ou
 test("existing saves migrate without relocking program calls or reducing purchased storage", () => {
   const raw = JSON.parse(JSON.stringify(fresh()));
   delete raw.researchRevision;
+  delete raw.assetProgression;
   raw.unlocks.push("storage2");
   raw.robots[0].code = "plant(Entities.Bush); move(Direction.East);";
   const loaded = hydrateFarm(raw);
   assert.equal(loaded.researchRevision, 2);
   assert.ok(loaded.unlocks.includes("plant"));
   assert.ok(loaded.unlocks.includes("move"));
-  assert.equal(depotCapacity(loaded), 500);
+  assert.ok(depotCapacity(loaded) >= 500);
   assert.equal(loaded.robots[0].code, raw.robots[0].code);
   assert.equal(validFarm(JSON.parse(JSON.stringify(loaded))), true);
 });

@@ -16,7 +16,7 @@ const group = (
   initialLevel = 0,
 ): ResearchGroup => ({ id, title, steps, initialLevel });
 /** Display groups only: persisted unlock IDs, costs and effects remain unchanged. */
-export const researchGroups: ResearchGroup[] = [
+const definitions: ResearchGroup[] = [
   group(
     "grass-base",
     "Herbe",
@@ -65,6 +65,14 @@ export const researchGroups: ResearchGroup[] = [
     ] as const
   ).map(([id, title, max]) => group(id, title, tiers(id, max))),
 ];
+export const researchGroups = definitions
+  .map((g) => ({
+    ...g,
+    steps: g.steps.filter((id) =>
+      research.some((r) => r.id === id && !r.localOnly),
+    ),
+  }))
+  .filter((g) => g.steps.length > 0);
 const byResearch = new Map(
   researchGroups.flatMap((group) =>
     group.steps.map((id) => [id, group] as const),

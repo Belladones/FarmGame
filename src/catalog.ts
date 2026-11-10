@@ -1,3 +1,4 @@
+import { retiredResearch } from "./assetProgression";
 import { balanceResearch, storageCapacities } from "./researchBalance";
 /** Values from docs/CONCEPTION.md, sections 1, 3, 6, 7 and 10. */
 export const itemNames = {
@@ -72,51 +73,51 @@ export const buildings = {
     price: 500,
     research: "construction",
     description:
-      "Stocke 200 unités ; Stockage 2 : 400, puis des capacités multipliées par cinq jusqu’au niveau 10.",
+      "Stocke 200 unités ; améliorations individuelles jusqu’au niveau 10, capacité et prix ×4.",
   },
   Well: {
     name: "Puits",
-    price: 150,
+    price: 300,
     research: "reservoir",
     description:
-      "Produit 1 unité d’eau par seconde. Réserve de 100 unités, puis 300 au niveau 2.",
+      "Produit 1 eau/s. Chaque amélioration locale double le débit ; réserve de 100 unités.",
   },
   Cistern: {
     name: "Citerne",
-    price: 120,
+    price: 200,
     research: "reservoir",
     description:
-      "Ajoute 400 unités au réseau d’eau connecté, puis 1 200 au niveau 2. Ne produit pas d’eau.",
+      "Ajoute 400 unités au réseau d’eau connecté ; chaque amélioration locale multiplie cette réserve par 4. Ne produit pas d’eau.",
   },
   Mill: {
     name: "Moulin",
-    price: 300,
+    price: 500,
     research: "milling",
     description:
       "5 blés → 1 farine en 6 secondes. Livrez les ingrédients puis récupérez la production.",
   },
   Oven: {
     name: "Four",
-    price: 450,
+    price: 1000,
     research: "bakery",
     description: "2 farines + 1 bois → 1 pain en 10 secondes.",
   },
   Sawmill: {
     name: "Scierie",
-    price: 350,
+    price: 750,
     research: "sawmill",
     description: "5 bois → 2 planches en 10 secondes.",
   },
   Composter: {
     name: "Composteur",
-    price: 400,
+    price: 750,
     research: "composting",
     description: "5 blés + 2 carottes → 1 engrais en 12 secondes.",
   },
   Workshop: {
-    name: "Atelier de réparation",
-    price: 800,
-    research: "maintenance",
+    name: "Atelier",
+    price: 500,
+    research: "workshop",
     description:
       "Reconstruit une carcasse pour 40 % du prix neuf : fermier 200 or, transporteur 200 or, drone 400 or.",
   },
@@ -138,6 +139,7 @@ export const recipes: Partial<
 };
 export interface Research {
   goldCost?: number;
+  localOnly?: boolean;
   id: string;
   name: string;
   cost: number;
@@ -777,7 +779,9 @@ export const research: Research[] = balanceResearch([
     "Durée des cycles des machines ×0,5.",
   ),
 ]).map((entry): Research => {
-  const prerequisites = new Set(entry.prerequisites);
+  const prerequisites = new Set(
+    entry.prerequisites.filter((id) => !retiredResearch(id)),
+  );
   const providers: Partial<Record<Item, string>> = {
     Wheat: "wheat-base",
     Wood: "bush",
@@ -820,10 +824,11 @@ export const research: Research[] = balanceResearch([
     if (depots > 16) throw new Error(`Coût hors capacité : ${entry.id}`);
     prerequisites.add(land);
   }
-  if (tier > 0 && entry.id !== "storage" + (tier + 1))
-    prerequisites.add("storage" + (tier + 1));
+  if (tier > 0 && entry.id !== "construction")
+    prerequisites.add("construction");
   return {
     ...entry,
+    localOnly: retiredResearch(entry.id),
     category: entry.id === "commerce" ? "Programmation" : entry.category,
     prerequisites: [...prerequisites],
   };
@@ -839,7 +844,7 @@ export const formatCost = (cost: Inventory) =>
   Object.entries(cost)
     .map(
       ([k, v]) =>
-        `${v.toLocaleString("fr-FR")} ${itemNames[k as Item].toLowerCase()}${["Wood", "Fertilizer"].includes(k) ? "" : "s"}`,
+        `${v >= 1000000 ? new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(v) : v.toLocaleString("fr-FR")} ${itemNames[k as Item].toLowerCase()}${["Wood", "Fertilizer"].includes(k) ? "" : "s"}`,
     )
     .join(" + ") || "Gratuit";
 export const sum = (inventory: Inventory) =>

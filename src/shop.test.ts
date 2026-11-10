@@ -211,7 +211,7 @@ test("mill inputs are consumed at cycle start; output must be collected and depo
   assert.equal(getStock(s, "Flour"), 0);
   assert.equal(command(s, "deposit", []), 1);
   assert.equal(sellStock(s, "Flour", 1), 1);
-  assert.equal(s.gold, 208);
+  assert.equal(s.gold, 8);
 });
 test("a full output buffer prevents ingredient consumption and transfers obey 50-unit buffers", () => {
   const s = prepared();

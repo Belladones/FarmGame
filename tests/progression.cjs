@@ -36,13 +36,16 @@ const { buy } = require("../src/engine.ts");
     );
     await p
       .getByRole("button", {
-        name: "Voir le prérequis Stockage · niveau 2",
+        name: "Voir le prérequis Construction",
         exact: true,
       })
       .click();
-    assert.equal(await p.locator(".skill-detail h3").innerText(), "Stockage");
+    assert.equal(
+      await p.locator(".skill-detail h3").innerText(),
+      "Construction",
+    );
     await p.waitForFunction(() => {
-      const n = document.querySelector('[data-skill="storage2"]'),
+      const n = document.querySelector('[data-skill="construction"]'),
         box = document.querySelector(".skill-scroll").getBoundingClientRect(),
         r = n.getBoundingClientRect();
       return r.top >= box.top && r.bottom <= box.bottom;

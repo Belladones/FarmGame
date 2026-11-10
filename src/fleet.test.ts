@@ -63,15 +63,15 @@ test("busy robots cannot teleport to garage and deployment respects reservations
   }
   assert.notDeepEqual(deploymentPosition(s, r.id), { x: other.x, y: other.y });
 });
-test("global upgrades and statuses reflect each model and garage state", () => {
+test("blueprints do not globally upgrade robots; statuses reflect each model and garage state", () => {
   const s = fresh(),
     r = s.robots[0];
   s.unlocks.push("hold", "motor", "tools");
-  assert.equal(capacity(s, r), 40);
-  assert.equal(robotSpeed(s, r), 1.25);
-  assert.equal(actionDuration(s, r), 0.8);
+  assert.equal(capacity(s, r), 20);
+  assert.equal(robotSpeed(s, r), 1);
+  assert.equal(actionDuration(s, r), 1);
   const transporter = { ...r, model: "Transporter" as const };
-  assert.equal(capacity(s, transporter), 200);
+  assert.equal(capacity(s, transporter), 100);
   assert.equal(
     robotCapabilities(s, transporter).some((c) => c.name === "Planter"),
     false,

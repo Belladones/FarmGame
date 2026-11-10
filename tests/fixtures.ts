@@ -4,6 +4,7 @@ export function legacyFarm() {
   const s = fresh();
   s.progressionVersion = 1;
   s.researchRevision = 1;
+  delete s.assetProgression;
   s.unlocks = [];
   s.tiles = [
     { planted: null, yield: 1, ground: "Grassland", water: 0, progress: 0 },

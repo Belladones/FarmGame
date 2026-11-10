@@ -1,3 +1,4 @@
+import { AssetUpgradesPanel } from "./AssetUpgradesPanel";
 import { useState } from "react";
 import {
   assetBlocker,
@@ -28,6 +29,7 @@ import {
 } from "./catalog";
 import { ResourceIcon } from "./Icons";
 export type ShopAction =
+  | { type: "upgrade"; id: string; upgrade: string }
   | {
       type: "buy";
       kind: Model | BuildingKind | "Fertilizer";
@@ -750,12 +752,31 @@ export function Shop({
             </div>
             <div className="asset-grid">
               {farm.buildings.map((b) => (
-                <article className="asset-card" key={b.id}>
+                <article
+                  className="asset-card"
+                  key={b.id}
+                  data-building-id={b.id}
+                >
                   <ProductArt kind={b.kind} />
+
                   <div>
                     <h3>
                       {buildings[b.kind].name} · ({b.x}, {b.y})
                     </h3>
+                    <details className="building-upgrade-menu">
+                      <summary>Améliorer {buildings[b.kind].name}</summary>
+                      <AssetUpgradesPanel
+                        farm={farm}
+                        kind="building"
+                        id={b.id}
+                        onUpgrade={(upgrade) =>
+                          act(
+                            { type: "upgrade", id: b.id, upgrade },
+                            "Bâtiment amélioré.",
+                          )
+                        }
+                      />
+                    </details>
                     <p>
                       {b.kind === "Depot"
                         ? inventoryText(b.inventory)

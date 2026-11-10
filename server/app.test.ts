@@ -167,6 +167,8 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
           unlocked: ["pearl", "none", "ribbon", "rose", "flower"],
         };
         farm.resources.Hay = 17;
+        farm.robots[0].equipment = { hold: 3, motor: 2, sensor: 1 };
+        farm.buildings[0].upgrades = { storage: 4 };
         farm.waterItems = 7;
         farm.waterRemainder = 0.3;
         farm.harvestedItems = { Hay: 23, Wheat: 4 };
@@ -311,6 +313,19 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
               "/api/save",
               "PUT",
               { farm: invalid, revision, schemaVersion: 1 },
+              cookieA,
+            )
+          ).status,
+          400,
+        );
+        const invalidEquipment = fresh();
+        invalidEquipment.robots[0].equipment = { hold: 99 };
+        assert.equal(
+          (
+            await req(
+              "/api/save",
+              "PUT",
+              { farm: invalidEquipment, revision, schemaVersion: 1 },
               cookieA,
             )
           ).status,

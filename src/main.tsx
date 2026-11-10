@@ -1,3 +1,4 @@
+import { upgradeAsset, assetUpgradeBlocker } from "./engine";
 import { GuiCompanion } from "./GuiCompanion";
 import { CompanionPanel, CompanionAvatar } from "./CompanionPanel";
 import { customizeCompanion } from "./companion";
@@ -172,7 +173,10 @@ const docs = [
     "move(Direction.East)",
     "Après la recherche move() : sur le champ, dépasser un bord rejoint le bord opposé. Les terrains constructibles gardent leurs limites et les collisions restent actives. Les anciennes parties gardent leurs bords bloqués.",
   ],
-  ["can_harvest()", "Retourne un boolean. Recherche : Capteur de maturité."],
+  [
+    "can_harvest()",
+    "Retourne un boolean. Recherchez Capteur de maturité puis installez-le sur ce robot dans Robots → Équipement, avec un atelier construit.",
+  ],
   [
     "get_pos_x() / get_pos_y()",
     "Retourne une coordonnée. Recherche : Coordonnées.",
@@ -200,11 +204,11 @@ const docs = [
   ],
   [
     "get_entity_type() / get_ground_type()",
-    "Identifie la culture et le sol. Recherche Analyse de la parcelle.",
+    "Identifie la culture et le sol. Recherche Analyse de la parcelle et équipement installé sur ce robot.",
   ],
   [
     "get_water()",
-    "Humidité de la parcelle entre 0 et 1. Recherche Capteur d’humidité.",
+    "Humidité de la parcelle entre 0 et 1. Recherche Capteur d’humidité et capteur installé sur ce robot.",
   ],
   [
     "harvest_group()",
@@ -603,6 +607,13 @@ function App() {
           action.store && action.kind !== "Fertilizer"
             ? purchaseForInventory(farm.current, action.kind)
             : purchase(farm.current, action.kind, action.quantity, action.site);
+      else if (action.type === "upgrade")
+        result = upgradeAsset(
+          farm.current,
+          "building",
+          action.id,
+          action.upgrade,
+        );
       else if (action.type === "sell")
         result = sellStock(farm.current, action.item, action.quantity) > 0;
       else if (action.type === "order")
@@ -651,6 +662,24 @@ function App() {
       setEditorOpen(true);
       setPanel(null);
       return true;
+    }
+    if (action.type === "upgrade") {
+      stop(action.id);
+      const blocker = assetUpgradeBlocker(
+        farm.current,
+        "robot",
+        action.id,
+        action.upgrade,
+      );
+      result = upgradeAsset(farm.current, "robot", action.id, action.upgrade);
+      refresh();
+      notify(
+        result
+          ? `Équipement installé sur ${action.id}.`
+          : (blocker ?? "Installation impossible."),
+        !result,
+      );
+      return result;
     }
     if (action.type === "buy") result = buy(farm.current, action.id);
     else if (action.type === "deploy")

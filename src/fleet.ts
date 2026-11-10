@@ -1,4 +1,10 @@
-import { actionDuration, robotSpeed, type Farm, type Robot } from "./engine";
+import {
+  actionDuration,
+  robotSpeed,
+  equipmentLevel,
+  type Farm,
+  type Robot,
+} from "./engine";
 import { models } from "./catalog";
 export type RobotRuntime = "starting" | "running";
 export function robotStatus(
@@ -22,6 +28,9 @@ export function robotStatus(
 }
 export function robotCapabilities(farm: Farm, robot: Robot) {
   const has = (id: string) => farm.unlocks.includes(id);
+  const sensor = (id: string) =>
+    has(id) &&
+    (farm.assetProgression !== 1 || equipmentLevel(farm, robot, id) > 0);
   const list = [{ name: "Transport", enabled: true }];
   if (robot.model === "Farmer")
     list.push(
@@ -39,9 +48,9 @@ export function robotCapabilities(farm: Farm, robot: Robot) {
       { name: "Engrais", enabled: has("consumables") && has("fertilizer") },
     );
   list.push(
-    { name: "Détection", enabled: has("sensor") },
+    { name: "Détection", enabled: sensor("sensor") },
     { name: "Position", enabled: has("position") },
-    { name: "Réservation", enabled: has("traffic2") },
+    { name: "Réservation", enabled: has("traffic2") && sensor("traffic") },
   );
   return list;
 }

@@ -65,7 +65,7 @@ const definitions = [
     caption:
       "Équipements, stockage et industrie, selon leurs véritables prérequis.",
     detail:
-      "harvest() est disponible au départ : récolte la plante sous le fermier (200 ticks si retrait, 1 sinon). Le fermier de 20 unités et le dépôt de 200 unités sont offerts. Stockage 2 : 400 unités pour 500 or.",
+      "harvest() est disponible au départ : récolte la plante sous le fermier (200 ticks si retrait, 1 sinon). Le fermier de 20 unités et le dépôt de 200 unités sont offerts. Le niveau 2 du dépôt s’achète sur ce bâtiment : 800 unités pour 500 or.",
   },
 ];
 /** Layout uses the first tier only. Later tier requirements are shown in the
@@ -79,6 +79,7 @@ export function buildGroupedTree(
   const nodes = new Map<string, ResearchNode>([[root.id, root]]);
   for (const id of ids) {
     const r = byId.get(id)!;
+    if (r.localOnly) continue;
     const group = researchGroupFor(id);
     const nodeId = group?.id ?? id;
     if (nodes.has(nodeId)) continue;
@@ -178,6 +179,8 @@ export const researchTrees: ResearchTree[] = definitions.map((def) =>
           ? researchGroups.find((g) => g.id === "grass-base")
           : undefined,
     },
-    research.filter((r) => r.category === def.name).map((r) => r.id),
+    research
+      .filter((r) => r.category === def.name && !r.localOnly)
+      .map((r) => r.id),
   ),
 );

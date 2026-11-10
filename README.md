@@ -35,6 +35,10 @@ Tests navigateur (API et frontend lancés dans un autre terminal) : `npm run tes
 
 En production : compiler avec `npm run build`, définir `DATABASE_URL` et `NODE_ENV=production`, puis lancer `npm start`. L’API sert aussi `dist/`, sur `PORT` (3001 par défaut). Un reverse proxy HTTPS doit conserver le nom d’hôte de la requête ; les cookies sont `Secure` en production. `HOST=0.0.0.0` est disponible pour un hébergement en conteneur. Les fichiers `.env` et les identifiants de base ne sont jamais inclus dans le bundle frontend.
 
+## Équipements et économie exponentielle
+
+Les coûts des cinq cultures doublant leur production sont désormais multipliés par **4** à chaque niveau : Arbre 10 coûte **19 660 800 foins**. Les équipements appartiennent à chaque robot et les améliorations à chaque bâtiment. Consultez [Économie et équipements](docs/ECONOMIE_ET_EQUIPEMENTS.md) pour les prix, les effets et la migration des anciennes parties.
+
 ## Arbres de recherche
 
 Les arbres suivent le classeur fourni par le joueur : foin → While → Vitesse → plant()/move() → Buisson → Carottes → Arbre, avec eau passive, cultures jusqu’au niveau 10, terrain jusqu’à 10×10 et stockage payé en or. Les valeurs explicites, les choix pour les niveaux vides et les règles de compatibilité sont détaillés dans [REEQUILIBRAGE.md](docs/REEQUILIBRAGE.md). La source est conservée dans `docs/sources/amelioration.xlsx`.
@@ -104,7 +108,7 @@ Les recherches consomment les matériaux déposés, sauf les paliers Stockage pa
 
 - **Vendre** : foin 1 or, blé 1, bois 3, carotte 5, citrouille 12, farine 8, pain 25, planche 12 et engrais 18. Seuls les stocks des dépôts sont vendus, jamais les soutes ni les machines. Les marchandises ne sont pas achetables et l’eau n’est pas vendable.
 - **Robots** : fermier 500 or (1 case/s, soute 20), transporteur 500 or (0,75 case/s, soute 100), drone 1 000 or (2 cases/s, soute 10). Les recherches Flotte, Transporteur et Drone débloquent les achats correspondants. Une case de départ libre dans le bon milieu est requise. Seul le fermier peut planter, récolter et labourer ; le drone peut transporter, arroser et appliquer de l’engrais. Le transporteur se limite aux transferts.
-- **Bâtiments** : dépôt 500 or, puits 150, citerne 120, moulin 300, four 450, scierie 350, composteur 400 et atelier 800. Chaque achat choisit un emplacement libre débloqué ; un bâtiment occupé bloque les déplacements.
+- **Bâtiments** : dépôt 500 or, puits 300, citerne 200, moulin 500, four 1 000, scierie 750, composteur 750 et atelier 500. Chaque achat choisit un emplacement libre débloqué ; un bâtiment occupé bloque les déplacements.
 - **Consommables** : engrais 25 or après Consommables, livré aux dépôts s’ils ont de la place. L’effet demande aussi la recherche Engrais et un chargement dans la soute.
 - **Mon exploitation** : choisir un robot à programmer, inspecter les stocks et machines, revendre un achat intact à 50 % de son prix payé, déplacer un bâtiment vide pendant une pause, ou reconstruire une carcasse avec un atelier. Pour éviter une perte de ressources, il faut vider l’objet avant revente ou déplacement. Le dépôt initial est conservé pour éviter une impasse.
 
@@ -114,7 +118,7 @@ Les cinq commandes commerciales du document consomment leurs marchandises et pai
 
 Les cinq cultures sont implémentées : blé, buisson, carotte, arbre et citrouille. Leurs recherches, rendements, sols, temps et coûts de plantation suivent le document. Les graines payantes proviennent de la soute, uniquement après une plantation réussie. Les arbres voisins orthogonaux ralentissent leur pousse. Les rendements restent figés à la plantation et une récolte trop volumineuse reste partiellement sur la case. Arrosage, engrais et récolte groupée ont leurs effets et prérequis propres.
 
-Les dépôts additionnent leurs capacités, mais chaque dépôt possède son inventaire et ses transferts locaux. Stockage passe de 200 à 500, 2 500 puis 10 000 unités par dépôt. Les emplacements constructibles passent de 1 à 2, 4, 8 puis 16.
+Les dépôts additionnent leurs capacités, mais chaque dépôt possède son inventaire et ses transferts locaux. Chaque dépôt s’améliore individuellement : 200 → 800 → 3 200 unités, puis ×4 jusqu’à 52 428 800 au niveau 10. Les emplacements constructibles passent de 1 à 2, 4, 8 puis 16.
 
 Les réseaux d’eau relient orthogonalement puits et citernes. Chaque puits produit 1 eau/s ; une citerne ajoute de la capacité sans augmenter le débit. Les robots remplissent leur réservoir distinct auprès d’un bâtiment d’eau adjacent.
 
@@ -173,16 +177,12 @@ pas exécuter de commandes. Le déploiement cherche une case libre compatible ;
 le programme se relance manuellement. Cet état est sauvegardé localement et dans
 PostgreSQL pour les comptes connectés. Les achats vont par défaut dans l’inventaire ; la livraison immédiate reste disponible.
 
-L’onglet **Arbre de compétences** comprend cinq pages : Soutes, Motorisation,
-Outils et eau, Capteurs et flotte, Dépôts. Les coûts et prérequis utilisent le
-catalogue commun aux recherches. Les améliorations s’appliquent aux robots
-actuels et futurs compatibles ; la capacité des dépôts reste distincte des
-soutes embarquées. `npm run test:fleet` vérifie le panneau dans Chromium.
+L’onglet **Équipement** propose les améliorations du robot choisi. Les cartes restent uniques, avec niveau actuel et prix suivant. Un atelier construit permet d’installer les équipements sur les robots à l’arrêt. Ses propres niveaux autorisent les paliers 2, 4 puis 5.
 
 
 ### Campagne de missions
 
-Le carnet de ferme propose **19 missions en quatre chapitres** : Premiers pas,
+Le carnet de ferme propose des missions en quatre chapitres : Premiers pas,
 Une ferme autonome, Cultiver autrement, Changer d’échelle. L’objectif actif reste
 sur l’écran de jeu, avec son compteur et la récupération directe de la récompense.
 Le carnet affiche les chapitres, les étapes futures, les conseils TypeScript et
@@ -270,17 +270,9 @@ route non implémentés ne sont plus proposés. Les liens internes correspondent
 aux prérequis ; le détail permet de consulter les prérequis d’autres catégories
 et affiche le coût total et la capacité actuelle des dépôts.
 
-Les prix sont conservés. Chaque recherche nécessite désormais le déblocage de
+Les prix suivent les règles actuelles détaillées dans le document Économie et équipements. Chaque recherche nécessite le déblocage de
 la production des ressources qu’elle consomme, ainsi qu’un palier de stockage
-compatible avec son coût total : 200, 500, 2 500 ou 10 000 unités par dépôt.
-Au-delà de 10 000 unités, les emplacements constructibles nécessaires sont aussi
-prérequis. Les bâtiments demandent un emplacement supplémentaire ; la flotte
-demande la première extension. Les achats vérifient la capacité réelle des dépôts
-construits, pas seulement les recherches acquises. Par exemple, Blé niveau 3
-coûte 350 unités et demande Stockage niveau 2 ; Blé niveau 5 coûte 22 000 unités
-et demande au moins trois dépôts de 10 000 unités. Les recherches déjà acquises
-restent actives, sans retrait de ressources ni réinitialisation de sauvegarde.
-La mission Construction précède désormais les améliorations exigeant ce stockage.
+compatible avec son coût total. Les recherches n’exigent plus les anciens drapeaux globaux Stockage : la capacité réellement construite et les améliorations locales des dépôts déterminent si le paiement est possible. Un dépôt de niveau 10 contient 52 428 800 unités ; plusieurs dépôts peuvent être combinés pour les recherches les plus coûteuses.
 
 Le fond étoilé est un SVG local statique. La caméra orthographique conserve le
 rapport largeur/hauteur réel du canvas et cadre une sphère englobant le terrain,

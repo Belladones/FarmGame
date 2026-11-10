@@ -62,6 +62,12 @@ export function HelpPanel({
           de la ferme ; utilisez la molette ou deux doigts pour zoomer. Le robot
           initial roule au sol.
         </p>
+        <p>
+          Les recherches débloquent des possibilités. Construisez un atelier,
+          puis ouvrez Robots → Équiper pour installer un capteur ou améliorer un
+          robot à l’arrêt. Ces équipements concernent seulement ce robot. Pour
+          améliorer un bâtiment, ouvrez Magasin → Mon exploitation → Améliorer.
+        </p>
       </section>
       <div className="help-start">
         <button onClick={() => onNavigate("Missions")}>

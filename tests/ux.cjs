@@ -39,7 +39,7 @@ const assert = require("node:assert/strict");
           exact: true,
         })
         .innerText(),
-      /0 \/ 10/,
+      /0 \/ 20/,
     );
     await p.screenshot({ path: "/tmp/farm-ux-desktop.png" });
     await p.setViewportSize({ width: 1024, height: 720 });

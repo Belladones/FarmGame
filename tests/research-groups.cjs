@@ -70,16 +70,15 @@ const base = process.env.FARM_URL || "http://localhost:5173";
     await p.locator('[data-skill="grass-base"]').click();
     await p
       .getByRole("button", {
-        name: "Voir le prérequis Stockage · niveau 2",
+        name: "Voir le prérequis Construction",
         exact: true,
       })
       .click();
-    assert.equal(await p.locator(".skill-detail h3").innerText(), "Stockage");
     assert.equal(
-      await p.locator('[data-skill="storage2"] .node-level').innerText(),
-      "1 / 10",
+      await p.locator(".skill-detail h3").innerText(),
+      "Construction",
     );
-    assert.match(await p.locator(".skill-price").innerText(), /500 or/);
+    assert.equal(await p.locator('[data-skill="storage2"]').count(), 0);
     await p
       .getByRole("button", { name: "Fermer le panneau", exact: true })
       .click();
@@ -93,11 +92,9 @@ const base = process.env.FARM_URL || "http://localhost:5173";
       .getByRole("button", { name: "Fermer le panneau", exact: true })
       .click();
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p
-      .getByRole("button", { name: "Arbre de compétences", exact: true })
-      .click();
-    assert.equal(await p.locator('[data-skill="hold"]').count(), 1);
-    assert.equal(await p.locator('[data-skill="hold2"]').count(), 0);
+    await p.getByRole("button", { name: "Équipement", exact: true }).click();
+    assert.equal(await p.locator('[data-upgrade="hold"]').count(), 1);
+    assert.equal(await p.locator('[data-upgrade="hold2"]').count(), 0);
     const max = fresh();
     max.width = 9;
     max.height = 9;
@@ -105,6 +102,7 @@ const base = process.env.FARM_URL || "http://localhost:5173";
     max.unlocks = research
       .filter((r) => r.id !== "extension10")
       .map((r) => r.id);
+    max.buildings[0].upgrades = { storage: 10 };
     max.resources = {
       ...research.find((r) => r.id === "extension10").materials,
     };

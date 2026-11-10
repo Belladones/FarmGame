@@ -24,9 +24,39 @@ function safeTree(value: unknown, depth = 0): boolean {
     );
   return false;
 }
+const robotLimits: Record<string, [number, number]> = {
+  hold: [1, 5],
+  motor: [1, 5],
+  tools: [1, 5],
+  handling: [1, 5],
+  tank: [1, 5],
+  application: [1, 5],
+  sensor: [0, 1],
+  analysis: [0, 1],
+  humidity: [0, 1],
+  traffic: [0, 1],
+};
+const buildingLimits: Record<string, [number, number]> = {
+  storage: [1, 10],
+  workshop: [1, 3],
+  waterRate: [1, 5],
+  waterStorage: [1, 5],
+  production: [1, 5],
+};
+function validLevels(value: unknown, limits: Record<string, [number, number]>) {
+  return (
+    value === undefined ||
+    (record(value) &&
+      Object.entries(value).every(
+        ([id, n]) => Object.hasOwn(limits, id) && integer(n, ...limits[id]),
+      ))
+  );
+}
 export function validFarm(value: unknown): value is RecordValue {
   if (!record(value) || !safeTree(value)) return false;
   const f = value;
+  if (f.assetProgression !== undefined && f.assetProgression !== 1)
+    return false;
   if (f.previousProgram !== undefined && typeof f.previousProgram !== "string")
     return false;
   if (
@@ -133,6 +163,12 @@ export function validFarm(value: unknown): value is RecordValue {
       !["Farmer", "Transporter", "Drone"].includes(String(r.model)) ||
       !integer(r.x, -1, 10) ||
       !integer(r.y, -1, 10) ||
+      !validLevels(r.equipment, robotLimits) ||
+      (r.baseCapacity !== undefined && !integer(r.baseCapacity, 1, 100)) ||
+      (r.actionFloor !== undefined &&
+        (typeof r.actionFloor !== "number" ||
+          r.actionFloor <= 0 ||
+          r.actionFloor > 1)) ||
       !inventory(r.inventory) ||
       typeof r.code !== "string" ||
       typeof r.destroyed !== "boolean" ||
@@ -190,6 +226,12 @@ export function validFarm(value: unknown): value is RecordValue {
   ]) {
     if (
       !record(b) ||
+      !validLevels(b.upgrades, buildingLimits) ||
+      [b.capacityFloor, b.productionFloor, b.waterCapacityFloor].some(
+        (n) =>
+          n !== undefined &&
+          (typeof n !== "number" || n < 0 || n > Number.MAX_SAFE_INTEGER),
+      ) ||
       typeof b.id !== "string" ||
       buildingIds.has(b.id) ||
       ![

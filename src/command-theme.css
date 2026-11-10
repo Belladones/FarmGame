@@ -2004,3 +2004,15 @@ img.companion-avatar {
 .research-level-detail > span {
   color: #ffb07b;
 }
+.asset-upgrades { padding: 18px; border: 1px solid #4c6575; background: #0d1923; min-width: 0; }
+.asset-upgrade-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); gap: 14px; }
+.asset-upgrade-grid article { padding: 14px; border: 1px solid #354e5f; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.asset-upgrade-grid h4 { margin: 0; display: flex; justify-content: space-between; gap: 12px; }
+.asset-upgrade-grid p { margin: 0; font-size: 13px; }
+.asset-upgrade-grid button { white-space: normal; margin-top: auto; min-height: 42px; }
+.asset-upgrade-grid progress { width: 100%; accent-color: #ff8b3d; }
+.asset-upgrade-grid small { color: #dfb088; }
+.building-upgrade-menu { grid-column: 1/-1; width: 100%; }
+.building-upgrade-menu summary { padding: 12px; cursor: pointer; color: #ffb27a; }
+.fleet-skill-view > label { display: flex; gap: 12px; padding: 16px; flex-wrap: wrap; }
+.asset-card:has(.building-upgrade-menu[open]) { grid-column: 1/-1; align-items: flex-start; }

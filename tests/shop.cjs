@@ -83,7 +83,7 @@ const { research, constructionSlots } = require("../src/catalog.ts");
       .getByRole("button", { name: "Acheter Dépôt · 500 or", exact: true })
       .click();
     await p
-      .getByRole("button", { name: "Acheter Moulin · 300 or", exact: true })
+      .getByRole("button", { name: "Acheter Moulin · 500 or", exact: true })
       .click();
     await p.screenshot({ path: "/tmp/farm-shop-buildings.png" });
     await p.getByRole("button", { name: "Consommables", exact: true }).click();
@@ -93,7 +93,7 @@ const { research, constructionSlots } = require("../src/catalog.ts");
     saved = await p.evaluate(
       () => JSON.parse(localStorage.getItem("farmscript-v1")).farm,
     );
-    assert.equal(saved.gold, 685);
+    assert.equal(saved.gold, 485);
     assert.equal(saved.resources.Wood, 50);
     assert.equal(saved.resources.Carrot, 20);
     assert.equal(saved.resources.Fertilizer, 1);
@@ -169,7 +169,7 @@ const { research, constructionSlots } = require("../src/catalog.ts");
     );
     assert.equal(saved.robots.length, 3);
     assert.equal(saved.buildings.length, 3);
-    assert.equal(saved.gold, 685);
+    assert.equal(saved.gold, 485);
     assert.deepEqual(errors, []);
     console.log(
       "Shop: catalogue, ventes, achats, flotte concurrente, pause, persistance et mobile OK.",

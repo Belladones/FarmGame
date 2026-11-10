@@ -28,11 +28,13 @@ test("every research is acyclic, has producible costs and fits reachable storage
     Carrot: "carrot",
     Pumpkin: "pumpkin",
   };
-  for (const r of research) {
+  for (const r of research.filter((r) => !r.localOnly)) {
     assert.ok(researchDepth(r.id) > 0);
     const previous = ancestors(r.id),
       s = fresh();
     s.unlocks = [...previous];
+    s.assetProgression = 1;
+    if (previous.has("construction")) s.buildings[0].upgrades = { storage: 10 };
     for (const [item, provider] of Object.entries(providers))
       if (r.materials[item as keyof typeof providers])
         assert.ok(previous.has(provider), `${r.id} cannot produce ${item}`);
@@ -46,8 +48,11 @@ test("trees contain exactly the actual research, in dependency order", () => {
   const represented = researchTrees.flatMap((t) =>
     t.nodes.flatMap((n) => n.group?.steps ?? (n.research ? [n.research] : [])),
   );
-  assert.equal(represented.length, research.length);
-  assert.equal(new Set(represented).size, research.length);
+  assert.equal(represented.length, research.filter((r) => !r.localOnly).length);
+  assert.equal(
+    new Set(represented).size,
+    research.filter((r) => !r.localOnly).length,
+  );
   for (const t of researchTrees)
     for (const n of t.nodes)
       for (const p of n.parents)
@@ -61,7 +66,7 @@ test("storage gates prevent impossible payments and old unlocks remain valid", (
   s.unlocks = ["wheat", "bush"];
   s.stock = 250;
   s.resources = { Wood: 100 };
-  assert.match(researchBlocker(s, "wheat3")!, /Stockage/);
+  assert.match(researchBlocker(s, "wheat3")!, /Construction/);
   assert.equal(buy(s, "wheat3"), false);
   assert.equal(s.stock, 250);
   s.unlocks.push("construction", "storage2");
@@ -75,6 +80,8 @@ test("storage gates prevent impossible payments and old unlocks remain valid", (
 });
 test("late research requires actual buildings, not only storage and land flags", () => {
   const s = fresh();
+  s.assetProgression = 1;
+  s.buildings[0].upgrades = { storage: 10 };
   const target = research.find((r) => r.id === "pumpkin10")!;
   s.unlocks = [...ancestors(target.id)];
   s.resources = { ...target.materials };

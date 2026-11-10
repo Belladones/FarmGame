@@ -1,10 +1,11 @@
 import type { Inventory, Research } from "./catalog";
 /** User workbook amélioration.xlsx; explicit values override the former progression.
- * Blank tiers continue doubling yields and multiplying research costs by five.
+ * Blank tiers continue doubling yields and multiplying research costs by four.
  */
-export const storageCapacities = [
-  200, 400, 2000, 10000, 50000, 250000, 1250000, 6250000, 31250000, 156250000,
-];
+export const storageCapacities = Array.from(
+  { length: 10 },
+  (_, i) => 200 * 4 ** i,
+);
 export function balanceResearch(original: Research[]): Research[] {
   const entries = new Map(original.map((r) => [r.id, { ...r }]));
   const set = (
@@ -194,10 +195,10 @@ export function balanceResearch(original: Research[]): Research[] {
       set(
         base + n,
         `${name} · niveau ${n}`,
-        { [item]: first * 5 ** (n - 2) },
+        { [item]: first * 4 ** (n - 2) },
         [previous, prereq],
         A,
-        `Rendement ×${2 ** (n - 1)} par rapport au niveau 1 : ${baseYield * 2 ** (n - 1)} unités par récolte. Appliqué aux nouvelles pousses / plantations.`,
+        `Production ${100 * 2 ** (n - 2)} % → ${100 * 2 ** (n - 1)} %. Rendement ×${2 ** (n - 1)} par rapport au niveau 1 : ${baseYield * 2 ** (n - 1)} unités par récolte. Appliqué aux nouvelles pousses / plantations.`,
       );
     }
   }
@@ -253,7 +254,7 @@ export function balanceResearch(original: Research[]): Research[] {
       [n === 2 ? "construction" : "storage" + (n - 1)],
       T,
       `${storageCapacities[n - 1].toLocaleString("fr-FR")} unités par dépôt. Coût en or, distinct des ressources stockées.`,
-      500 * 5 ** (n - 2),
+      500 * 4 ** (n - 2),
     );
   // Continue the unchanged industry after the newly specified agriculture chain.
   for (const id of [
@@ -295,10 +296,40 @@ export function balanceResearch(original: Research[]): Research[] {
     set(
       "reservoir" + n,
       `Puits et citernes · niveau ${n}`,
-      { Wood: 500 * 5 ** (n - 2), Carrot: 200 * 5 ** (n - 2) },
+      { Wood: 500 * 4 ** (n - 2), Carrot: 200 * 5 ** (n - 2) },
       ["reservoir" + (n - 1)],
       T,
       `Capacité des puits et citernes ×${3 * 2 ** (n - 2)} ; débit des puits inchangé (1 eau/s). L’eau passive de l’arbre Agriculture est indépendante.`,
     );
+  set(
+    "workshop",
+    "Robotique et atelier",
+    { Wood: 20 },
+    ["construction"],
+    T,
+    "Débloque l’atelier (500 or), l’installation individuelle d’équipements et la réparation des robots.",
+  );
+  set(
+    "handling",
+    "Manutention",
+    { Wood: 100, Carrot: 50 },
+    ["workshop"],
+    T,
+    "Débloque les équipements de transfert, à acheter séparément sur chaque robot.",
+  );
+  for (const id of ["hold", "motor", "tools", "tank"]) {
+    const e = entries.get(id)!;
+    e.prerequisites = [...new Set([...e.prerequisites, "workshop"])];
+    e.detail =
+      "Débloque cet équipement dans la fiche de chaque robot. L’installation et ses niveaux sont payés individuellement à l’atelier.";
+  }
+  for (const [id, name, price] of [
+    ["milling", "moulin", 500],
+    ["bakery", "four", 1000],
+    ["sawmill", "scierie", 750],
+    ["composting", "composteur", 750],
+  ] as const)
+    entries.get(id)!.detail =
+      `Débloque le ${name} au magasin (${price} or). Les améliorations de débit sont propres à chaque bâtiment.`;
   return [...entries.values()];
 }

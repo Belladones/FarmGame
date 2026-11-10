@@ -34,23 +34,12 @@ const assert = require("node:assert/strict");
     assert.equal(await p.locator(".fleet-card").count(), 0);
     await p.getByLabel("Rechercher un robot").fill("");
     await p.screenshot({ path: "/tmp/farm-fleet.png" });
-    await p
-      .getByRole("button", { name: "Arbre de compétences", exact: true })
-      .click();
-    assert.equal(await p.locator(".skill-tabs button").count(), 5);
-    for (const name of [
-      "Motorisation",
-      "Outils et eau",
-      "Capteurs et flotte",
-      "Dépôts",
-      "Soutes",
-    ]) {
-      await p
-        .locator(".skill-tabs")
-        .getByRole("button", { name: new RegExp(name) })
-        .click();
-      assert.ok((await p.locator(".skill-node").count()) > 0);
-    }
+    await p.getByRole("button", { name: "Équipement", exact: true }).click();
+    assert.ok((await p.locator(".asset-upgrade-grid article").count()) > 0);
+    assert.equal(
+      await p.getByLabel("Robot à équiper", { exact: true }).inputValue(),
+      "f1",
+    );
     await p.screenshot({ path: "/tmp/farm-fleet-upgrades.png" });
     await p.getByRole("button", { name: "Mes robots", exact: true }).click();
     await p.setViewportSize({ width: 390, height: 844 });
@@ -79,23 +68,13 @@ const assert = require("node:assert/strict");
     }, fixture);
     await p.reload();
     await p.getByRole("button", { name: "Robots", exact: true }).click();
-    await p
-      .getByRole("button", { name: "Arbre de compétences", exact: true })
-      .click();
-    await p
-      .getByRole("button", { name: /^Soute · 0 \/ 3 · 80/, exact: true })
-      .click();
-    await p
-      .getByRole("button", {
-        name: /^Rechercher · 80/,
-        exact: true,
-      })
-      .click();
-    await p.getByRole("button", { name: "Mes robots", exact: true }).click();
-    assert.match(await p.locator(".fleet-stats").innerText(), /20/);
+    await p.getByRole("button", { name: "Équiper f1", exact: true }).click();
+    const gear = p.getByRole("region", { name: "Équipement f1", exact: true });
+    assert.equal(await gear.locator('[data-upgrade="hold"]').count(), 1);
+    assert.match(await gear.innerText(), /atelier/);
     assert.deepEqual(errors, []);
     console.log(
-      "Fleet: garage, deployment, save, filters, five skill pages and mobile passed",
+      "Fleet: garage, deployment, save, filters, individual equipment and mobile passed",
     );
   } finally {
     await browser.close();

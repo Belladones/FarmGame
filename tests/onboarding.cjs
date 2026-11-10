@@ -87,7 +87,7 @@ const { chromium } = require("playwright"),
             resource
           ] ?? 0) >= target,
         [resource, target],
-        { timeout: 120000 },
+        { timeout: 240000 },
       );
       await stop();
       console.log(`Produced ${target} ${resource}.`);
@@ -123,10 +123,67 @@ const { chromium } = require("playwright"),
       "harvest(); deposit(); }";
     await produce("Wood", 20, woodWithoutSensor);
     await claim();
+    await produce("Wood", 70, woodWithoutSensor);
+    await research("construction", "20 bois", "Technologie");
+    await research("workshop", "20 bois", "Technologie");
+    await produce("Hay", 50, hayCode);
+    await research("land", "50 foins + 30 bois", "Technologie");
+    const sellHay = async () => {
+      await p.getByRole("button", { name: "Magasin", exact: true }).click();
+      const row = p
+        .locator(".sale-row")
+        .filter({ has: p.getByLabel("Quantité de Foin", { exact: true }) });
+      await row.getByRole("button", { name: "Tout", exact: true }).click();
+      await row.getByRole("button", { name: /^Vendre ·/ }).click();
+      await close();
+    };
+    for (const amount of [150, 150, 150, 50]) {
+      await produce("Hay", amount, hayCode);
+      await sellHay();
+    }
+    await p.getByRole("button", { name: "Magasin", exact: true }).click();
+    await p.getByRole("button", { name: "Bâtiments", exact: true }).click();
+    await p
+      .getByRole("button", { name: "Acheter Atelier · 500 or", exact: true })
+      .click();
+    const workshop = (await read()).storedBuildings.find(
+      (b) => b.kind === "Workshop",
+    ).id;
+    await close();
+    await p.getByRole("button", { name: "Inventaire", exact: true }).click();
+    await p
+      .getByRole("button", { name: "Placer " + workshop, exact: true })
+      .click();
+    await p.locator('[data-cell="0,-1"]').click();
+    await p
+      .getByRole("button", { name: "Poser un terrain en béton", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "Poser " + workshop + " ici", exact: true })
+      .click();
+    await p
+      .getByRole("button", { name: "Reprendre la simulation", exact: true })
+      .click();
+    await close();
+    await claim();
+    console.log(
+      "Workshop researched, earned through hay sales, purchased and physically installed.",
+    );
+    await produce("Wood", 20, woodWithoutSensor);
+
     await produce("Hay", 150, hayCode);
     await research("conditions", "150 foins + 10 bois", "Programmation");
     await produce("Hay", 50, hayCode);
     await research("sensor", "50 foins + 10 bois", "Technologie");
+    await produce("Wood", 10, woodWithoutSensor);
+    await produce("Hay", 50, hayCode);
+    await p.getByRole("button", { name: "Robots", exact: true }).click();
+    await p.getByRole("button", { name: "Équiper f1", exact: true }).click();
+    await p
+      .getByRole("region", { name: "Équipement f1", exact: true })
+      .locator('[data-upgrade="sensor"] button')
+      .click();
+    await close();
     await claim();
     console.log(
       "Real wood production funds Conditions and the maturity sensor without wheat.",

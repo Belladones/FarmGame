@@ -210,7 +210,7 @@ export const missions: Mission[] = [
     researched("hold"),
     100,
     75,
-    "La capacité double pour les modèles compatibles. Le stockage des dépôts reste indépendant. Produisez et déposez le bois nécessaire.",
+    "Recherchez Soute pour débloquer l’équipement, puis installez le niveau 2 sur un robot à l’atelier : 100 bois + 50 foins. Seul ce robot gagne de la capacité.",
     "Robots",
     "Améliorer les soutes",
   ),
@@ -289,7 +289,7 @@ export const missions: Mission[] = [
     (s) => s.buildings.filter((b) => b.kind === "Mill").length,
     300,
     100,
-    "Recherchez Meunerie puis achetez un moulin (300 or). Prévoyez une case voisine accessible pour livrer le blé et collecter la farine.",
+    "Recherchez Meunerie puis achetez un moulin (500 or). Prévoyez une case voisine accessible pour livrer le blé et collecter la farine.",
     "Magasin",
     "Construire un moulin",
     "deliver(Direction.East, Resources.Wheat, 5);\n// Attendre un cycle du moulin voisin.\ncollect(Direction.East, Resources.Flour, 1);",
@@ -433,9 +433,27 @@ const modernMissions: Mission[] = [
       "deposit();\n".repeat(10) +
       "harvest();\ndeposit();",
   },
+  milestone(
+    "workshop-first",
+    1,
+    "Un atelier pour progresser",
+    "Construisez votre premier atelier.",
+    1,
+    (s) => s.buildings.filter((b) => b.kind === "Workshop").length,
+    0,
+    50,
+    "Recherchez Construction (20 bois), Robotique et atelier (20 bois), puis un terrain constructible. Vendez du foin pour acheter l’atelier à 500 or et posez-le depuis l’inventaire.",
+    "Magasin",
+    "Construire l’atelier",
+  ),
   {
     ...missions.find((m) => m.id === "observe")!,
-    hint: "Conditions et opérateurs : 150 foins + 10 bois. can_harvest() : 50 foins + 10 bois, après les conditions et plant(). Le capteur évite de détruire les plantes immatures.",
+    progress: (s) =>
+      Number(s.unlocks.includes("conditions")) +
+      Number(
+        s.robots.some((r) => !r.destroyed && (r.equipment?.sensor ?? 0) > 0),
+      ),
+    hint: "Conditions et opérateurs : 150 foins + 10 bois. can_harvest() : 50 foins + 10 bois, après les conditions et plant(). Puis installez le capteur sur votre fermier dans Robots → Équipement (50 foins + 10 bois), avec un atelier construit. Le capteur évite les récoltes immatures.",
   },
   {
     ...missions.find((m) => m.id === "soil")!,
@@ -449,7 +467,7 @@ const modernMissions: Mission[] = [
   },
   {
     ...missions.find((m) => m.id === "coordinates")!,
-    hint: "Coordonnées : 50 bois + 50 carottes, après Carottes, can_harvest() et move(). Variables : 100 bois + 150 carottes. Stockage 2 (500 or, 400 unités) permet de réunir ce coût.",
+    hint: "Coordonnées : 50 bois + 50 carottes, après Carottes, can_harvest() et move(). Variables : 100 bois + 150 carottes. Stockage du dépôt 2 (500 or, 800 unités) permet de réunir ce coût.",
   },
   {
     ...missions.find((m) => m.id === "hundred")!,
@@ -471,7 +489,30 @@ const modernMissions: Mission[] = [
     if (id === "construction")
       return {
         ...m,
-        hint: "Construction coûte 20 bois. Stockage 2 coûte 500 or et porte chaque dépôt à 400 unités. Les terrains constructibles accueillent les bâtiments.",
+        text: "Débloquez Construction, améliorez un dépôt et obtenez un deuxième terrain constructible.",
+        progress: (s: Farm) =>
+          Number(s.unlocks.includes("construction")) +
+          Number(
+            s.buildings.some(
+              (b) => b.kind === "Depot" && (b.upgrades?.storage ?? 1) >= 2,
+            ),
+          ) +
+          Number(s.unlocks.includes("land")),
+        hint: "Construction coûte 20 bois. Le niveau 2 du dépôt coûte 500 or et porte ce dépôt à 800 unités. Les terrains constructibles accueillent les bâtiments.",
+      };
+    if (id === "hold-upgrade")
+      return {
+        ...m,
+        progress: (s: Farm) =>
+          Number(s.robots.some((r) => (r.equipment?.hold ?? 1) >= 2)),
+      };
+    if (id === "motor-upgrade")
+      return {
+        ...m,
+        progress: (s: Farm) =>
+          Number(s.robots.some((r) => (r.equipment?.motor ?? 1) >= 2)) +
+          Number(s.robots.some((r) => (r.equipment?.tools ?? 1) >= 2)),
+        hint: "Débloquez les familles d’équipements, puis améliorez le moteur et les outils du fermier dans Robots → Équipement. Les coûts et effets sont propres à chaque unité.",
       };
     if (id === "fleet-license")
       return {
@@ -491,7 +532,14 @@ const modernMissions: Mission[] = [
     if (id === "logistics")
       return {
         ...m,
-        hint: "Stockage 3 (2 000 unités) s’achète avec de l’or après Stockage 2. La recherche Transporteur prépare un robot à 500 or, réservé à la logistique.",
+        text: "Améliorez un dépôt au niveau 3 puis recherchez Transporteur.",
+        progress: (s: Farm) =>
+          Number(
+            s.buildings.some(
+              (b) => b.kind === "Depot" && (b.upgrades?.storage ?? 1) >= 3,
+            ),
+          ) + Number(s.unlocks.includes("transporter")),
+        hint: "Stockage du dépôt 3 (3 200 unités) s’achète avec de l’or après Stockage 2. La recherche Transporteur prépare un robot à 500 or, réservé à la logistique.",
       };
     if (id === "thousand")
       return {
@@ -503,8 +551,17 @@ const modernMissions: Mission[] = [
     return m;
   }),
 ];
+const legacyAssetMissions = missions.map((m) =>
+  ["hold-upgrade", "construction", "motor-upgrade", "logistics"].includes(m.id)
+    ? modernMissions.find((next) => next.id === m.id)!
+    : m,
+);
 export const missionsFor = (s: Farm): Mission[] =>
-  s.progressionVersion === 2 ? modernMissions : missions;
+  s.progressionVersion === 2
+    ? modernMissions
+    : s.assetProgression === 1
+      ? legacyAssetMissions
+      : missions;
 export const currentMission = (s: Farm) =>
   missionsFor(s).find((m) => !s.claimed.includes(m.id));
 export const completedMissions = (s: Farm) =>

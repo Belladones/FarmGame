@@ -14,10 +14,11 @@ import {
   type RobotRuntime,
 } from "./fleet";
 import { ProductArt } from "./Shop";
-import { SkillTree } from "./SkillTree";
+import { AssetUpgradesPanel } from "./AssetUpgradesPanel";
 export type FleetAction =
   | { type: "deploy" | "recall" | "select" | "stop" | "repair"; id: string }
   | { type: "buy"; id: string }
+  | { type: "upgrade"; id: string; upgrade: string }
   | { type: "shop" };
 export function FleetPanel({
   farm,
@@ -35,7 +36,8 @@ export function FleetPanel({
   const [tab, setTab] = useState<"robots" | "skills">("robots"),
     [filter, setFilter] = useState("all"),
     [search, setSearch] = useState(""),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useState(""),
+    [equippedRobot, setEquippedRobot] = useState(farm.activeRobotId);
   const living = farm.robots.filter((r) => !r.destroyed),
     deployed = living.filter((r) => r.deployed),
     garage = living.filter((r) => !r.deployed),
@@ -69,7 +71,7 @@ export function FleetPanel({
           className={tab === "skills" ? "selected" : ""}
           onClick={() => setTab("skills")}
         >
-          Arbre de compétences
+          Équipement
         </button>
         <button
           className="fleet-shop-link"
@@ -80,11 +82,35 @@ export function FleetPanel({
       </nav>
       {tab === "skills" ? (
         <div className="fleet-skill-view">
-          <SkillTree
+          <label>
+            Robot à équiper
+            <select
+              aria-label="Robot à équiper"
+              value={equippedRobot}
+              onChange={(e) => setEquippedRobot(e.target.value)}
+            >
+              {farm.robots
+                .filter((r) => !r.destroyed && !r.loan)
+                .map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.id} · {models[r.model].name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <button onClick={() => onAction({ type: "stop", id: equippedRobot })}>
+            Arrêter ce robot
+          </button>
+          <AssetUpgradesPanel
             farm={farm}
-            focus="robots"
-            onBuy={(id) => onAction({ type: "buy", id })}
-            onSell={() => onAction({ type: "shop" })}
+            kind="robot"
+            id={equippedRobot}
+            onUpgrade={(upgrade) =>
+              act(
+                { type: "upgrade", id: equippedRobot, upgrade },
+                "Équipement installé sur ce robot.",
+              )
+            }
           />
         </div>
       ) : (
@@ -285,6 +311,14 @@ export function FleetPanel({
                     ))}
                   </div>
                   {r.lastError && <p className="robot-error">{r.lastError}</p>}
+                  <button
+                    onClick={() => {
+                      setEquippedRobot(r.id);
+                      setTab("skills");
+                    }}
+                  >
+                    Équiper {r.id}
+                  </button>
                   <div className="fleet-card-actions">
                     {r.destroyed ? (
                       <button
