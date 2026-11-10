@@ -36,7 +36,7 @@ export function balanceResearch(original: Research[]): Research[] {
     { Hay: 5 },
     [],
     P,
-    "Débloque les boucles while, for et les booléens true / false en TypeScript. Arrêter termine le programme sans figer le jeu.",
+    "Débloque les boucles while et les booléens true / false en TypeScript. Arrêter termine le programme sans figer le jeu.",
   );
   set(
     "speed",
@@ -93,6 +93,38 @@ export function balanceResearch(original: Research[]): Research[] {
     ["variables", "conditions"],
     P,
     "Organisez le programme avec function et des paramètres typés. Les fonctions nommées restent disponibles pour expérimenter.",
+  );
+  set(
+    "for",
+    "Boucle for",
+    { Hay: 100, Wood: 25 },
+    ["loops", "conditions"],
+    P,
+    "Répétez un nombre précis de fois : for (let i = 0; i < 3; i++) { harvest(); deposit(); }. Étape d’apprentissage ; la syntaxe reste disponible pour conserver les programmes existants.",
+  );
+  set(
+    "lists",
+    "Les listes",
+    { Wood: 150, Carrot: 100 },
+    ["variables", "for"],
+    P,
+    "Tableaux TypeScript : const cultures = [Entities.Bush, Entities.Carrot]; accès cultures[0], longueur cultures.length et parcours for...of. Étape d’apprentissage ; la syntaxe reste disponible.",
+  );
+  set(
+    "dictionaries",
+    "Les dictionnaires",
+    { Wood: 300, Carrot: 200 },
+    ["lists"],
+    P,
+    'Associez des clés à des valeurs : const stock: Record<string, number> = { Hay: 10, Wood: 5 }; stock["Hay"]. Étape d’apprentissage ; les objets restent disponibles.',
+  );
+  set(
+    "imports",
+    "Imports de fonctions",
+    { Wood: 1000, Carrot: 1500 },
+    ["functions", "dictionaries"],
+    P,
+    'Partagez des fonctions entre fichiers de robots : export function recolter() { harvest(); } dans f2.ts, puis import { recolter } from "./f2"; dans f1.ts. Les instructions au niveau principal du fichier importé s’exécutent une fois au premier import, avec le robot appelant.',
   );
   set(
     "sensor",

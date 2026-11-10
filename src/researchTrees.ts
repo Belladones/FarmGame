@@ -95,7 +95,15 @@ export function buildGroupedTree(
       detail: first.detail,
       cost: formatResearchCost(first),
       symbol:
-        nodeId === "extension"
+        (
+          {
+            for: "for",
+            lists: "[ ]",
+            dictionaries: "{ clé: valeur }",
+            imports: "import",
+          } as Record<string, string>
+        )[nodeId] ??
+        (nodeId === "extension"
           ? "▦"
           : nodeId.startsWith("storage")
             ? "▣"
@@ -107,7 +115,7 @@ export function buildGroupedTree(
                   ? "function"
                   : nodeId === "variables"
                     ? "const / let"
-                    : "⬡",
+                    : "⬡"),
       art:
         nodeId === "grass-base"
           ? "hay"

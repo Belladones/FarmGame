@@ -99,6 +99,9 @@ monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
 monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   target: monaco.languages.typescript.ScriptTarget.ES2020,
   strict: true,
+  module: monaco.languages.typescript.ModuleKind.ESNext,
+  moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+  allowImportingTsExtensions: true,
   // Separate scripts may reuse variable names without sharing a TypeScript scope.
   moduleDetection: 3,
   noEmit: true,
@@ -506,6 +509,20 @@ function App() {
       return;
     }
     const source = r.code;
+    const files = Object.fromEntries(
+      farm.current.robots.map((robot) => [robot.id, robot.code]),
+    );
+    // Keep all local robot files available to TypeScript, including garage robots.
+    for (const robot of farm.current.robots) {
+      const fileUri = monaco.Uri.parse(
+        `file:///robots/${encodeURIComponent(robot.id)}.ts`,
+      );
+      const existing = monaco.editor.getModel(fileUri);
+      if (!existing)
+        monaco.editor.createModel(robot.code, "typescript", fileUri);
+      else if (existing.getValue() !== robot.code)
+        existing.setValue(robot.code);
+    }
     delete r.lastError;
     const uri = monaco.Uri.parse(`file:///robots/${encodeURIComponent(id)}.ts`);
     const model =
@@ -516,33 +533,49 @@ function App() {
         const getClient =
             await monaco.languages.typescript.getTypeScriptWorker(),
           client = await getClient(model.uri);
-        const diagnostics = [
-          ...(await client.getSyntacticDiagnostics(model.uri.toString())),
-          ...(await client.getSemanticDiagnostics(model.uri.toString())),
-        ];
+        const { programDependencies } = await import("./programModules");
+        const checkedFiles = programDependencies(id, files);
+        const diagnostics: {
+          diagnostic: monaco.languages.typescript.Diagnostic;
+          fileModel: monaco.editor.ITextModel;
+          file: string;
+        }[] = [];
+        for (const file of checkedFiles) {
+          const fileModel = monaco.editor.getModel(
+            monaco.Uri.parse(`file:///robots/${encodeURIComponent(file)}.ts`),
+          )!;
+          for (const diagnostic of [
+            ...(await client.getSyntacticDiagnostics(fileModel.uri.toString())),
+            ...(await client.getSemanticDiagnostics(fileModel.uri.toString())),
+          ])
+            diagnostics.push({ diagnostic, fileModel, file });
+        }
         if (generations.current.get(id) !== generation) return;
         if (r.code !== source) {
           stop(id);
           return;
         }
         if (diagnostics.length) {
-          const d = diagnostics[0],
-            pos = model.getPositionAt(d.start ?? 0),
+          const { diagnostic: d, fileModel, file } = diagnostics[0],
+            pos = fileModel.getPositionAt(d.start ?? 0),
             message =
               typeof d.messageText === "string"
                 ? d.messageText
                 : d.messageText.messageText;
-          r.lastError = `Erreur TypeScript, ligne ${pos.lineNumber} : ${message}`;
+          r.lastError = `Erreur TypeScript (${file}.ts), ligne ${pos.lineNumber} : ${message}`;
           log(`[${id}] ${r.lastError}`);
           notify(`[${id}] ${r.lastError}`, true);
           stop(id);
           return;
         }
-      } catch {
+      } catch (error) {
         if (generations.current.get(id) === generation) {
-          log(
-            `[${id}] Le service TypeScript n’est pas prêt. Réessayez dans un instant.`,
-          );
+          r.lastError =
+            error instanceof Error
+              ? error.message
+              : "Le service TypeScript n’est pas prêt. Réessayez dans un instant.";
+          log(`[${id}] ${r.lastError}`);
+          notify(`[${id}] ${r.lastError}`, true);
           stop(id);
         }
         return;
@@ -583,6 +616,9 @@ function App() {
     w.postMessage({
       type: "run",
       code: source,
+      entry: id,
+      files,
+      imports: farm.current.unlocks.includes("imports"),
       conditions: farm.current.unlocks.includes("conditions"),
       loops:
         farm.current.unlocks.includes("loops") ||

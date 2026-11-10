@@ -1,3 +1,4 @@
+import { bundlePrograms } from "./programModules";
 import { validateProgramProgression } from "./programProgression";
 import ts from "typescript";
 import { apiNames } from "./api";
@@ -21,18 +22,24 @@ self.onmessage = async ({ data }) => {
       self.postMessage({ type: "call", id, name, args });
     });
   try {
+    const bundled = bundlePrograms(
+      data.entry ?? "player",
+      data.files ?? { player: data.code },
+      !!data.imports,
+      (source) =>
+        validateProgramProgression(source, {
+          loops: data.loops !== false,
+          conditions: !!data.conditions,
+        }),
+    );
     const source = ts.createSourceFile(
       "player.ts",
-      data.code,
+      bundled.code,
       ts.ScriptTarget.Latest,
       true,
       ts.ScriptKind.TS,
     );
-    const functions = new Set<string>();
-    validateProgramProgression(source, {
-      loops: data.loops !== false,
-      conditions: !!data.conditions,
-    });
+    const functions = new Set<string>(bundled.names);
     const collect = (n: ts.Node) => {
       if (ts.isFunctionDeclaration(n) && n.name) functions.add(n.name.text);
       ts.forEachChild(n, collect);
@@ -152,7 +159,7 @@ self.onmessage = async ({ data }) => {
         };
         return ts.visitNode(root, visit) as ts.SourceFile;
       };
-    const out = ts.transpileModule(data.code, {
+    const out = ts.transpileModule(bundled.code, {
       compilerOptions: {
         target: ts.ScriptTarget.ES2022,
         module: ts.ModuleKind.None,

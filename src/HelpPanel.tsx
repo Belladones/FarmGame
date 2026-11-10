@@ -165,7 +165,9 @@ export function HelpPanel({
         <p>
           Chaque robot possède son code. Les commandes du jeu sont attendues
           automatiquement : écrivez simplement plant(Entities.Bush). Les
-          callbacks, générateurs et imports ne sont pas encore pris en charge.
+          callbacks et générateurs ne sont pas encore pris en charge. Après la
+          recherche Imports de fonctions, les imports nommés entre fichiers de
+          robots sont disponibles.
         </p>
         <p>
           La ferme est sauvegardée sur cet appareil. Connectez-vous pour
@@ -174,6 +176,39 @@ export function HelpPanel({
           se relance manuellement après déploiement.
         </p>
         <p>Cliquez sur votre compte pour accéder aux sauvegardes.</p>
+      </details>
+      <details className="help-shortcuts">
+        <summary>For, listes, dictionnaires et imports</summary>
+        <p>
+          Les recherches Programmation expliquent ces outils TypeScript. Les
+          trois premières sont des étapes d’apprentissage et conservent les
+          syntaxes déjà disponibles.
+        </p>
+        <pre>{`for (let i = 0; i < 3; i++) { harvest(); deposit(); }
+const cultures = [Entities.Bush, Entities.Carrot];
+for (const culture of cultures) { plant(culture); }
+const stock: Record<string, number> = { Hay: 10, Wood: 5 };
+const foin = stock["Hay"];`}</pre>
+        <p>
+          Dans le fichier d’un autre robot, même au garage (par exemple f2.ts),
+          exportez une fonction. Dans f1.ts, importez-la. Les appels agissent
+          sur f1, sans lancer ni déplacer f2.
+        </p>
+        <pre>{`// f2.ts
+export function recolter() {
+  harvest();
+  deposit();
+}
+// f1.ts
+import { recolter } from "./f2";
+recolter();`}</pre>
+        <p>
+          Le fichier importé s’exécute une seule fois par lancement : gardez ses
+          actions dans des fonctions, sans boucle infinie au niveau principal.
+          Les imports sont locaux, nommés (alias possibles), sans paquet externe
+          ni import circulaire. Relancez le programme après une modification du
+          fichier partagé.
+        </p>
       </details>
       <details className="help-reset">
         <summary>Recommencer une partie</summary>
