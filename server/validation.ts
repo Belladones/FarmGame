@@ -94,6 +94,10 @@ export function validFarm(value: unknown): value is RecordValue {
       !record(c) ||
       typeof c.skin !== "string" ||
       typeof c.accessory !== "string" ||
+      (c.lens !== undefined &&
+        !["lens-red", "lens-cyan", "lens-violet", "lens-green"].includes(
+          c.lens as string,
+        )) ||
       !Array.isArray(c.unlocked) ||
       c.unlocked.length > 64 ||
       !c.unlocked.every((id) => typeof id === "string")

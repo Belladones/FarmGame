@@ -20,3 +20,11 @@ FARM_URL=http://localhost:5173 npm run assets:luma:previews
 ```
 
 Les identifiants de cosmétiques et les sauvegardes sont inchangés. Les portraits et le personnage affiché utilisent le même modèle. Le précédent modèle procédural sert de secours en cas d’erreur de chargement. Le modèle est purement décoratif : il n’est pas ajouté à la flotte agricole et ne bloque pas les commandes de l’interface.
+
+## Peinture, stickers et lentille
+
+Le shader `src/robotPaint.ts` remplace uniquement les pixels de peinture jaune. Les couleurs des pièces mécaniques, des inscriptions et les cartes de relief sont préservées. La lentille utilise un masque de sa zone dans l’atlas : le changement de couleur concerne sa surface et sa lumière, sans recolorer les autres voyants rouges.
+
+`src/robotStickers.ts` projette de vrais décalques sur les panneaux de la tête avec `DecalGeometry`. Ils restent collés à leur support et accompagnent le mouvement de tête ; les anciens objets ruban, fleur et halo ne sont plus affichés. Les trois choix se cumulent : peinture, sticker et lentille. Les 64 portraits utilisent les mêmes shaders et les mêmes décalques que le personnage.
+
+Les identifiants historiques sont conservés pour préserver les déblocages : `pearl` correspond à Jaune, `rose` à Rose, `mint` à Rouge et `cosmic` à Noir ; `ribbon`, `flower`, `halo` correspondent aux stickers Étoile, Fleur et Circuit. Les seuils de missions restent inchangés. Une ancienne sauvegarde sans champ `lens` reçoit la lentille rouge d’origine. Les couleurs de lentille cyan/violet/vert se débloquent à 1/3/5 missions récompensées, indépendamment de la coque et du sticker.

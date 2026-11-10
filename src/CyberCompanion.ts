@@ -1,3 +1,5 @@
+import { robotPaint } from "./robotPaint";
+import { createRobotStickers } from "./robotStickers";
 import {
   companionLife,
   restMotion,
@@ -42,29 +44,20 @@ export function createCyberCompanion(
   );
   const head = asset.getObjectByName("LumaHeadJoint");
   const glowLevels = new Map<THREE.MeshStandardMaterial, number>();
-  const originals = new Map<THREE.MeshStandardMaterial, THREE.Color>();
+  const paints = new Map<
+    THREE.MeshStandardMaterial,
+    ReturnType<typeof robotPaint>
+  >();
   asset.traverse((o) => {
     if (o instanceof THREE.Mesh) {
       o.name ||= "Luma.cyber.mesh";
       for (const m of Array.isArray(o.material) ? o.material : [o.material])
         if (m instanceof THREE.MeshStandardMaterial) {
-          originals.set(m, m.color.clone());
+          if (!paints.has(m)) paints.set(m, robotPaint(m));
           glowLevels.set(m, m.emissiveIntensity);
         }
     }
   });
-  const accent = new THREE.MeshStandardMaterial({
-      color: 0xa68aff,
-      emissive: 0x665590,
-      emissiveIntensity: 0.3,
-      roughness: 0.4,
-    }),
-    white = new THREE.MeshStandardMaterial({ color: 0xf2f0ff, roughness: 0.4 }),
-    gold = new THREE.MeshStandardMaterial({
-      color: 0xf4c664,
-      emissive: 0xd99430,
-      emissiveIntensity: 0.2,
-    });
   const headAccessories = new THREE.Group();
   body.add(headAccessories);
   if (head) {
@@ -73,47 +66,14 @@ export function createCyberCompanion(
       body.worldToLocal(head.getWorldPosition(new THREE.Vector3())),
     );
   }
-  const accessories = new Map<string, THREE.Object3D>();
-  const ribbon = new THREE.Group();
-  ribbon.position.set(-0.22, 1.01, 0.26);
-  headAccessories.add(ribbon);
-  ribbon.position.sub(headAccessories.position);
-  for (const side of [-1, 1]) {
-    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), white);
-    petal.scale.set(0.65, 1.5, 0.3);
-    petal.position.x = side * 0.03;
-    petal.rotation.z = -side * 0.65;
-    ribbon.add(petal);
-  }
-  accessories.set("ribbon", ribbon);
-  const flower = new THREE.Group();
-  flower.position.set(0.24, 0.96, 0.26);
-  headAccessories.add(flower);
-  flower.position.sub(headAccessories.position);
-  for (let i = 0; i < 5; i++) {
-    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 8), gold),
-      a = (i * Math.PI * 2) / 5;
-    petal.position.set(Math.cos(a) * 0.025, Math.sin(a) * 0.025, 0);
-    petal.scale.z = 0.3;
-    flower.add(petal);
-  }
-  accessories.set("flower", flower);
-  const halo = new THREE.Mesh(
-    new THREE.TorusGeometry(0.26, 0.008, 8, 32),
-    accent,
-  );
-  halo.position.y = 1.09;
-  halo.rotation.x = Math.PI / 2;
-  body.add(halo);
-  accessories.set("halo", halo);
+  const accessories = createRobotStickers(head, headAccessories);
   const mixer = new THREE.AnimationMixer(asset),
     clip =
       gltf.animations.find((c) => /idle|hover|float/i.test(c.name)) ??
       gltf.animations[0];
   if (clip) mixer.clipAction(clip).play();
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let time = 0,
-    lastSkin = "";
+  let time = 0;
   body.position.y = 0.29;
   function update(
     dt: number,
@@ -121,16 +81,17 @@ export function createCyberCompanion(
     camera: THREE.Vector3,
     motion: CompanionMotion = restMotion,
   ) {
-    if (appearance.skin !== lastSkin) {
-      const palette = cosmetics.find(
-          (c) => c.kind === "skin" && c.id === appearance.skin,
-        ),
-        tint = new THREE.Color(0xffffff);
-      if (appearance.skin !== "pearl" && palette && "color" in palette)
-        tint.lerp(new THREE.Color(palette.color), 0.32);
-      for (const [m, base] of originals) m.color.copy(base).multiply(tint);
-      if (palette && "accent" in palette) accent.color.set(palette.accent);
-      lastSkin = appearance.skin;
+    const skin = cosmetics.find(
+      (c) => c.kind === "skin" && c.id === appearance.skin,
+    );
+    const lens = cosmetics.find(
+      (c) => c.kind === "lens" && c.id === appearance.lens,
+    );
+    for (const uniforms of paints.values()) {
+      uniforms.lumaPaintEnabled.value = appearance.skin === "pearl" ? 0 : 1;
+      if (skin && "color" in skin) uniforms.lumaPaint.value.set(skin.color);
+      uniforms.lumaLensEnabled.value = lens && lens.id !== "lens-red" ? 1 : 0;
+      if (lens && "color" in lens) uniforms.lumaLens.value.set(lens.color);
     }
     for (const [id, o] of accessories) o.visible = id === appearance.accessory;
     const delta = Math.max(0, Math.min(dt, 0.1));

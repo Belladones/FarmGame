@@ -293,16 +293,16 @@ export function createCompanion() {
       const c = cosmetics.find(
         (c) => c.kind === "skin" && c.id === appearance.skin,
       );
-      if (c && "color" in c) {
+      if (c && "color" in c && "accent" in c) {
         shell.color.set(c.color);
         accent.color.set(c.accent);
         accent.emissive.set(c.accent);
       }
       lastSkin = appearance.skin;
     }
-    ribbon.visible = appearance.accessory === "ribbon";
-    flower.visible = appearance.accessory === "flower";
-    halo.visible = appearance.accessory === "halo";
+    ribbon.visible = false;
+    flower.visible = false;
+    halo.visible = false;
     if (!reduced.matches) time += dt;
     const expression = companionExpression(time, reduced.matches);
     if (!reduced.matches || dt === 0) body.position.y = expression.height;

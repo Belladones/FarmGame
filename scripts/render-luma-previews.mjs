@@ -10,6 +10,11 @@ try {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1000 },
   });
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
   await page.route("**/luma-preview.html", (route) =>
     route.fulfill({
       contentType: "text/html",
@@ -43,24 +48,32 @@ try {
       zIndex: 1000,
     });
     document.body.appendChild(renderer.domElement);
-    window.renderLumaPreview = (skin, accessory) => {
-      model.update(0, { skin, accessory, unlocked: [] }, camera.position);
+    window.renderLumaPreview = (skin, accessory, lens) => {
+      model.update(0, { skin, accessory, lens, unlocked: [] }, camera.position);
       renderer.render(scene, camera);
     };
   });
   for (const skin of ["pearl", "rose", "mint", "cosmic"])
-    for (const accessory of ["none", "ribbon", "flower", "halo"]) {
-      await page.evaluate(
-        ({ skin, accessory }) => window.renderLumaPreview(skin, accessory),
-        { skin, accessory },
-      );
-      await page.locator("#luma-preview").screenshot({
-        path: `${directory}/${skin}-${accessory}.png`,
-        omitBackground: true,
-      });
-    }
+    for (const accessory of ["none", "ribbon", "flower", "halo"])
+      for (const lens of [
+        "lens-red",
+        "lens-cyan",
+        "lens-violet",
+        "lens-green",
+      ]) {
+        await page.evaluate(
+          ({ skin, accessory, lens }) =>
+            window.renderLumaPreview(skin, accessory, lens),
+          { skin, accessory, lens },
+        );
+        await page.locator("#luma-preview").screenshot({
+          path: `${directory}/${skin}-${accessory}-${lens}.png`,
+          omitBackground: true,
+        });
+      }
+  if (errors.length) throw new Error(errors.join("\n"));
   console.log(
-    "Rendered 16 cosmetic previews from the supplied utility robot mesh.",
+    "Rendered 64 cosmetic previews from the supplied utility robot mesh.",
   );
 } finally {
   await browser.close();

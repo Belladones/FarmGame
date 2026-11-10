@@ -59,7 +59,10 @@ test("imported Luma is normalized without rewriting source geometry, UVs or tran
       { ...freshCompanion(), skin: "rose" },
       new THREE.Vector3(0, 1.2, 6),
     );
-    assert.ok(!material.color.equals(originalColor));
+    assert.ok(
+      material.color.equals(originalColor),
+      "paint shader must preserve source material and textures",
+    );
     assert.equal(material.map, texture);
     controller.update(0.1, freshCompanion(), new THREE.Vector3(0, 1.2, 6));
     assert.ok(material.color.equals(originalColor));

@@ -4,77 +4,111 @@ export const cosmetics = [
   {
     id: "pearl",
     kind: "skin",
-    name: "Perle",
+    name: "Jaune",
     missions: 0,
-    color: "#d7e7e8",
+    color: "#d9ad38",
     accent: "#bc86ed",
-    description: "Coque nacrée et lumière lilas.",
+    description: "La peinture jaune du modèle original.",
   },
   {
     id: "rose",
     kind: "skin",
-    name: "Rosée",
+    name: "Rose",
     missions: 1,
-    color: "#f2bfd4",
+    color: "#ed87b1",
     accent: "#ed79b0",
-    description: "Une touche de rose au jardin.",
+    description: "Peinture rose, détails mécaniques et inscriptions préservés.",
   },
   {
     id: "mint",
     kind: "skin",
-    name: "Menthe",
+    name: "Rouge",
     missions: 3,
-    color: "#bce5dd",
+    color: "#c82d37",
     accent: "#49dfd1",
-    description: "Reflets turquoise et coque menthe.",
+    description: "Peinture rouge sur les panneaux de la coque.",
   },
   {
     id: "cosmic",
     kind: "skin",
-    name: "Nébuleuse",
+    name: "Noir",
     missions: 6,
-    color: "#424868",
+    color: "#252932",
     accent: "#b69bff",
-    description: "Une tenue pour les nuits étoilées.",
+    description: "Coque noire avec ses reliefs et marquages conservés.",
   },
   {
     id: "none",
     kind: "accessory",
-    name: "Sans accessoire",
+    name: "Sans sticker",
     missions: 0,
     description: "La silhouette originale.",
   },
   {
     id: "ribbon",
     kind: "accessory",
-    name: "Ruban",
+    name: "Étoile",
     missions: 0,
-    description: "Un petit nœud pastel.",
+    description: "Un autocollant étoilé sur la coque.",
   },
   {
     id: "flower",
     kind: "accessory",
-    name: "Fleur solaire",
+    name: "Fleur",
     missions: 2,
-    description: "Une fleur portée près de l’écran.",
+    description: "Un sticker floral collé sur la tête.",
   },
   {
     id: "halo",
     kind: "accessory",
-    name: "Halo orbital",
+    name: "Circuit",
     missions: 5,
-    description: "Un anneau lumineux en suspension.",
+    description: "Un motif de circuit électronique sur la coque.",
+  },
+  {
+    id: "lens-red",
+    kind: "lens",
+    name: "Rouge d’origine",
+    missions: 0,
+    color: "#ff3157",
+    description: "La lentille rouge du robot original.",
+  },
+  {
+    id: "lens-cyan",
+    kind: "lens",
+    name: "Cyan",
+    missions: 1,
+    color: "#36e3f5",
+    description: "Un œil lumineux bleu cyan.",
+  },
+  {
+    id: "lens-violet",
+    kind: "lens",
+    name: "Violet",
+    missions: 3,
+    color: "#a46bff",
+    description: "Une lentille violette et ses reflets.",
+  },
+  {
+    id: "lens-green",
+    kind: "lens",
+    name: "Vert",
+    missions: 5,
+    color: "#58ee92",
+    description: "Un œil lumineux vert.",
   },
 ] as const;
 export interface Companion {
   skin: string;
   accessory: string;
+  lens?: string;
   unlocked: string[];
 }
 export const freshCompanion = (): Companion => ({
   skin: "pearl",
   accessory: "ribbon",
-  unlocked: ["pearl", "none", "ribbon"],
+  lens: "lens-red",
+  unlocked: ["pearl", "none", "ribbon", "lens-red"],
 });
 export function hydrateCompanion(raw: unknown): Companion {
   const base = freshCompanion();
@@ -97,6 +131,7 @@ export function hydrateCompanion(raw: unknown): Companion {
     accessory: allowed(v.accessory, "accessory")
       ? v.accessory!
       : base.accessory,
+    lens: allowed(v.lens, "lens") ? v.lens! : base.lens,
     unlocked,
   };
 }

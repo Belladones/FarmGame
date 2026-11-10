@@ -4,14 +4,16 @@ import { cosmetics, companionMissionCount } from "./companion";
 export function CompanionAvatar({
   skin = "pearl",
   accessory = "ribbon",
+  lens = "lens-red",
 }: {
   skin?: string;
   accessory?: string;
+  lens?: string;
 }) {
   return (
     <img
       className="companion-avatar"
-      src={`/models/luma/previews/${skin}-${accessory}.png`}
+      src={`/models/luma/previews/${skin}-${accessory}-${lens}.png`}
       alt="Luma, votre robot compagne"
       style={{ objectFit: "contain" }}
     />
@@ -25,7 +27,7 @@ export function CompanionPanel({
   farm: Farm;
   onCustomize: (id: string) => void;
 }) {
-  const [tab, setTab] = useState<"skin" | "accessory">("skin");
+  const [tab, setTab] = useState<"skin" | "accessory" | "lens">("skin");
   const count = companionMissionCount(farm);
   return (
     <section className="companion-panel" aria-label="Votre compagne Luma">
@@ -35,8 +37,8 @@ export function CompanionPanel({
           <span className="overline">VOTRE COMPAGNE</span>
           <h3>Luma</h3>
           <p>
-            Elle flotte près de vos menus, cligne des yeux et vous fait des
-            petits coucous.
+            Choisissez la peinture de sa coque, ajoutez un sticker et
+            personnalisez la couleur de sa lentille.
           </p>
           <small>
             Cosmétiques sans bonus de production · {count} mission
@@ -53,13 +55,19 @@ export function CompanionPanel({
           className={tab === "skin" ? "active" : ""}
           onClick={() => setTab("skin")}
         >
-          Apparences
+          Coques
         </button>
         <button
           className={tab === "accessory" ? "active" : ""}
           onClick={() => setTab("accessory")}
         >
-          Accessoires
+          Stickers
+        </button>
+        <button
+          className={tab === "lens" ? "active" : ""}
+          onClick={() => setTab("lens")}
+        >
+          Lentille
         </button>
       </div>
       <div className="cosmetic-grid">
@@ -75,6 +83,7 @@ export function CompanionPanel({
                 key={c.id}
               >
                 <CompanionAvatar
+                  lens={c.kind === "lens" ? c.id : farm.companion.lens}
                   skin={c.kind === "skin" ? c.id : farm.companion.skin}
                   accessory={
                     c.kind === "accessory" ? c.id : farm.companion.accessory

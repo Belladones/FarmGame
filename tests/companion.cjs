@@ -23,7 +23,7 @@ const { fresh } = require("../src/engine.ts");
     p.on("pageerror", (e) => errors.push(e.message));
     p.on("console", (message) => {
       if (
-        /Content Security Policy|GLTFLoader:.*load texture|PCFSoftShadowMap/.test(
+        /Content Security Policy|GLTFLoader:.*load texture|PCFSoftShadowMap|THREE.WebGLProgram|Shader Error/.test(
           message.text(),
         )
       )
@@ -111,11 +111,11 @@ const { fresh } = require("../src/engine.ts");
     assert.equal(await mascot.isVisible(), false);
     const panel = p.getByRole("region", { name: "Votre compagne Luma" });
     await panel
-      .getByRole("button", { name: "Équipé Perle", exact: true })
+      .getByRole("button", { name: "Équipé Jaune", exact: true })
       .scrollIntoViewIfNeeded();
     assert.equal(
       await panel
-        .getByRole("button", { name: "Verrouillé Rosée", exact: true })
+        .getByRole("button", { name: "Verrouillé Rose", exact: true })
         .isDisabled(),
       true,
     );
@@ -137,16 +137,18 @@ const { fresh } = require("../src/engine.ts");
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
     await panel
-      .getByRole("button", { name: "Débloquer et équiper Rosée", exact: true })
+      .getByRole("button", { name: "Débloquer et équiper Rose", exact: true })
       .click();
-    await panel
-      .getByRole("button", { name: "Accessoires", exact: true })
-      .click();
+    await panel.getByRole("button", { name: "Stickers", exact: true }).click();
     await panel
       .getByRole("button", {
-        name: "Débloquer et équiper Fleur solaire",
+        name: "Débloquer et équiper Fleur",
         exact: true,
       })
+      .click();
+    await panel.getByRole("button", { name: "Lentille", exact: true }).click();
+    await panel
+      .getByRole("button", { name: "Débloquer et équiper Cyan", exact: true })
       .click();
     await p
       .getByRole("button", { name: "Fermer le panneau", exact: true })
@@ -163,6 +165,10 @@ const { fresh } = require("../src/engine.ts");
     assert.equal(
       await p.locator(".gui-companion").getAttribute("data-accessory"),
       "flower",
+    );
+    assert.equal(
+      await p.locator(".gui-companion").getAttribute("data-lens"),
+      "lens-cyan",
     );
     await p.emulateMedia({ reducedMotion: "reduce" });
     const still = await p.locator(".gui-companion").getAttribute("data-x");
@@ -196,9 +202,7 @@ const { fresh } = require("../src/engine.ts");
     await p
       .getByRole("button", { name: "Session et sauvegarde", exact: true })
       .click();
-    await panel
-      .getByRole("button", { name: "Apparences", exact: true })
-      .click();
+    await panel.getByRole("button", { name: "Coques", exact: true }).click();
     await panel.scrollIntoViewIfNeeded();
     await p.screenshot({ path: "/tmp/farm-luma-cosmetics-mobile.png" });
     assert.equal(

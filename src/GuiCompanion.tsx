@@ -235,6 +235,7 @@ export function GuiCompanion({
         facing: String(pose.facing),
         skin: latest.current.appearance.skin,
         accessory: latest.current.appearance.accessory,
+        lens: latest.current.appearance.lens ?? "lens-red",
         space: "gui",
       });
       renderer.render(scene, camera);

@@ -53,7 +53,8 @@ test("cosmetic data is normalized and validated on loading", () => {
     {
       skin: "pearl",
       accessory: "ribbon",
-      unlocked: ["pearl", "none", "ribbon", "rose"],
+      lens: "lens-red",
+      unlocked: ["pearl", "none", "ribbon", "lens-red", "rose"],
     },
   );
   assert.equal(
@@ -64,4 +65,35 @@ test("cosmetic data is normalized and validated on loading", () => {
     false,
   );
   assert.equal(validFarm(fresh()), true);
+});
+
+test("lens, stickers and paint equip independently and legacy unlocks survive", () => {
+  const f = fresh();
+  assert.equal(customizeCompanion(f, "lens-cyan"), false);
+  f.claimed = [missions[0].id];
+  assert.equal(customizeCompanion(f, "rose"), true);
+  assert.equal(customizeCompanion(f, "lens-cyan"), true);
+  assert.equal(f.companion.skin, "rose");
+  assert.equal(f.companion.accessory, "ribbon");
+  assert.equal(f.companion.lens, "lens-cyan");
+  assert.deepEqual(
+    hydrateFarm(JSON.parse(JSON.stringify(f))).companion,
+    f.companion,
+  );
+  const legacy = hydrateCompanion({
+    skin: "mint",
+    accessory: "halo",
+    unlocked: ["mint", "halo"],
+  });
+  assert.equal(legacy.skin, "mint");
+  assert.equal(legacy.accessory, "halo");
+  assert.equal(legacy.lens, "lens-red");
+  assert.equal(
+    validFarm({ ...f, companion: { ...f.companion, lens: 123 } }),
+    false,
+  );
+  assert.equal(
+    validFarm({ ...f, companion: { ...f.companion, lens: "missing" } }),
+    false,
+  );
 });

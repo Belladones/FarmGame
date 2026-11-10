@@ -165,7 +165,16 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
         farm.companion = {
           skin: "rose",
           accessory: "flower",
-          unlocked: ["pearl", "none", "ribbon", "rose", "flower"],
+          lens: "lens-cyan",
+          unlocked: [
+            "pearl",
+            "none",
+            "ribbon",
+            "rose",
+            "flower",
+            "lens-red",
+            "lens-cyan",
+          ],
         };
         farm.resources.Hay = 17;
         farm.robots[0].equipment = { hold: 3, motor: 2, sensor: 1 };
