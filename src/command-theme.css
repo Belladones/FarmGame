@@ -2022,3 +2022,6 @@ img.companion-avatar {
 .sticker-loadout p { color: #9db0be; font-size: 12px; }
 .sticker-loadout button { padding: 8px 12px; border: 1px solid #405561; background: #1a2c38; color: #e7eef4; }
 .sticker-loadout button:disabled { opacity: .45; }
+
+.sticker-thumbnail { height: 112px; width: 100%; display: grid; place-items: center; background: #14202a; border-radius: 4px; }
+.sticker-thumbnail > span { display: block; background-repeat: no-repeat; }

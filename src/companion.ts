@@ -1,3 +1,4 @@
+import { stickerLibrary } from "./stickerLibrary";
 import {
   MAX_STICKERS,
   randomStickerPlacement,
@@ -103,6 +104,13 @@ export const cosmetics = [
     color: "#58ee92",
     description: "Un œil lumineux vert.",
   },
+  ...stickerLibrary.map((sticker) => ({
+    id: sticker.id,
+    kind: "accessory" as const,
+    name: sticker.name,
+    missions: 0,
+    description: "Autocollant à poser sur la coque de Luma.",
+  })),
 ] as const;
 export interface Companion {
   skin: string;
@@ -116,7 +124,13 @@ export const freshCompanion = (): Companion => ({
   accessory: "ribbon",
   lens: "lens-red",
   stickers: [{ id: "ribbon", slot: 1, rotation: 0 }],
-  unlocked: ["pearl", "none", "ribbon", "lens-red"],
+  unlocked: [
+    "pearl",
+    "none",
+    "ribbon",
+    "lens-red",
+    ...stickerLibrary.map((sticker) => sticker.id),
+  ],
 });
 export function hydrateCompanion(raw: unknown): Companion {
   const base = freshCompanion();

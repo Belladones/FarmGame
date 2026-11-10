@@ -55,7 +55,7 @@ test("cosmetic data is normalized and validated on loading", () => {
       accessory: "ribbon",
       lens: "lens-red",
       stickers: [{ id: "ribbon", slot: 1, rotation: 0 }],
-      unlocked: ["pearl", "none", "ribbon", "lens-red", "rose"],
+      unlocked: [...freshCompanion().unlocked, "rose"],
     },
   );
   assert.equal(

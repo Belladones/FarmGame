@@ -1,3 +1,5 @@
+import { stickerContourMask } from "./stickerContourMask";
+import { stickerArt, stickerAtlas } from "./stickerLibrary";
 import { stickerMounts, type StickerPlacement } from "./stickerPlacements";
 import * as THREE from "three";
 import { DecalGeometry } from "three/examples/jsm/geometries/DecalGeometry.js";
@@ -64,10 +66,12 @@ export function createRobotStickers(
   headParent: THREE.Group,
   body: THREE.Group,
   asset: THREE.Object3D,
+  atlas?: THREE.Texture,
 ) {
   let signature = "";
   const groups: THREE.Group[] = [],
-    textures = new Map<string, THREE.Texture>();
+    textures = new Map<string, THREE.Texture>(),
+    masks = new Map<string, THREE.Texture>();
   const clear = () => {
     for (const group of groups) {
       group.removeFromParent();
@@ -89,7 +93,12 @@ export function createRobotStickers(
       body.updateWorldMatrix(true, true);
       for (const placement of placements.slice(0, 3)) {
         const mount = stickerMounts[placement.slot];
-        if (!mount || !["ribbon", "flower", "halo"].includes(placement.id))
+        const art = stickerArt(placement.id);
+        if (
+          !mount ||
+          (!art && !["ribbon", "flower", "halo"].includes(placement.id)) ||
+          (art && !atlas)
+        )
           continue;
         const parent = mount.part === "head" ? headParent : body;
         const source = mount.part === "head" ? head : asset;
@@ -110,11 +119,29 @@ export function createRobotStickers(
         const inverse = parent.matrixWorld.clone().invert();
         let texture = textures.get(placement.id);
         if (!texture) {
-          texture = stickerTexture(placement.id);
+          if (art && atlas) {
+            texture = atlas.clone();
+            const [x, y, width, height] = art.rect;
+            texture.repeat.set(
+              width / stickerAtlas.width,
+              height / stickerAtlas.height,
+            );
+            texture.offset.set(
+              x / stickerAtlas.width,
+              1 - (y + height) / stickerAtlas.height,
+            );
+            texture.needsUpdate = true;
+          } else texture = stickerTexture(placement.id);
           textures.set(placement.id, texture);
+        }
+        let mask = masks.get(placement.id);
+        if (!mask) {
+          mask = stickerContourMask(placement.id);
+          if (mask) masks.set(placement.id, mask);
         }
         const material = new THREE.MeshStandardMaterial({
           map: texture,
+          alphaMap: mask ?? null,
           transparent: true,
           roughness: 0.8,
           depthWrite: false,
@@ -129,7 +156,11 @@ export function createRobotStickers(
             object,
             position,
             orientation,
-            new THREE.Vector3(mount.size, mount.size, 0.3),
+            new THREE.Vector3(
+              mount.size * (art ? Math.min(1, art.rect[2] / art.rect[3]) : 1),
+              mount.size * (art ? Math.min(1, art.rect[3] / art.rect[2]) : 1),
+              0.3,
+            ),
           );
           if (!geometry.attributes.position.count) {
             geometry.dispose();
@@ -150,6 +181,8 @@ export function createRobotStickers(
       clear();
       textures.forEach((t) => t.dispose());
       textures.clear();
+      masks.forEach((mask) => mask.dispose());
+      masks.clear();
     },
   };
 }

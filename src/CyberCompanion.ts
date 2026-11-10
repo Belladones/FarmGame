@@ -1,3 +1,4 @@
+import { loadStickerAtlas } from "./stickerAtlasTexture";
 import { robotPaint } from "./robotPaint";
 import { createRobotStickers } from "./robotStickers";
 import {
@@ -14,13 +15,18 @@ import { cosmetics, type Companion } from "./companion";
 export async function loadCyberCompanion(
   url = "/models/luma/utility-robot.glb",
 ) {
-  return createCyberCompanion(await new GLTFLoader().loadAsync(url));
+  const [gltf, atlas] = await Promise.all([
+    new GLTFLoader().loadAsync(url),
+    loadStickerAtlas(),
+  ]);
+  return createCyberCompanion(gltf, atlas);
 }
 /** Uses the supplied geometry unchanged; transforms and cosmetics stay separate. */
 export function createCyberCompanion(
   gltf: Pick<GLTF, "scene" | "animations"> & {
     parser?: Pick<GLTF["parser"], "json">;
   },
+  atlas?: THREE.Texture,
 ) {
   const group = new THREE.Group(),
     body = new THREE.Group(),
@@ -66,7 +72,13 @@ export function createCyberCompanion(
       body.worldToLocal(head.getWorldPosition(new THREE.Vector3())),
     );
   }
-  const accessories = createRobotStickers(head, headAccessories, body, asset);
+  const accessories = createRobotStickers(
+    head,
+    headAccessories,
+    body,
+    asset,
+    atlas,
+  );
   const mixer = new THREE.AnimationMixer(asset),
     clip =
       gltf.animations.find((c) => /idle|hover|float/i.test(c.name)) ??

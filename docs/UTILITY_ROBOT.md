@@ -34,3 +34,9 @@ Les identifiants historiques sont conservés pour préserver les déblocages : `
 `companion.stickers` contient au maximum trois entrées `{ id, slot, rotation }`. Cinq panneaux sûrs sont disponibles : quatre zones de la tête autour de la lentille et le torse. Les slots sont uniques. L’emplacement et l’angle sont tirés au sort lors de l’ajout, jamais pendant le rendu ou le chargement ; une ancienne sauvegarde migre son sticker unique vers la zone historique en haut à droite. Le menu permet d’ajouter plusieurs exemplaires, de retirer chaque entrée et de redistribuer les positions. La validation serveur protège la limite, les indices, les doublons et les angles.
 
 Les portraits sont désormais calculés avec le même modèle et les mêmes placements que le personnage. Un seul moteur hors écran et un seul modèle sont partagés ; les images sont mises en cache, sans boucle d’animation pour les portraits. Les PNG existants servent uniquement de secours pendant leur chargement.
+
+## Collection de la planche fournie
+
+La planche envoyée dans le chat a été détourée avec l’outil d’image, puis enregistrée dans `public/models/luma/stickers/atlas.png`. `src/stickerLibrary.ts` définit les 35 découpes individuelles. Les proportions des dessins sont conservées sur les vignettes et les décalques 3D. Les trois régions dont les rectangles touchent un dessin voisin ont un contour de sélection supplémentaire (`stickerContours.ts`), utilisé à la fois pour les vignettes et pour le masque des décalques.
+
+Les 35 stickers sont disponibles sans coût ni mission supplémentaire. Les anciens stickers et déblocages restent conservés. L’atlas transparent est chargé avant le modèle et réutilisé par les portraits ; les découpes utilisent des textures partageant la même image, sans charger 35 fichiers. La limite de trois stickers, les emplacements distincts, le retrait et la sauvegarde des inclinaisons restent identiques.

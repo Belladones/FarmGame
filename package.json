@@ -7,7 +7,7 @@
     "dev": "concurrently --kill-others-on-fail -n api,web \"npm:dev:api\" \"npm:dev:web\"",
     "build": "tsc -b && vite build && npm run build:server",
     "test": "tsx --test src/*.test.ts",
-    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs && node tests/fleet.cjs && node tests/missions.cjs && node tests/ux.cjs && node tests/sidebar.cjs && node tests/progression.cjs && node tests/inventory.cjs && npm run test:programs && npm run test:companion && npm run test:onboarding && npm run test:saves && npm run test:research-groups && npm run test:equipment && npm run test:imports",
+    "test:e2e": "node tests/smoke.cjs && node tests/board-and-trees.cjs && node tests/shop.cjs && node tests/fleet.cjs && node tests/missions.cjs && node tests/ux.cjs && node tests/sidebar.cjs && node tests/progression.cjs && node tests/inventory.cjs && npm run test:programs && npm run test:companion && npm run test:onboarding && npm run test:saves && npm run test:research-groups && npm run test:equipment && npm run test:imports && npm run test:sticker-pack",
     "dev:web": "vite --host 0.0.0.0",
     "dev:api": "tsx watch server/index.ts",
     "db:migrate": "tsx server/migrate.ts",
@@ -29,7 +29,8 @@
     "test:saves": "node tests/save-slots.cjs",
     "test:research-groups": "node tests/research-groups.cjs",
     "test:equipment": "node tests/asset-upgrades.cjs",
-    "test:imports": "node tests/program-imports.cjs"
+    "test:imports": "node tests/program-imports.cjs",
+    "test:sticker-pack": "node tests/sticker-pack.cjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

@@ -1,3 +1,5 @@
+import { stickerContours } from "./stickerContours";
+import { stickerArt, stickerAtlas } from "./stickerLibrary";
 import type { StickerPlacement } from "./stickerPlacements";
 import { stickerMounts, MAX_STICKERS } from "./stickerPlacements";
 import { useEffect, useState } from "react";
@@ -38,6 +40,32 @@ export function CompanionAvatar({
       alt="Luma, votre robot compagne"
       style={{ objectFit: "contain" }}
     />
+  );
+}
+
+function StickerThumbnail({ id }: { id: string }) {
+  const art = stickerArt(id)!;
+  const [x, y, width, height] = art.rect;
+  const scale = Math.min(108 / width, 96 / height);
+  return (
+    <div
+      className="sticker-thumbnail"
+      role="img"
+      aria-label={`Sticker ${art.name}`}
+    >
+      <span
+        style={{
+          width: width * scale,
+          height: height * scale,
+          backgroundImage: `url(${stickerAtlas.url})`,
+          backgroundSize: `${stickerAtlas.width * scale}px ${stickerAtlas.height * scale}px`,
+          backgroundPosition: `${-x * scale}px ${-y * scale}px`,
+          clipPath: stickerContours[id]
+            ? `polygon(${stickerContours[id].map(([x, y]) => `${x * 100}% ${y * 100}%`).join(",")})`
+            : undefined,
+        }}
+      />
+    </div>
   );
 }
 
@@ -126,6 +154,9 @@ export function CompanionPanel({
       <div className="cosmetic-grid">
         {cosmetics
           .filter((c) => c.kind === tab)
+          .sort(
+            (a, b) => Number(!!stickerArt(b.id)) - Number(!!stickerArt(a.id)),
+          )
           .map((c) => {
             const owned = farm.companion.unlocked.includes(c.id),
               equipped =
@@ -147,20 +178,24 @@ export function CompanionPanel({
                 className={"cosmetic-card " + (equipped ? "equipped" : "")}
                 key={c.id}
               >
-                <CompanionAvatar
-                  stickers={
-                    c.kind === "accessory"
-                      ? c.id === "none"
-                        ? []
-                        : [{ id: c.id, slot: 1, rotation: 0 }]
-                      : farm.companion.stickers
-                  }
-                  lens={c.kind === "lens" ? c.id : farm.companion.lens}
-                  skin={c.kind === "skin" ? c.id : farm.companion.skin}
-                  accessory={
-                    c.kind === "accessory" ? c.id : farm.companion.accessory
-                  }
-                />
+                {stickerArt(c.id) ? (
+                  <StickerThumbnail id={c.id} />
+                ) : (
+                  <CompanionAvatar
+                    stickers={
+                      c.kind === "accessory"
+                        ? c.id === "none"
+                          ? []
+                          : [{ id: c.id, slot: 1, rotation: 0 }]
+                        : farm.companion.stickers
+                    }
+                    lens={c.kind === "lens" ? c.id : farm.companion.lens}
+                    skin={c.kind === "skin" ? c.id : farm.companion.skin}
+                    accessory={
+                      c.kind === "accessory" ? c.id : farm.companion.accessory
+                    }
+                  />
+                )}
                 <strong>{c.name}</strong>
                 <p>{c.description}</p>
                 <small>
