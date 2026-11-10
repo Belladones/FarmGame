@@ -37,25 +37,30 @@ export function companionLife(
       height: 0.29,
       roll: 0,
       pitch: 0,
+      bodyYaw: 0,
       headYaw: 0,
       headPitch: 0,
       wave: 0,
-      limb: 0,
       glow: 1,
     };
-  const phase = time % 17;
-  const wave =
-    phase > 3 && phase < 5.5 ? Math.sin(((phase - 3) / 2.5) * Math.PI) : 0;
   return {
     height: 0.29 + Math.sin(time * 1.7) * 0.028 + Math.sin(time * 0.73) * 0.009,
     roll: (-motion.vx / 38) * 0.085 + Math.sin(time * 1.1) * 0.015,
-    pitch: (motion.vy / 38) * 0.055,
+    pitch: (motion.vy / 38) * 0.055 + motion.gazeY * 0.09 * motion.attention,
+    bodyYaw: motion.gazeX * 0.32 * motion.attention,
     headYaw:
-      motion.gazeX * 0.16 * motion.attention + Math.sin(time * 0.65) * 0.035,
-    headPitch:
-      -motion.gazeY * 0.1 * motion.attention + Math.sin(time * 0.9) * 0.015,
-    wave: Math.max(wave, motion.attention * (0.5 + Math.sin(time * 3) * 0.15)),
-    limb: Math.sin(time * 1.7 + 0.8) * 0.045,
+      motion.gazeX * 0.38 * motion.attention +
+      Math.sin(time * 0.65) * 0.02 * (1 - motion.attention),
+    headPitch: motion.gazeY * 0.23 * motion.attention,
+    wave: 0,
     glow: 0.94 + Math.sin(time * 2.1) * 0.06 + motion.attention * 0.15,
+  };
+}
+
+/** Screen Y grows downwards, matching a positive pitch about the model's X axis. */
+export function companionGaze(dx: number, dy: number) {
+  return {
+    gazeX: Math.max(-1, Math.min(1, Math.atan2(dx, 180) / 1.2)),
+    gazeY: Math.max(-1, Math.min(1, Math.atan2(dy, 180) / 1.2)),
   };
 }

@@ -41,14 +41,6 @@ export function createCyberCompanion(
     -center.z * scale,
   );
   const head = asset.getObjectByName("LumaHeadJoint");
-  const arms = [
-    asset.getObjectByName("LumaArmLeftJoint"),
-    asset.getObjectByName("LumaArmRightJoint"),
-  ];
-  const legs = [
-    asset.getObjectByName("LumaLegLeftJoint"),
-    asset.getObjectByName("LumaLegRightJoint"),
-  ];
   const glowLevels = new Map<THREE.MeshStandardMaterial, number>();
   const originals = new Map<THREE.MeshStandardMaterial, THREE.Color>();
   asset.traverse((o) => {
@@ -149,32 +141,26 @@ export function createCyberCompanion(
     const life = companionLife(time, motion, reduced.matches);
     const easing = reduced.matches ? 1 : 1 - Math.exp(-6 * delta);
     body.position.y = life.height;
-    body.rotation.y = Math.atan2(
+    const facing = Math.atan2(
       camera.x - body.position.x,
       camera.z - body.position.z,
     );
+    const targetYaw = facing + life.bodyYaw;
+    // Shortest arc avoids spinning when a camera direction crosses -π / +π.
+    const yawDelta = Math.atan2(
+      Math.sin(targetYaw - body.rotation.y),
+      Math.cos(targetYaw - body.rotation.y),
+    );
+    body.rotation.y +=
+      yawDelta * (reduced.matches ? 1 : 1 - Math.exp(-4 * delta));
     body.rotation.z += (life.roll - body.rotation.z) * easing;
     body.rotation.x += (life.pitch - body.rotation.x) * easing;
     if (head) {
-      head.rotation.y += (life.headYaw - head.rotation.y) * easing;
-      head.rotation.x += (life.headPitch - head.rotation.x) * easing;
+      const gazeEasing = reduced.matches ? 1 : 1 - Math.exp(-12 * delta);
+      head.rotation.y += (life.headYaw - head.rotation.y) * gazeEasing;
+      head.rotation.x += (life.headPitch - head.rotation.x) * gazeEasing;
       headAccessories.rotation.copy(head.rotation);
     }
-    arms.forEach((arm, index) => {
-      if (!arm) return;
-      const target =
-        (index ? 1 : -1) * (life.limb + (index === 0 ? life.wave * 0.32 : 0));
-      arm.rotation.z += (target - arm.rotation.z) * easing;
-      arm.rotation.x += (-life.wave * 0.08 - arm.rotation.x) * easing;
-    });
-    legs.forEach((leg, index) => {
-      if (!leg) return;
-      const target = reduced.matches
-        ? 0
-        : life.limb * (index ? -1 : 1) +
-          (Math.hypot(motion.vx, motion.vy) / 38) * 0.055;
-      leg.rotation.x += (target - leg.rotation.x) * easing;
-    });
     for (const [material, base] of glowLevels)
       material.emissiveIntensity = base * life.glow;
     return {

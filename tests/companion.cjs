@@ -55,9 +55,17 @@ const { fresh } = require("../src/engine.ts");
         Number(document.querySelector(".gui-companion").dataset.attention) >
         0.5,
     );
+    await p.mouse.move(5, 5);
     await p.waitForFunction(
-      () => Number(document.querySelector(".gui-companion").dataset.wave) > 0.2,
+      () =>
+        Number(document.querySelector(".gui-companion").dataset.facing) < -0.05,
     );
+    await p.mouse.move(1435, 800);
+    await p.waitForFunction(
+      () =>
+        Number(document.querySelector(".gui-companion").dataset.facing) > 0.05,
+    );
+    assert.equal(await mascot.getAttribute("data-wave"), "0");
     assert.equal(
       await mascot.evaluate((el) => getComputedStyle(el).position),
       "fixed",

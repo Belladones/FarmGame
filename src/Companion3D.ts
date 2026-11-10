@@ -322,24 +322,15 @@ export function createCompanion() {
     eyes.forEach((e) => (e.scale.y = 1.12 * expression.blink));
     arms.forEach((arm, i) => {
       const side = i === 0 ? -1 : 1;
-      arm.rotation.z =
-        side * (0.16 + expression.sway) + (i === 1 ? expression.wave * 1.8 : 0);
+      arm.rotation.z = side * 0.16;
       arm.rotation.x = -0.12;
     });
-    forearms.forEach(
-      (arm, i) =>
-        (arm.rotation.x =
-          -0.15 -
-          (i === 1 ? expression.wave * (0.5 + Math.sin(time * 10) * 0.2) : 0)),
-    );
+    forearms.forEach((arm, i) => (arm.rotation.x = -0.15));
     legs.forEach((leg, i) => {
       leg.rotation.x = i === 0 ? 0.18 : -0.15;
-      leg.rotation.z = (i === 0 ? -0.08 : 0.08) + expression.sway * 0.5;
+      leg.rotation.z = i === 0 ? -0.08 : 0.08;
     });
-    knees.forEach(
-      (knee, i) =>
-        (knee.rotation.x = (i === 0 ? 0.22 : 0.48) + expression.sway),
-    );
+    knees.forEach((knee, i) => (knee.rotation.x = i === 0 ? 0.22 : 0.48));
     return {
       x: body.position.x,
       y: body.position.y,
@@ -347,7 +338,7 @@ export function createCompanion() {
       moving: false,
       facing: body.rotation.y,
       blink: expression.blink,
-      wave: expression.wave,
+      wave: 0,
     };
   }
   return {

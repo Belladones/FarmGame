@@ -1,4 +1,4 @@
-import { companionFlight, restMotion } from "./companionMotion";
+import { companionFlight, companionGaze, restMotion } from "./companionMotion";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createCompanion } from "./Companion3D";
@@ -36,7 +36,7 @@ export function GuiCompanion({
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     element.appendChild(renderer.domElement);
     const scene = new THREE.Scene(),
-      camera = new THREE.OrthographicCamera(-0.52, 0.52, 0.78, -0.78, 0.1, 20);
+      camera = new THREE.OrthographicCamera(-0.66, 0.66, 0.99, -0.99, 0.1, 20);
     camera.position.set(0, 1.2, 6);
     camera.lookAt(0, 0.91, 0);
     scene.add(new THREE.HemisphereLight(0xffffff, 0x4e7286, 2.6));
@@ -71,7 +71,7 @@ export function GuiCompanion({
         if (!disposed) element.dataset.model = "classic-fallback";
       });
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    let rect: GuiRect = { x: 0, y: 0, width: 96, height: 144 },
+    let rect: GuiRect = { x: 0, y: 0, width: 120, height: 180 },
       target = { ...rect },
       initialized = false,
       nextPlan = 0,
@@ -119,8 +119,8 @@ export function GuiCompanion({
     const plan = (now: number) => {
       const size =
         innerWidth < 700
-          ? { width: 64, height: 96 }
-          : { width: 96, height: 144 };
+          ? { width: 80, height: 120 }
+          : { width: 120, height: 180 };
       renderer.setSize(size.width, size.height, false);
       Object.assign(element.style, {
         width: `${size.width}px`,
@@ -205,13 +205,11 @@ export function GuiCompanion({
         nextPlan = now + 1800 + Math.random() * 2200;
       }
       const px = pointer.x - rect.x - rect.width / 2,
-        py = pointer.y - rect.y - rect.height / 2;
-      const attention =
-        pointer.active && Math.hypot(px, py) < 240 && !reduced.matches ? 1 : 0;
+        py = pointer.y - rect.y - rect.height * 0.4;
+      const attention = pointer.active && !reduced.matches ? 1 : 0;
       motion.attention +=
         (attention - motion.attention) * (1 - Math.exp(-5 * dt));
-      motion.gazeX = Math.max(-1, Math.min(1, px / 200));
-      motion.gazeY = Math.max(-1, Math.min(1, py / 200));
+      Object.assign(motion, companionGaze(px, py));
       element.style.transform = `translate3d(${rect.x}px,${rect.y}px,0)`;
       const pose = companion.update(
         dt,
@@ -232,6 +230,9 @@ export function GuiCompanion({
               ? "curious"
               : "idle",
         attention: String(motion.attention),
+        gazeX: String(motion.gazeX),
+        gazeY: String(motion.gazeY),
+        facing: String(pose.facing),
         skin: latest.current.appearance.skin,
         accessory: latest.current.appearance.accessory,
         space: "gui",

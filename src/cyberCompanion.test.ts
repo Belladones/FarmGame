@@ -88,7 +88,7 @@ test("empty imported scenes are rejected so the GUI can keep its fallback", () =
   );
 });
 
-test("rigid head and limb joints animate, cosmetics follow the head and reduced motion resets the pose", () => {
+test("head and body track the pointer while limb joints stay in their original pose", () => {
   const previous = globalThis.matchMedia;
   let reducedMotion = false;
   globalThis.matchMedia = (query) => ({
@@ -125,8 +125,22 @@ test("rigid head and limb joints animate, cosmetics follow the head and reduced 
         attention: 1,
       });
     assert.ok(head.rotation.y > 0.1);
-    assert.ok(Math.abs(arm.rotation.z) > 0.05);
-    assert.ok(Math.abs(leg.rotation.x) > 0.01);
+    assert.ok(model.group.children[0].rotation.y > 0.2);
+    assert.ok(head.rotation.x < 0);
+    assert.deepEqual(arm.rotation.toArray(), [0, 0, 0, "XYZ"]);
+    assert.deepEqual(leg.rotation.toArray(), [0, 0, 0, "XYZ"]);
+    for (let i = 0; i < 20; i++)
+      model.update(0.05, freshCompanion(), new THREE.Vector3(0, 1.2, 6), {
+        vx: -25,
+        vy: -5,
+        gazeX: -1,
+        gazeY: 0.5,
+        attention: 1,
+      });
+    assert.ok(head.rotation.y < -0.2);
+    assert.ok(model.group.children[0].rotation.y < -0.2);
+    assert.equal(arm.rotation.z, 0);
+    assert.equal(leg.rotation.x, 0);
     reducedMotion = true;
     const pose = model.update(
       0.05,
