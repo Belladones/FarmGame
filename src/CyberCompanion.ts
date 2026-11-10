@@ -4,7 +4,9 @@ import {
   type GLTF,
 } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { cosmetics, type Companion } from "./companion";
-export async function loadCyberCompanion(url = "/models/luma/cyber.gltf") {
+export async function loadCyberCompanion(
+  url = "/models/luma/utility-robot.glb",
+) {
   return createCyberCompanion(await new GLTFLoader().loadAsync(url));
 }
 /** Uses the supplied geometry unchanged; transforms and cosmetics stay separate. */
@@ -16,7 +18,7 @@ export function createCyberCompanion(
   const group = new THREE.Group(),
     body = new THREE.Group(),
     asset = gltf.scene;
-  group.name = "Luma.cyber";
+  group.name = "Luma.utility-robot";
   group.add(body);
   const normalized = new THREE.Group();
   body.add(normalized);
@@ -56,7 +58,7 @@ export function createCyberCompanion(
     });
   const accessories = new Map<string, THREE.Object3D>();
   const ribbon = new THREE.Group();
-  ribbon.position.set(-0.12, 0.97, 0.04);
+  ribbon.position.set(-0.22, 1.01, 0.26);
   body.add(ribbon);
   for (const side of [-1, 1]) {
     const petal = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), white);
@@ -67,7 +69,7 @@ export function createCyberCompanion(
   }
   accessories.set("ribbon", ribbon);
   const flower = new THREE.Group();
-  flower.position.set(0.13, 0.94, 0.05);
+  flower.position.set(0.24, 0.96, 0.26);
   body.add(flower);
   for (let i = 0; i < 5; i++) {
     const petal = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 8), gold),
@@ -78,7 +80,7 @@ export function createCyberCompanion(
   }
   accessories.set("flower", flower);
   const halo = new THREE.Mesh(
-    new THREE.TorusGeometry(0.13, 0.008, 8, 32),
+    new THREE.TorusGeometry(0.26, 0.008, 8, 32),
     accent,
   );
   halo.position.y = 1.09;

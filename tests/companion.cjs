@@ -26,7 +26,8 @@ const { fresh } = require("../src/engine.ts");
     await mascot.locator("canvas").waitFor();
     await p.waitForFunction(
       () =>
-        document.querySelector(".gui-companion").dataset.model === "classic",
+        document.querySelector(".gui-companion").dataset.model ===
+        "utility-robot",
     );
     await p.waitForFunction(
       () => document.querySelector(".gui-companion").dataset.x,
@@ -179,7 +180,10 @@ const { fresh } = require("../src/engine.ts");
     );
     assert.deepEqual(errors, []);
     assert.deepEqual(assetErrors, []);
-    assert.deepEqual(modelRequests, []);
+    assert.ok(
+      modelRequests.some((url) => url.includes("utility-robot.glb")),
+      "supplied robot must load",
+    );
     console.log(
       "Companion: GUI roaming, click-through, independent farm camera, separate fleet, cosmetic unlocks, equipment, persistence, reduced motion and mobile passed",
     );

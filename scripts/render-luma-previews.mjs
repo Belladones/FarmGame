@@ -10,7 +10,15 @@ try {
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1000 },
   });
-  await page.goto(process.env.FARM_URL || "http://localhost:5173");
+  await page.route("**/luma-preview.html", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<!doctype html><html><body></body></html>",
+    }),
+  );
+  await page.goto(
+    `${process.env.FARM_URL || "http://localhost:5173"}/luma-preview.html`,
+  );
   await page.evaluate(async () => {
     const THREE = await import("/node_modules/three/build/three.module.js");
     const { loadCyberCompanion } = await import("/src/CyberCompanion.ts");
@@ -46,14 +54,14 @@ try {
         ({ skin, accessory }) => window.renderLumaPreview(skin, accessory),
         { skin, accessory },
       );
-      await page
-        .locator("#luma-preview")
-        .screenshot({
-          path: `${directory}/${skin}-${accessory}.png`,
-          omitBackground: true,
-        });
+      await page.locator("#luma-preview").screenshot({
+        path: `${directory}/${skin}-${accessory}.png`,
+        omitBackground: true,
+      });
     }
-  console.log("Rendered 16 cosmetic previews from the supplied cyber mesh.");
+  console.log(
+    "Rendered 16 cosmetic previews from the supplied utility robot mesh.",
+  );
 } finally {
   await browser.close();
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createCompanion } from "./Companion3D";
+import { loadCyberCompanion } from "./CyberCompanion";
 import type { Companion } from "./companion";
 import {
   guiSpots,
@@ -41,9 +42,33 @@ export function GuiCompanion({
     const light = new THREE.DirectionalLight(0xffffff, 2.4);
     light.position.set(-3, 4, 5);
     scene.add(light);
-    const companion = createCompanion();
-    element.dataset.model = "classic";
+    let companion = createCompanion(),
+      disposed = false;
+    element.dataset.model = "loading";
     scene.add(companion.group);
+    const disposeModel = (model: typeof companion) => {
+      const geometries = new Set<THREE.BufferGeometry>();
+      model.group.traverse((o) => {
+        if (o instanceof THREE.Mesh) geometries.add(o.geometry);
+      });
+      geometries.forEach((geometry) => geometry.dispose());
+      model.dispose();
+    };
+    loadCyberCompanion()
+      .then((model) => {
+        if (disposed) {
+          disposeModel(model);
+          return;
+        }
+        scene.remove(companion.group);
+        disposeModel(companion);
+        companion = model;
+        scene.add(companion.group);
+        element.dataset.model = "utility-robot";
+      })
+      .catch(() => {
+        if (!disposed) element.dataset.model = "classic-fallback";
+      });
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     let rect: GuiRect = { x: 0, y: 0, width: 96, height: 144 },
       target = { ...rect },
@@ -172,13 +197,11 @@ export function GuiCompanion({
     reduced.addEventListener("change", relayout);
     frame = requestAnimationFrame(draw);
     return () => {
+      disposed = true;
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", relayout);
       reduced.removeEventListener("change", relayout);
-      scene.traverse((o) => {
-        if (o instanceof THREE.Mesh) o.geometry.dispose();
-      });
-      companion.dispose();
+      disposeModel(companion);
       renderer.dispose();
       renderer.domElement.remove();
     };
