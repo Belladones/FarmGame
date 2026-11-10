@@ -78,3 +78,15 @@ test("global trees do not expose retired building or gear levels", () => {
       .prerequisites.includes("construction"),
   );
 });
+
+test("all research pages have a single straight reading path in dependency order", () => {
+  for (const tree of [...researchTrees, ...robotTrees]) {
+    assert.equal(new Set(tree.nodes.map((n) => n.x)).size, 1, tree.name);
+    tree.nodes.forEach((node, index) => {
+      assert.equal(node.previous, tree.nodes[index - 1]?.id);
+      if (index) assert.equal(node.y - tree.nodes[index - 1].y, 180);
+      for (const parent of node.parents)
+        assert.ok(tree.nodes.findIndex((n) => n.id === parent) < index);
+    });
+  }
+});

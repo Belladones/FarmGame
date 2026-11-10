@@ -12,6 +12,8 @@ export interface ResearchNode {
   x: number;
   y: number;
   parents: string[];
+  /** Previous card in the reading path; not an additional purchase prerequisite. */
+  previous?: string;
   research?: string;
   group?: ResearchGroup;
   base?: boolean;
@@ -151,22 +153,17 @@ export function buildGroupedTree(
     depths.set(id, d);
     return d;
   }
-  const rows = new Map<number, ResearchNode[]>();
-  for (const node of nodes.values())
-    if (node !== root) {
-      const d = depth(node.id);
-      rows.set(d, [...(rows.get(d) ?? []), node]);
-    }
-  let y = 205;
-  for (const [, row] of [...rows].sort(([a], [b]) => a - b)) {
-    row.sort((a, b) => a.title.localeCompare(b.title, "fr"));
-    row.forEach((node, i) => {
-      node.x = row.length === 1 ? 315 : 45 + (i % 3) * 220;
-      node.y = y + Math.floor(i / 3) * 180;
-    });
-    y += Math.ceil(row.length / 3) * 180;
-  }
-  return { name, caption, nodes: [...nodes.values()] };
+  // A single topological reading path. Keep actual parents for the detail
+  // panel and navigation; the visible line never invents an unlock requirement.
+  const ordered = [...nodes.values()].filter((node) => node !== root);
+  ordered.sort((a, b) => depth(a.id) - depth(b.id));
+  const path = [root, ...ordered];
+  path.forEach((node, index) => {
+    node.x = 315;
+    node.y = 25 + index * 180;
+    node.previous = path[index - 1]?.id;
+  });
+  return { name, caption, nodes: path };
 }
 export const researchTrees: ResearchTree[] = definitions.map((def) =>
   buildGroupedTree(

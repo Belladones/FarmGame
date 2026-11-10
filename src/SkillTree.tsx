@@ -157,7 +157,9 @@ export function SkillTree({
       <div className="skill-layout">
         <div className="skill-map-section">
           <div className="skill-map-heading">
-            <span>{tree.caption}</span>
+            <span>
+              {tree.caption} Parcours linéaire · prérequis dans le détail.
+            </span>
             <span className="skill-legend">
               <i /> Acquis <i /> À rechercher <i /> À venir
             </span>
@@ -167,7 +169,7 @@ export function SkillTree({
             ref={scrollRef}
             key={page}
             tabIndex={0}
-            aria-label={`Arbre ${tree.name}, défilement horizontal et vertical`}
+            aria-label={`Arbre ${tree.name}, défilement vertical`}
           >
             <div
               className="skill-map"
@@ -179,23 +181,20 @@ export function SkillTree({
                 height="100%"
                 aria-hidden="true"
               >
-                {tree.nodes.flatMap((n) =>
-                  n.parents.map((id) => {
-                    const parent = tree.nodes.find((p) => p.id === id)!;
-                    const x = parent.x + 57,
-                      y = parent.y + 92,
-                      cx = n.x + 57,
-                      cy = n.y;
-                    const mid = y + (cy - y) / 2;
+                {tree.nodes
+                  .filter((n) => n.previous)
+                  .map((n) => {
+                    const previous = tree.nodes.find(
+                      (p) => p.id === n.previous,
+                    )!;
                     return (
                       <path
-                        key={id + "-" + n.id}
-                        d={`M${x} ${y}V${mid}H${cx}V${cy}`}
-                        className={isLearned(parent, farm) ? "unlocked" : ""}
+                        key={`${previous.id}-${n.id}`}
+                        d={`M${n.x + 57} ${previous.y + 92}V${n.y}`}
+                        className={isLearned(n, farm) ? "unlocked" : ""}
                       />
                     );
-                  }),
-                )}
+                  })}
               </svg>
               {tree.nodes.map((n) => {
                 const owned = isAcquired(n, farm),
