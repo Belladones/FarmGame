@@ -4,7 +4,7 @@ import { randomUUID, createHash } from "node:crypto";
 import type { Server } from "node:http";
 import { createPool, migrate } from "./db.js";
 import { createApp } from "./app.js";
-import { fresh } from "../src/engine.ts";
+import { fresh } from "../src/modules/farm/application/engine.ts";
 
 test("PostgreSQL accounts, sessions and save isolation", async (t) => {
   const url = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;

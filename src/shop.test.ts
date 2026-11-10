@@ -21,8 +21,11 @@ import {
   relocateBuilding,
   at,
   releaseReservation,
-} from "./engine";
-import { research, buildings, models, sum, constructionSlots } from "./catalog";
+} from "./modules/farm/application/engine";
+import { research } from "./modules/research/domain/catalog";
+import { buildings, constructionSlots } from "./modules/construction/domain/catalog";
+import { models } from "./modules/robots/domain/catalog";
+import { sum } from "./shared/domain/resources";
 function prepared() {
   const s = fresh();
   s.stock = 100;

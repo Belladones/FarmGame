@@ -2,7 +2,7 @@ require("tsx/cjs");
 const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { buy } = require("../src/engine.ts");
+const { buy } = require("../src/modules/farm/application/engine.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: "/usr/bin/chromium",
@@ -19,7 +19,7 @@ const { buy } = require("../src/engine.ts");
     f.stock = 100;
     f.resources.Hay = 30;
     buy(f, "extension");
-    f.unlocks = require("../src/catalog.ts").research.map((r) => r.id);
+    f.unlocks = require("./catalog.ts").research.map((r) => r.id);
     f.robots[0].code =
       'const marker: string = "ONE";\nwhile (true) { console.log(marker); harvest(); }';
     f.robots.push({

@@ -1,8 +1,8 @@
 require("tsx/cjs");
 const { chromium } = require("playwright"),
   assert = require("node:assert/strict");
-const { fresh } = require("../src/engine.ts"),
-  { research } = require("../src/catalog.ts");
+const { fresh } = require("../src/modules/farm/application/engine.ts"),
+  { research } = require("./catalog.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: "/usr/bin/chromium",
@@ -45,8 +45,8 @@ const { fresh } = require("../src/engine.ts"),
     await p.locator(".farm-scene canvas").waitFor();
     assert.equal(await p.locator(".workshop-hotspot").count(), 0);
     const THREE = require("three"),
-      { farmViewport } = require("../src/camera.ts"),
-      { placedSites } = require("../src/engine.ts");
+      { farmViewport } = require("../src/modules/farm/adapters/three/camera.ts"),
+      { placedSites } = require("../src/modules/farm/application/engine.ts");
     const sites = placedSites(f),
       minX = Math.min(0, ...sites.map((s) => s.x)),
       maxX = Math.max(f.width - 1, ...sites.map((s) => s.x)),

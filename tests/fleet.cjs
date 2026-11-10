@@ -52,7 +52,7 @@ const assert = require("node:assert/strict");
       ),
       true,
     );
-    const { buy } = require("../src/engine.ts");
+    const { buy } = require("../src/modules/farm/application/engine.ts");
     const fixture = fresh();
     fixture.stock = 100;
     fixture.resources.Hay = 30;

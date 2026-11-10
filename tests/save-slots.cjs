@@ -2,7 +2,7 @@ require("tsx/cjs");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
-const { fresh } = require("../src/engine.ts");
+const { fresh } = require("../src/modules/farm/application/engine.ts");
 const base = process.env.FARM_URL || "http://localhost:5173";
 (async () => {
   const browser = await chromium.launch({

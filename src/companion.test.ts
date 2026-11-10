@@ -1,12 +1,12 @@
-import { missions } from "./missions";
+import { missions } from "./modules/missions/domain/missions";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, hydrateFarm } from "./engine";
+import { fresh, hydrateFarm } from "./modules/farm/application/engine";
 import {
   customizeCompanion,
   freshCompanion,
   hydrateCompanion,
-} from "./companion";
+} from "./modules/companion/domain/companion";
 import { validFarm } from "../server/validation";
 test("legacy saves gain a default companion without changing the fleet", () => {
   const f = fresh(),

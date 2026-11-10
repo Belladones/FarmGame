@@ -2,8 +2,8 @@ require("tsx/cjs");
 const { legacyFarm: fresh } = require("./fixtures.ts");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { buy } = require("../src/engine.ts");
-const { research } = require("../src/catalog.ts");
+const { buy } = require("../src/modules/farm/application/engine.ts");
+const { research } = require("./catalog.ts");
 (async () => {
   const b = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",

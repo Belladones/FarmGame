@@ -11,11 +11,11 @@ import {
   TICK_SECONDS,
   missionBlocker,
   claim,
-} from "./engine";
-import { currentMission, missionsFor, career } from "./missions";
-import { validateProgramProgression } from "./programProgression";
-import { declarations } from "./api";
-import { research } from "./catalog";
+} from "./modules/farm/application/engine";
+import { currentMission, missionsFor, career } from "./modules/missions/domain/missions";
+import { validateProgramProgression } from "./modules/programming/adapters/typescript/programProgression";
+import { declarations } from "./modules/programming/domain/api";
+import { research } from "./modules/research/domain/catalog";
 test("a new game starts with harvestable grass, no wheat or loop unlock and a simple program", () => {
   const s = fresh();
   assert.equal(s.tiles[0].entity, "Grass");

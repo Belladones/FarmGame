@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { robotPaint } from "./robotPaint";
+import { robotPaint } from "./modules/companion/adapters/three/robotPaint";
 test("selective paint and lens uniforms update without rewriting source maps or tinting all parts", () => {
   const texture = new THREE.Texture();
   const material = new THREE.MeshStandardMaterial({

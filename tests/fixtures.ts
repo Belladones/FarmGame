@@ -1,4 +1,4 @@
-import { fresh } from "../src/engine";
+import { fresh } from "../src/modules/farm/application/engine";
 /** Established farms keep the pre-tutorial wheat behavior; new-start tests use fresh(). */
 export function legacyFarm() {
   const s = fresh();

@@ -1,8 +1,9 @@
 import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { research, sum } from "./catalog";
-import { researchTrees, researchDepth } from "./researchTrees";
+import { research } from "./modules/research/domain/catalog";
+import { sum } from "./shared/domain/resources";
+import { researchTrees, researchDepth } from "./modules/research/adapters/react/researchTrees";
 import {
   buy,
   hydrateFarm,
@@ -10,8 +11,8 @@ import {
   slotCount,
   depotCapacity,
   command,
-} from "./engine";
-import { farmViewport, cameraInclination } from "./camera";
+} from "./modules/farm/application/engine";
+import { farmViewport, cameraInclination } from "./modules/farm/adapters/three/camera";
 function ancestors(id: string, result = new Set<string>()) {
   for (const p of research.find((r) => r.id === id)!.prerequisites) {
     if (!result.has(p)) {

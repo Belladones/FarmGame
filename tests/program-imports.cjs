@@ -1,8 +1,8 @@
 require("tsx/cjs");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
-const { fresh } = require("../src/engine.ts");
-const { research } = require("../src/catalog.ts");
+const { fresh } = require("../src/modules/farm/application/engine.ts");
+const { research } = require("./catalog.ts");
 (async () => {
   const browser = await chromium.launch({
     executablePath: "/usr/bin/chromium",

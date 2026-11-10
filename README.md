@@ -149,15 +149,11 @@ Après perte du dernier fermier, un unique fermier de secours non vendable et de
 
 ## Architecture et limites actuelles
 
-- `server/` : API Express, comptes, sessions, validation, migrations et écritures PostgreSQL avec révisions.
-- `src/persistence.ts` et `src/SessionPanel.tsx` : synchronisation, conflits et interface des sessions.
-- `src/catalog.ts` : catalogue et prix issus du document, recherches implémentées, recettes, modèles, cultures et commandes commerciales.
-- `src/engine.ts` : état de la ferme, migration, actions, achats, stocks locaux, cycles, eau, déplacements, collisions et réparation. Tests dans `src/engine.test.ts` et `src/shop.test.ts`.
-- `src/FarmScene.tsx` : caméra orbitale et modèles 3D procéduraux originaux des robots, cultures et bâtiments, sans assets téléchargés.
-- `src/Shop.tsx` : catalogue du magasin, achats, ventes, placement et gestion des biens.
-- `src/SkillTree.tsx` : trois pages d’arbres reliés. Les recherches implémentées sont achetables ; les branches encore prévues restent « À venir ».
-- `src/api.ts` : API typée injectée dans Monaco et partagée avec le runtime.
-- `src/runner.worker.ts` : transpilation TypeScript et instrumentation des boucles et appels dans un Worker ; chaque robot a un runtime indépendant.
+Le client suit une architecture hexagonale organisée par domaine métier dans `src/modules/` : ferme, robots, construction, équipements, recherches, missions, commerce, programmation, compagnon et sauvegardes. Chaque module sépare les règles (`domain`), les cas d’usage (`application`), leurs contrats (`ports`) et les implémentations techniques (`adapters`). `src/app/` compose l’application ; `src/shared/` contient le vocabulaire des ressources et les composants communs.
+
+Les sauvegardes utilisent des ports injectés pour le stockage, le réseau et l’horloge. Les règles internes n’importent aucun composant React ou Three.js. Un test d’architecture vérifie cette direction de dépendance à chaque `npm test`. Les catalogues sont répartis par métier et les sauvegardes existantes gardent leur format.
+
+Consulter [l’architecture et les conventions](docs/ARCHITECTURE.md) pour les responsabilités, le diagramme et les points d’orchestration restant à découper. Le serveur Express/PostgreSQL dans `server/` conserve son organisation actuelle.
 
 Le **catalogue du magasin** et ses systèmes associés sont implémentés ; la **campagne de 56 missions** n’est pas encore intégrée. La campagne guidée commence par le foin, la première boucle, l’agrandissement puis la culture du blé ; elle vérifie les ressources réellement récoltées et déposées ainsi que les recherches acquises. L’accès aux constructions du langage n’est pas encore entièrement verrouillé selon l’arbre : Variables et Fonctions servent de prérequis de progression, mais leur syntaxe reste libre pour conserver les programmes existants. Les aides `range`, `list`, `len`, `str` et les branches de programmation avancée restent à venir.
 
@@ -337,4 +333,4 @@ Cliquez sur l’atelier construit dans la ferme  pour ouvrir sa baie de maintena
 
 ### Organisation du code
 
-Les modules métier d’équipement se trouvent dans `src/equipment/` et reçoivent leurs services de stock par injection ; ils ne dépendent pas de React ou de Three.js. Le moteur conserve ses exports publics pour les sauvegardes, les commandes et les tests. `src/scene/` isole les interactions de la scène (clic, glisser, annulation), `src/workshop/` les styles de l’atelier, `src/ui/` les illustrations partagées et `src/programming/` les contenus pédagogiques. Les composants d’interface ne passent plus par le magasin pour charger une illustration.
+Les règles de l’atelier sont dans `src/modules/equipment/`, ses styles dans `adapters/react/workshop.css` et le clic 3D dans `src/modules/farm/adapters/three/buildingPicking.ts`. Les illustrations communes vivent dans `src/shared/adapters/react/`. Voir [l’architecture](docs/ARCHITECTURE.md).

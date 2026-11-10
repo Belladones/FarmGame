@@ -1,0 +1,55 @@
+import type { cropData } from "./crops";
+import type { Inventory } from "../../../shared/domain/resources";
+import type { Companion } from "../../companion/domain/companion";
+import type { Robot } from "../../robots/domain/Robot";
+import type { Building } from "../../construction/domain/Building";
+export type Crop = keyof typeof cropData;
+export interface Tile {
+  emptySince?: number;
+  planted: number | null;
+  yield: number;
+  entity?: Crop;
+  ground?: "Grassland" | "Soil";
+  water?: number;
+  progress?: number;
+  updatedAt?: number;
+  level?: number;
+  grouped?: boolean;
+}
+export interface Farm {
+  assetProgression?: 1;
+  researchRevision?: 1 | 2;
+  legacyDepotCapacity?: number;
+  waterItems?: number;
+  waterRemainder?: number;
+  previousProgram?: string;
+  progressionVersion: 1 | 2;
+  companion: Companion;
+  time: number;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  tiles: Tile[];
+  cargo: number;
+  stock: number;
+  resources: Inventory;
+  gold: number;
+  harvestedItems: Inventory;
+  depositedItems: Inventory;
+  harvested: number;
+  deposited: number;
+  planted: number;
+  produced: Inventory;
+  visited: number[];
+  wheatLevel: number;
+  unlocks: string[];
+  claimed: string[];
+  robots: Robot[];
+  buildings: Building[];
+  activeRobotId: string;
+  nextId: number;
+  orderPeriods: Record<string, number>;
+  sites: { x: number; y: number }[];
+  storedBuildings: Building[];
+}

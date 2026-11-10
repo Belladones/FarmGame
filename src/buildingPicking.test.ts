@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { attachBuildingPicking } from "./scene/buildingPicking";
+import { attachBuildingPicking } from "./modules/farm/adapters/three/buildingPicking";
 function setup(occluded = false) {
   const canvas = Object.assign(new EventTarget(), {
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 200, height: 200 }),

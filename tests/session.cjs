@@ -7,8 +7,8 @@ const {
   buy,
   purchase,
   purchaseForInventory,
-} = require("../src/engine.ts");
-const { research, constructionSlots } = require("../src/catalog.ts");
+} = require("../src/modules/farm/application/engine.ts");
+const { research, constructionSlots } = require("./catalog.ts");
 const base = process.env.FARM_URL || "http://localhost:5173";
 const headers = { "X-FarmScript-Request": "1" };
 // Autosave can finish (or detect a conflict) while the panel is opening.

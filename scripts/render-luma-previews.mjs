@@ -26,7 +26,7 @@ try {
   );
   await page.evaluate(async () => {
     const THREE = await import("/node_modules/three/build/three.module.js");
-    const { loadCyberCompanion } = await import("/src/CyberCompanion.ts");
+    const { loadCyberCompanion } = await import("/src/modules/companion/adapters/three/CyberCompanion.ts");
     const scene = new THREE.Scene(),
       camera = new THREE.OrthographicCamera(-0.4, 0.4, 0.6, -0.6, 0.1, 20);
     camera.position.set(0, 1.2, 6);

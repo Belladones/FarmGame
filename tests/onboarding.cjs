@@ -256,7 +256,7 @@ const { chromium } = require("playwright"),
     await p.reload();
     await p.waitForFunction(
       () =>
-        document.querySelector(".gui-companion")?.dataset.model === "classic",
+        document.querySelector(".gui-companion")?.dataset.model === "utility-robot",
     );
     const restoredBackup = await read();
     assert.equal(restoredBackup.previousProgram, oldProgram);

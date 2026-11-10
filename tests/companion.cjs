@@ -1,7 +1,7 @@
 require("tsx/cjs");
 const { chromium } = require("playwright"),
   assert = require("node:assert/strict");
-const { fresh } = require("../src/engine.ts");
+const { fresh } = require("../src/modules/farm/application/engine.ts");
 (async () => {
   const b = await chromium.launch({
     executablePath: "/usr/bin/chromium",
@@ -120,7 +120,7 @@ const { fresh } = require("../src/engine.ts");
       true,
     );
     const f = fresh();
-    f.claimed = require("../src/missions.ts")
+    f.claimed = require("../src/modules/missions/domain/missions.ts")
       .missions.slice(0, 3)
       .map((m) => m.id);
     await p.addInitScript((f) => {

@@ -2,15 +2,15 @@ import { legacyFarm as fresh } from "../tests/fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import ts from "typescript";
-import { claim, hydrateFarm, missionBlocker, advance } from "./engine";
+import { claim, hydrateFarm, missionBlocker, advance } from "./modules/farm/application/engine";
 import {
   missions,
   chapters,
   currentMission,
   career,
   completedMissions,
-} from "./missions";
-import { declarations } from "./api";
+} from "./modules/missions/domain/missions";
+import { declarations } from "./modules/programming/domain/api";
 import { validFarm } from "../server/validation";
 
 test("campaign rewards are ordered, atomic, and XP cannot count unknown or duplicate IDs", () => {

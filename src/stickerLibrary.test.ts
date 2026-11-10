@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { stickerLibrary, stickerAtlas } from "./stickerLibrary";
-import { fresh, hydrateFarm } from "./engine";
-import { customizeCompanion } from "./companion";
+import { stickerLibrary, stickerAtlas } from "./modules/companion/domain/stickerLibrary";
+import { fresh, hydrateFarm } from "./modules/farm/application/engine";
+import { customizeCompanion } from "./modules/companion/domain/companion";
 test("all 35 sticker crops belong to the supplied transparent atlas", () => {
   const png = readFileSync(
     new URL("../public/models/luma/stickers/atlas.png", import.meta.url),

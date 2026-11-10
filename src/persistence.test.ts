@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, advance, command } from "./engine";
-import { hasLocalProgress } from "./persistence";
+import { fresh, advance, command } from "./modules/farm/application/engine";
+import { hasLocalProgress } from "./modules/saves/adapters/browser/CloudSave";
 test("the free initial skill and automatic grass growth do not conflict with cloud login", () => {
   const s = fresh();
   assert.deepEqual(s.unlocks, ["till"]);
@@ -41,7 +41,7 @@ test("earned resources, research, custom code, terrain and cosmetics remain mean
 });
 
 test("local named games preserve robots and code when starting over and resuming", async () => {
-  const { CloudSave } = await import("./persistence");
+  const { CloudSave } = await import("./modules/saves/adapters/browser/CloudSave");
   const storage = new Map<string, string>();
   const previous = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
   Object.defineProperty(globalThis, "localStorage", {

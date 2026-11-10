@@ -16,13 +16,13 @@ import {
   type Farm,
   type Building,
   purchaseForInventory,
-} from "./engine";
-import { research } from "./catalog";
+} from "./modules/farm/application/engine";
+import { research } from "./modules/research/domain/catalog";
 import {
   robotEquipment,
   upgradeCost,
   buildingUpgrades,
-} from "./assetProgression";
+} from "./modules/equipment/domain/assetProgression";
 import { validFarm } from "../server/validation";
 const clone = <T>(value: T): T => structuredClone(value);
 function setup() {
@@ -270,7 +270,7 @@ test("migration preserves an explicit legacy depot floor even when its historic 
 });
 
 test("legacy campaigns with local assets do not require retired global upgrade flags", async () => {
-  const { missionsFor } = await import("./missions");
+  const { missionsFor } = await import("./modules/missions/domain/missions");
   const s = setup();
   s.progressionVersion = 1;
   const goal = missionsFor(s).find((m) => m.id === "construction")!;

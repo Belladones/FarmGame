@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createCompanion, companionExpression } from "./Companion3D";
-import { freshCompanion } from "./companion";
+import { createCompanion, companionExpression } from "./modules/companion/adapters/three/Companion3D";
+import { freshCompanion } from "./modules/companion/domain/companion";
 test("the companion floats without ground and faces cameras on every side", () => {
   const previous = globalThis.matchMedia;
   globalThis.matchMedia = (query) => ({

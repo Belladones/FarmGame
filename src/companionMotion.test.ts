@@ -5,7 +5,7 @@ import {
   companionLife,
   companionGaze,
   restMotion,
-} from "./companionMotion";
+} from "./modules/companion/domain/companionMotion";
 
 test("flight accelerates gradually, brakes, arrives without overshooting and is frame-rate independent", () => {
   assert.ok(companionFlight(100, 0, 0.05).speed < 3);
