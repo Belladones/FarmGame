@@ -26,7 +26,7 @@ const { fresh } = require("../src/modules/farm/domain/factories.ts");
       "UPDATE game_missions SET title='Mission depuis PostgreSQL',target=2 WHERE campaign='modern' AND id='first'",
     );
     await db.query(
-      "UPDATE game_definitions SET data=jsonb_set(data,'{capacity}','30') WHERE section='models' AND id='Farmer'",
+      "UPDATE game_robot_models SET capacity=30 WHERE id='Farmer'",
     );
     server = await new Promise((resolve) => {
       const s = createApp(db, {

@@ -84,3 +84,5 @@ Le serveur expose désormais un module `catalog` avec port, cas d’usage et ada
 Le catalogue chargé depuis PostgreSQL est installé avant l’import des écrans, puis transmis à chaque Worker. Les données initiales et les contrats sérialisables sont partagés sans dépendance au navigateur dans `src/shared/domain/`. Le serveur les compile avec son propre build ; son point d’entrée de production est `dist-server/server/index.js`.
 
 Les détails de migration, de conservation des anciennes parties, de mode hors ligne et les requêtes SQL sont décrits dans [DATABASE.md](DATABASE.md).
+
+Le stockage du catalogue utilise des tables à colonnes dédiées et des relations pour les coûts, rendements et compatibilités. Les adaptateurs de `server/modules/catalog/adapters/postgres/definitions/` sont séparés par métier ; le repository assemble leurs résultats dans la transaction de lecture du catalogue.

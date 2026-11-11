@@ -4,20 +4,8 @@ import {
   validateCatalog,
   type GameCatalog,
 } from "../../../../../src/shared/domain/gameCatalog.js";
-type Connection = Pick<pg.PoolClient, "query">;
-const arraySections = [
-  "robotEquipment",
-  "buildingUpgrades",
-  "tradeOrders",
-  "cosmetics",
-];
-const objectSections = ["models", "buildings", "recipes", "crops"];
-const settings = [
-  "storageCapacities",
-  "constructionSlots",
-  "ranks",
-  "thresholds",
-];
+import type { Connection } from "./connection.js";
+import { seedDefinitions, readDefinitions } from "./definitionsRepository.js";
 /** Initial installation only: restarting never overwrites catalogue edits. */
 export async function seedCatalog(db: Connection) {
   if ((await db.query("SELECT 1 FROM game_catalog WHERE id=1")).rowCount)
@@ -99,26 +87,7 @@ export async function seedCatalog(db: Connection) {
           m.action,
         ],
       );
-  for (const section of [...objectSections, ...arraySections]) {
-    const value = (c.definitions as Record<string, unknown>)[section];
-    const entries = Array.isArray(value)
-      ? value.map((v, i) => [v.id + ":" + i, v])
-      : Object.entries(value as Record<string, unknown>);
-    for (const [position, [id, data]] of entries.entries())
-      await db.query("INSERT INTO game_definitions VALUES($1,$2,$3,$4)", [
-        section,
-        id,
-        position,
-        JSON.stringify(data),
-      ]);
-  }
-  for (const id of settings)
-    await db.query("INSERT INTO game_definitions VALUES($1,$2,$3,$4)", [
-      "settings",
-      id,
-      0,
-      JSON.stringify((c.definitions as Record<string, unknown>)[id]),
-    ]);
+  await seedDefinitions(db, c.definitions);
   await db.query("INSERT INTO game_catalog(id,version) VALUES(1,1)");
 }
 /** A repeatable-read transaction prevents partially reading a multi-table catalogue edit. */
@@ -184,20 +153,7 @@ export async function readCatalog(pool: pg.Pool): Promise<GameCatalog> {
         destination: r.destination,
         action: r.action,
       });
-    const definitions: Record<string, unknown> = {};
-    for (const s of objectSections) definitions[s] = {};
-    for (const s of arraySections) definitions[s] = [];
-    for (const r of (
-      await db.query(
-        "SELECT * FROM game_definitions ORDER BY section,position,id",
-      )
-    ).rows) {
-      if (r.section === "settings") definitions[r.id] = r.data;
-      else if (arraySections.includes(r.section))
-        (definitions[r.section] as unknown[]).push(r.data);
-      else if (objectSections.includes(r.section))
-        (definitions[r.section] as Record<string, unknown>)[r.id] = r.data;
-    }
+    const definitions = await readDefinitions(db);
     const result = {
       version: Number(metadata.rows[0].version),
       resources,

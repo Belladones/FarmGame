@@ -27,11 +27,28 @@ Le démarrage de l’API applique aussi les migrations. `004_game_catalog_and_pr
 | `game_research_steps` | Ordre des niveaux d’un même élément |
 | `game_chapters` | Chapitres de la campagne |
 | `game_missions` | Objectifs, règles de progression, récompenses, aide, code et ordre, par campagne |
-| `game_definitions` | Paramètres des robots, bâtiments, cultures, recettes, équipements, commandes commerciales, cosmétiques et progression |
+| `game_robot_models` | Nom, prix, vitesse, capacité et recherche des robots |
+| `game_building_types` | Nom, prix, recherche et description des bâtiments |
+| `game_crop_types` | Ressource, durée de croissance, sol et recherche des cultures |
+| `game_crop_costs`, `game_crop_yields` | Coûts de plantation et rendements par niveau |
+| `game_recipes`, `game_recipe_inputs`, `game_recipe_outputs` | Durées, ingrédients et produits des recettes |
+| `game_robot_equipment`, `game_robot_equipment_costs`, `game_robot_equipment_models` | Équipements, coûts et modèles compatibles |
+| `game_building_upgrades`, `game_building_upgrade_costs`, `game_building_upgrade_types` | Améliorations, coûts et bâtiments compatibles |
+| `game_trade_orders` | Ressource demandée, quantité, paiement et recherche |
+| `game_cosmetics` | Type, couleur, accent, rareté et nombre de missions requis |
+| `game_storage_tiers` | Capacité des dépôts pour chaque niveau |
+| `game_construction_slots` | Ordre et coordonnées des emplacements initiaux |
+| `game_career_ranks` | Nom et seuil d’expérience de chaque rang |
 
 `game_research_links.research_id` désigne la recherche à acheter ; `prerequisite_id` désigne une recherche requise. Les contraintes référentielles empêchent les liens vers des identifiants inexistants. L’API vérifie aussi les cycles et la cohérence des données avant d’exposer un catalogue.
 
-`game_definitions.section` vaut `models`, `buildings`, `recipes`, `crops`, `robotEquipment`, `buildingUpgrades`, `tradeOrders`, `cosmetics` ou `settings`. Les données à structure variable vivent en JSONB dans chaque ligne ; les identifiants et l’ordre restent des colonnes. Deux équipements peuvent porter le même nom technique pour des bâtiments différents ; leur identifiant de ligne est distinct.
+La migration `006_relational_game_definitions.sql` transforme les lignes JSON déjà présentes en tables métier, puis supprime `game_definitions`. Les nouvelles tables ne contiennent aucune colonne JSON ou tableau SQL : les listes et les relations ont leurs propres lignes et clés étrangères.
+
+Les valeurs modifiées en base sont recopiées telles quelles, y compris les décimales, l’ordre des listes et les champs facultatifs. La migration n’utilise pas les valeurs initiales du fichier embarqué pour remplacer un catalogue existant. Si un ancien objet possède un champ supplémentaire sans colonne correspondante, ou viole une contrainte relationnelle, la transaction échoue et conserve l’ancienne table et ses données. Le schéma doit alors être adapté avant de relancer la migration.
+
+Pour les équipements, `id` identifie une variante et `equipment_key` sa famille. Les quatre variantes `production` restent distinctes et sont reliées respectivement aux différents bâtiments. `gold_cost` peut être NULL lorsqu’un équipement ne demande que des matériaux.
+
+L’API reconstitue encore des objets JSON pour le navigateur et les Workers ; il s’agit du format de transport, construit depuis les colonnes relationnelles. Les sauvegardes et les conditions composées des missions conservent leur propre représentation décrite plus bas.
 
 ## Modifier le catalogue
 
@@ -62,9 +79,21 @@ UPDATE game_missions
 SET title = 'Une première récolte', target = 2
 WHERE campaign = 'modern' AND id = 'first';
 
-UPDATE game_definitions
-SET data = jsonb_set(data, '{capacity}', '30')
-WHERE section = 'models' AND id = 'Farmer';
+UPDATE game_robot_models
+SET capacity = 30, speed = 1.2
+WHERE id = 'Farmer';
+
+UPDATE game_crop_yields
+SET amount = 10
+WHERE crop_id = 'Tree' AND level = 1;
+
+UPDATE game_recipe_inputs
+SET amount = 3
+WHERE building_type_id = 'Oven' AND resource_id = 'Wood';
+
+UPDATE game_storage_tiers
+SET capacity = 250
+WHERE level = 1;
 ```
 
 La version de `game_catalog` augmente automatiquement lors d’une modification des tables de définition. Une session en cours conserve ses règles jusqu’au rechargement, pour éviter de changer les coûts au milieu d’une action. Les identifiants des recherches déjà achetées restent stables ; les changer constitue une migration de progression, pas un simple renommage.
