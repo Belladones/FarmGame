@@ -2,6 +2,7 @@ import bootstrap from "../../../shared/domain/bootstrap.json";
 import { stickerLibrary } from "./stickerLibrary";
 import {
   MAX_STICKERS,
+  validStickerPlacement,
   randomStickerPlacement,
   stickerMounts,
   type StickerPlacement,
@@ -77,8 +78,7 @@ export function hydrateCompanion(raw: unknown): Companion {
         !Number.isInteger(entry.slot) ||
         entry.slot < 0 ||
         entry.slot >= stickerMounts.length ||
-        !Number.isFinite(entry.rotation) ||
-        Math.abs(entry.rotation) > 0.3 ||
+        !validStickerPlacement(entry) ||
         stickers.some((s) => s.slot === entry.slot)
       )
         continue;
@@ -86,6 +86,8 @@ export function hydrateCompanion(raw: unknown): Companion {
         id: entry.id,
         slot: entry.slot,
         rotation: entry.rotation,
+        ...(entry.surface ? { surface: structuredClone(entry.surface) } : {}),
+        ...(entry.scale !== undefined ? { scale: entry.scale } : {}),
       });
       if (stickers.length === MAX_STICKERS) break;
     }
@@ -140,5 +142,26 @@ export function customizeCompanion(farm: Farm, id: string): boolean {
     else c.stickers.push(randomStickerPlacement(id, c.stickers)!);
   }
   c[item.kind] = id;
+  return true;
+}
+
+/** Edits an owned sticker only; this cannot add stickers or bypass cosmetic unlocks. */
+export function editCompanionSticker(
+  farm: Farm,
+  placement: StickerPlacement,
+): boolean {
+  if (!validStickerPlacement(placement)) return false;
+  const sticker = farm.companion.stickers?.find(
+    (s) => s.slot === placement.slot,
+  );
+  if (
+    !sticker ||
+    sticker.id !== placement.id ||
+    !farm.companion.unlocked.includes(placement.id)
+  )
+    return false;
+  Object.assign(sticker, structuredClone(placement));
+  if (placement.surface === undefined) delete sticker.surface;
+  if (placement.scale === undefined) delete sticker.scale;
   return true;
 }

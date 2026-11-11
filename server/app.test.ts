@@ -167,7 +167,13 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
           accessory: "flower",
           lens: "lens-cyan",
           stickers: [
-            { id: "ribbon", slot: 0, rotation: 0.1 },
+            {
+              id: "ribbon",
+              slot: 0,
+              rotation: 1.2,
+              scale: 1.5,
+              surface: { mesh: "0/1", position: [2, 3, 4], normal: [0, 0, 1] },
+            },
             { id: "flower", slot: 3, rotation: -0.15 },
           ],
           unlocked: [

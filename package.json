@@ -33,7 +33,8 @@
     "test:sticker-pack": "node tests/sticker-pack.cjs",
     "test:legendary": "node tests/legendary-skins.cjs",
     "test:workshop": "node tests/workshop.cjs",
-    "test:catalog": "node tests/catalog.cjs"
+    "test:catalog": "node tests/catalog.cjs",
+    "test:profile": "node tests/profile.cjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

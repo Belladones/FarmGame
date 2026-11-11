@@ -72,9 +72,13 @@ function StickerThumbnail({ id }: { id: string }) {
 export function CompanionPanel({
   farm,
   onCustomize,
+  selectedSlot,
+  onSelectSticker,
 }: {
   farm: Farm;
   onCustomize: (id: string) => void;
+  selectedSlot?: number;
+  onSelectSticker?: (slot: number) => void;
 }) {
   const [tab, setTab] = useState<"skin" | "accessory" | "lens">("skin");
   const count = companionMissionCount(farm);
@@ -126,15 +130,24 @@ export function CompanionPanel({
             {MAX_STICKERS}
           </strong>
           <p>
-            L’emplacement et l’inclinaison sont tirés au sort à l’ajout, puis
-            conservés dans la sauvegarde.
+            Sélectionnez un sticker, puis placez-le librement sur la vue 3D. Sa
+            position et sa rotation sont conservées dans votre partie.
           </p>
           {(farm.companion.stickers ?? []).map((sticker) => (
-            <div key={sticker.slot}>
-              <span>
+            <div
+              key={sticker.slot}
+              className={selectedSlot === sticker.slot ? "selected" : ""}
+            >
+              <button
+                className="sticker-select"
+                aria-pressed={selectedSlot === sticker.slot}
+                onClick={() => onSelectSticker?.(sticker.slot)}
+              >
                 {cosmetics.find((c) => c.id === sticker.id)?.name} ·{" "}
-                {stickerMounts[sticker.slot]?.name}
-              </span>
+                {sticker.surface
+                  ? "Position libre"
+                  : stickerMounts[sticker.slot]?.name}
+              </button>
               <button
                 aria-label={`Retirer le sticker ${sticker.slot + 1}`}
                 onClick={() => onCustomize(`sticker:remove:${sticker.slot}`)}
@@ -193,7 +206,7 @@ export function CompanionPanel({
                         ? c.id === "none"
                           ? []
                           : [{ id: c.id, slot: 1, rotation: 0 }]
-                        : farm.companion.stickers
+                        : []
                     }
                     lens={c.kind === "lens" ? c.id : farm.companion.lens}
                     skin={c.kind === "skin" ? c.id : farm.companion.skin}

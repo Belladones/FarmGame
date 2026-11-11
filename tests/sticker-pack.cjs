@@ -39,7 +39,7 @@ const { fresh } = require("../src/modules/farm/application/engine.ts");
         "utility-robot",
     );
     await p
-      .getByRole("button", { name: "Session et sauvegarde", exact: true })
+      .getByRole("button", { name: "Profil de Luma", exact: true })
       .click();
     const panel = p.getByRole("region", { name: "Votre compagne Luma" });
     await panel.getByRole("button", { name: "Stickers", exact: true }).click();
@@ -119,7 +119,7 @@ const { fresh } = require("../src/modules/farm/application/engine.ts");
     );
     await p.setViewportSize({ width: 390, height: 844 });
     await p
-      .getByRole("button", { name: "Session et sauvegarde", exact: true })
+      .getByRole("button", { name: "Profil de Luma", exact: true })
       .click();
     await panel.getByRole("button", { name: "Stickers", exact: true }).click();
     assert.equal(await panel.locator(".sticker-thumbnail").count(), 35);

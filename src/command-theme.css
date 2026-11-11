@@ -1249,7 +1249,7 @@
   background: #b9844320;
   border: 1px solid #c9914f55;
 }
-.game .menu-account {
+.game .menu-account:not(.profile-window) {
   width: min(780px, calc(100% - 64px));
   height: min(900px, calc(100% - 56px));
   margin: auto;
@@ -1267,7 +1267,7 @@
 }
 @media (max-width: 650px) {
   .game .menu-guide,
-  .game .menu-account {
+  .game .menu-account:not(.profile-window) {
     width: 100%;
     height: 100%;
     margin: 0;

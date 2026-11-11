@@ -1,3 +1,4 @@
+import { validStickerPlacement } from "../src/modules/companion/domain/stickerPlacements.js";
 type RecordValue = Record<string, unknown>;
 const record = (v: unknown): v is RecordValue =>
   !!v && typeof v === "object" && !Array.isArray(v);
@@ -101,18 +102,8 @@ export function validFarm(value: unknown): value is RecordValue {
       (c.stickers !== undefined &&
         (!Array.isArray(c.stickers) ||
           c.stickers.length > 3 ||
-          !c.stickers.every(
-            (s) =>
-              record(s) &&
-              typeof s.id === "string" &&
-              s.id.length <= 64 &&
-              integer(s.slot, 0, 4) &&
-              typeof s.rotation === "number" &&
-              Number.isFinite(s.rotation) &&
-              Math.abs(s.rotation) <= 0.3,
-          ) ||
-          new Set(c.stickers.map((s) => (s as Record<string, unknown>).slot))
-            .size !== c.stickers.length)) ||
+          !c.stickers.every(validStickerPlacement) ||
+          new Set(c.stickers.map((s) => s.slot)).size !== c.stickers.length)) ||
       !Array.isArray(c.unlocked) ||
       c.unlocked.length > 64 ||
       !c.unlocked.every((id) => typeof id === "string")

@@ -1,3 +1,4 @@
+import { surfaceWorld } from "./stickerSurface";
 import { stickerContourMask } from "./stickerContourMask";
 import { stickerArt, stickerAtlas } from "../../domain/stickerLibrary";
 import {
@@ -72,29 +73,39 @@ export function createRobotStickers(
   atlas?: THREE.Texture,
 ) {
   let signature = "";
-  const groups: THREE.Group[] = [],
+  const groups = new Map<number, { key: string; group: THREE.Group }>(),
     textures = new Map<string, THREE.Texture>(),
     masks = new Map<string, THREE.Texture>();
+  const remove = (slot: number) => {
+    const entry = groups.get(slot);
+    if (!entry) return;
+    entry.group.removeFromParent();
+    const materials = new Set<THREE.Material>();
+    entry.group.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.geometry.dispose();
+        for (const m of Array.isArray(o.material) ? o.material : [o.material])
+          materials.add(m);
+      }
+    });
+    materials.forEach((m) => m.dispose());
+    groups.delete(slot);
+  };
   const clear = () => {
-    for (const group of groups) {
-      group.removeFromParent();
-      group.traverse((o) => {
-        if (o instanceof THREE.Mesh) {
-          o.geometry.dispose();
-          (o.material as THREE.Material).dispose();
-        }
-      });
-    }
-    groups.length = 0;
+    for (const slot of groups.keys()) remove(slot);
   };
   return {
     update(placements: readonly StickerPlacement[]) {
       const key = JSON.stringify(placements);
       if (signature === key) return;
       signature = key;
-      clear();
+      for (const slot of groups.keys())
+        if (!placements.some((s) => s.slot === slot)) remove(slot);
       body.updateWorldMatrix(true, true);
       for (const placement of placements.slice(0, 3)) {
+        const savedKey = JSON.stringify(placement);
+        if (groups.get(placement.slot)?.key === savedKey) continue;
+        remove(placement.slot);
         const mount = stickerMounts[placement.slot];
         const art = stickerArt(placement.id);
         if (
@@ -103,21 +114,29 @@ export function createRobotStickers(
           (art && !atlas)
         )
           continue;
-        const parent = mount.part === "head" ? headParent : body;
-        const source = mount.part === "head" ? head : asset;
+        const surface = placement.surface
+          ? surfaceWorld(asset, placement.surface)
+          : undefined;
+        if (placement.surface && !surface) continue;
+        const parent =
+          surface?.mesh ?? (mount.part === "head" ? headParent : body);
+        const source = surface?.mesh ?? (mount.part === "head" ? head : asset);
         if (!source) continue;
         const point = new THREE.Vector3(...mount.position);
         if (mount.part === "head") point.sub(headParent.position);
-        const position = parent.localToWorld(point);
+        const position = surface?.point ?? parent.localToWorld(point);
+        const rotation = new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 0, 1),
+          placement.rotation,
+        );
         const orientation = new THREE.Euler().setFromQuaternion(
-          parent
-            .getWorldQuaternion(new THREE.Quaternion())
-            .multiply(
-              new THREE.Quaternion().setFromAxisAngle(
+          (surface
+            ? new THREE.Quaternion().setFromUnitVectors(
                 new THREE.Vector3(0, 0, 1),
-                placement.rotation,
-              ),
-            ),
+                surface.normal,
+              )
+            : parent.getWorldQuaternion(new THREE.Quaternion())
+          ).multiply(rotation),
         );
         const inverse = parent.matrixWorld.clone().invert();
         let texture = textures.get(placement.id);
@@ -154,15 +173,20 @@ export function createRobotStickers(
         const group = new THREE.Group();
         group.name = `Luma.sticker.${placement.id}.${placement.slot}`;
         source.traverse((object) => {
-          if (!(object instanceof THREE.Mesh)) return;
+          if (!(object instanceof THREE.Mesh) || object.userData.lumaDecal)
+            return;
           const geometry = new DecalGeometry(
             object,
             position,
             orientation,
             new THREE.Vector3(
-              mount.size * (art ? Math.min(1, art.rect[2] / art.rect[3]) : 1),
-              mount.size * (art ? Math.min(1, art.rect[3] / art.rect[2]) : 1),
-              0.3,
+              mount.size *
+                (placement.scale ?? 1) *
+                (art ? Math.min(1, art.rect[2] / art.rect[3]) : 1),
+              mount.size *
+                (placement.scale ?? 1) *
+                (art ? Math.min(1, art.rect[3] / art.rect[2]) : 1),
+              surface ? 0.06 : 0.3,
             ),
           );
           if (!geometry.attributes.position.count) {
@@ -170,15 +194,25 @@ export function createRobotStickers(
             return;
           }
           geometry.applyMatrix4(inverse);
-          group.add(new THREE.Mesh(geometry, material));
+          const decal = new THREE.Mesh(geometry, material);
+          decal.userData.lumaDecal = true;
+          decal.userData.stickerSlot = placement.slot;
+          group.add(decal);
         });
         if (!group.children.length) {
           material.dispose();
           continue;
         }
         parent.add(group);
-        groups.push(group);
+        groups.set(placement.slot, { key: savedKey, group });
       }
+    },
+    meshes() {
+      return [...groups.values()].flatMap((e) =>
+        e.group.children.filter(
+          (o): o is THREE.Mesh => o instanceof THREE.Mesh,
+        ),
+      );
     },
     dispose() {
       clear();

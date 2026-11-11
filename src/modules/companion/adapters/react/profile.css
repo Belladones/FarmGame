@@ -1,0 +1,485 @@
+.game .skill-screen.profile-window {
+  width: min(1440px, calc(100% - 40px));
+  height: calc(100% - 40px);
+  margin: auto;
+  border: 1px solid #829fb566;
+}
+@media (max-width: 800px) {
+  .game .skill-screen.profile-window {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+  }
+}
+.game .profile-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid #71c6d24d;
+  background: #12354480;
+  border-radius: 1px;
+  color: #bae5ec;
+  font-size: 10px;
+  box-shadow: none;
+}
+.game .profile-shortcut span {
+  font-size: 9px;
+  color: #89acbd;
+}
+.game .account-profile-link {
+  padding: 14px;
+  border: 1px solid #75baca66;
+  background: #143645;
+  color: #bce7ed;
+  border-radius: 0;
+}
+.game .profile-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 24px 30px 18px;
+  color: #e5eff6;
+  gap: 20px;
+  background: radial-gradient(ellipse at 15% 20%, #23677a20, transparent 60%);
+}
+.game .profile-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.game .profile-heading .overline {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #7dd6e1;
+}
+.game .profile-heading h2 {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  margin: 8px 0;
+}
+.game .profile-heading p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #86a5b8;
+  margin: 0;
+}
+.game .profile-heading > button {
+  font-size: 11px;
+  padding: 12px;
+  border: 1px solid #7195a64d;
+  background: #15314066;
+  color: #c0d8e5;
+  border-radius: 0;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+.game .profile-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.15fr) minmax(320px, 1fr);
+  gap: 22px;
+  flex: 1;
+  min-height: 0;
+}
+.game .profile-preview-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+.game .luma-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  border: 1px solid #6c9aaa4d;
+  background:
+    radial-gradient(ellipse at 50% 48%, #397a8b28, transparent 65%), #091720aa;
+}
+.game .luma-view-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 8px;
+  letter-spacing: 1.4px;
+  color: #547c90;
+  padding: 14px 17px;
+  border-bottom: 1px solid #648ca529;
+}
+.game .luma-view-heading .overline {
+  color: #8adbe5;
+  font-size: 9px;
+}
+.game .luma-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background-image:
+    linear-gradient(#6ec1d105 1px, transparent 1px),
+    linear-gradient(90deg, #6ec1d105 1px, transparent 1px);
+  background-size: 38px 38px;
+  overflow: hidden;
+  cursor: grab;
+}
+.game .luma-stage.mode-move {
+  cursor: crosshair;
+}
+.game .luma-stage.mode-rotate {
+  cursor: crosshair;
+}
+.game .luma-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+.game .luma-stage canvas:focus-visible {
+  outline: 1px solid #8adbe5;
+  outline-offset: -4px;
+}
+.game .luma-view-status {
+  position: absolute;
+  inset: 44% 12px auto;
+  text-align: center;
+  font-size: 12px;
+  color: #91b3c7;
+  pointer-events: none;
+}
+.game .luma-view-tools,
+.game .luma-view-angles {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 12px 0;
+}
+.game .luma-view-tools button,
+.game .luma-view-angles button {
+  font-size: 10px;
+  padding: 9px 10px;
+  border: 1px solid #63859a50;
+  background: #1633446b;
+  border-radius: 0;
+  color: #a9c5d6;
+  box-shadow: none;
+}
+.game .luma-view-tools button[aria-pressed="true"] {
+  border-color: #82d9e5;
+  background: #2d6e803b;
+  color: #c8f1f6;
+}
+.game .luma-view-tools button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.game .luma-view-angles button {
+  font-size: 9px;
+  padding: 5px 9px;
+  border-color: transparent;
+  background: transparent;
+  color: #7495aa;
+}
+.game .luma-view-hint {
+  color: #7b9baf;
+  text-align: center;
+  line-height: 1.6;
+  font-size: 10px;
+  margin: 9px 14px 13px;
+}
+.game .profile-customization {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #436b7f transparent;
+  padding-right: 6px;
+}
+.game .profile-customization .companion-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.game .profile-customization .companion-intro {
+  display: block;
+  padding: 0 0 16px;
+  margin: 0;
+  border-bottom: 1px solid #759aaa33;
+}
+.game .profile-customization .companion-intro > .companion-avatar {
+  display: none;
+}
+.game .profile-customization .companion-intro h3 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 7px 0;
+}
+.game .profile-customization .companion-intro p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #a4bdcd;
+  margin: 10px 0;
+}
+.game .profile-customization .companion-intro small {
+  font-size: 10px;
+  color: #6e93a9;
+}
+.game .profile-customization .companion-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 14px 0;
+  background: #0c1924;
+  display: flex;
+  gap: 7px;
+}
+.game .profile-customization .companion-tabs button {
+  flex: 1;
+  border-radius: 0;
+  padding: 10px;
+  background: #1d36464f;
+  border-color: #7094a54d;
+  color: #99b7cb;
+  box-shadow: none;
+  font-size: 11px;
+}
+.game .profile-customization .companion-tabs button.active {
+  background: #ff8b3d19;
+  border-color: #ff9c5e;
+  color: #ffbc8e;
+}
+.game .profile-customization .cosmetic-grid {
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 10px;
+}
+.game .profile-customization .cosmetic-card {
+  border-radius: 0;
+  border-color: #7094a536;
+  padding: 12px;
+  background: #10253266;
+}
+.game .profile-customization .cosmetic-card.equipped {
+  border-color: #83d2dc;
+  background: #29556425;
+}
+.game .profile-customization .cosmetic-card > strong {
+  font-size: 12px;
+}
+.game .profile-customization .cosmetic-card p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8fabbf;
+}
+.game .profile-customization .cosmetic-card button {
+  border-radius: 0;
+  font-size: 10px;
+  padding: 10px;
+  box-shadow: none;
+}
+.game .profile-sticker-transform {
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border: 1px solid #759aaa44;
+  background: #102a3866;
+  flex-shrink: 0;
+}
+.game .profile-sticker-transform > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  grid-column: 1/-1;
+  font-size: 11px;
+}
+.game .profile-sticker-transform > div span {
+  font-size: 9px;
+  color: #81a4b8;
+}
+.game .profile-sticker-transform label {
+  font-size: 10px;
+  color: #99baca;
+  display: block;
+}
+.game .profile-sticker-transform output {
+  float: right;
+  color: #c3e9ef;
+  font-family: monospace;
+}
+.game .profile-sticker-transform input {
+  display: block;
+  width: 100%;
+  accent-color: #83d7e1;
+  margin: 12px 0 2px;
+  cursor: pointer;
+}
+.game .profile-sticker-transform > button {
+  grid-column: 1/-1;
+  font-size: 10px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #7b9aae;
+  text-align: left;
+  box-shadow: none;
+}
+.game .profile-panel .sticker-loadout {
+  background: #12344336;
+  border-color: #759aaa44;
+  padding: 14px;
+}
+.game .profile-panel .sticker-loadout p {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.game .profile-panel .sticker-loadout > div {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  margin: 7px 0;
+  padding: 3px;
+  border: 1px solid transparent;
+}
+.game .profile-panel .sticker-loadout > div.selected {
+  border-color: #82d9e588;
+  background: #27607530;
+}
+.game .profile-panel .sticker-loadout button {
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 10px;
+  padding: 8px;
+  white-space: normal;
+}
+.game .profile-panel .sticker-loadout .sticker-select {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: #bfdce9;
+}
+.game .profile-panel .sticker-loadout > button {
+  margin-top: 8px;
+  font-size: 10px;
+}
+.game .profile-panel button:focus-visible {
+  outline: 2px solid #83d7e1;
+  outline-offset: -2px;
+}
+@media (max-width: 800px) {
+  .game .profile-panel {
+    overflow: auto;
+    padding: 16px;
+    gap: 16px;
+  }
+  .game .profile-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .game .profile-heading h2 {
+    font-size: 20px;
+  }
+  .game .profile-heading > button {
+    font-size: 10px;
+    padding: 9px;
+    max-width: 130px;
+  }
+  .game .profile-layout {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    min-height: 0;
+    gap: 22px;
+  }
+  .game .profile-preview-column {
+    min-height: 0;
+    flex: none;
+  }
+  .game .luma-view {
+    height: 540px;
+    flex: none;
+  }
+  .game .profile-customization {
+    overflow: visible;
+    min-height: 0;
+    padding: 0;
+  }
+  .game .profile-customization .companion-tabs {
+    position: static;
+  }
+  .game .profile-sticker-transform {
+    padding: 12px;
+  }
+  .game .luma-view-heading > span:last-child {
+    display: none;
+  }
+}
+@media (max-width: 430px) {
+  .game .profile-heading {
+    display: block;
+  }
+  .game .profile-heading > button {
+    margin-top: 12px;
+    max-width: none;
+  }
+  .game .luma-view {
+    height: 460px;
+  }
+  .game .luma-view-tools button {
+    font-size: 9px;
+    padding: 9px 6px;
+  }
+  .game .profile-customization .cosmetic-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .game .profile-sticker-transform > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+@media (min-width: 801px) and (max-height: 720px) {
+  .game .profile-panel {
+    overflow: auto;
+  }
+  .game .profile-layout {
+    flex: none;
+    min-height: 580px;
+  }
+  .game .profile-customization {
+    max-height: 580px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .game .profile-shortcut {
+    position: absolute;
+    right: calc(100% + 6px);
+    top: 0;
+    margin: 0;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+  .game .profile-shortcut span {
+    display: none;
+  }
+  .game .profile-shortcut::before {
+    content: "✦";
+    font-size: 17px;
+  }
+}

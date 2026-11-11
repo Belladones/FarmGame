@@ -50,6 +50,11 @@ export function createCyberCompanion(
     -center.z * scale,
   );
   const head = asset.getObjectByName("LumaHeadJoint");
+  const restHead = head?.quaternion.clone();
+  const surfaceMeshes: THREE.Mesh[] = [];
+  asset.traverse((o) => {
+    if (o instanceof THREE.Mesh) surfaceMeshes.push(o);
+  });
   const finishes = new Map<
     THREE.MeshStandardMaterial,
     { roughness: number; metalness: number }
@@ -94,12 +99,7 @@ export function createCyberCompanion(
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   let time = 0;
   body.position.y = 0.29;
-  function update(
-    dt: number,
-    appearance: Companion,
-    camera: THREE.Vector3,
-    motion: CompanionMotion = restMotion,
-  ) {
+  function applyAppearance(appearance: Companion) {
     const skin = cosmetics.find(
       (c) => c.kind === "skin" && c.id === appearance.skin,
     );
@@ -135,6 +135,15 @@ export function createCyberCompanion(
           ? []
           : [{ id: appearance.accessory, slot: 1, rotation: 0 }]),
     );
+    return legendary;
+  }
+  function update(
+    dt: number,
+    appearance: Companion,
+    camera: THREE.Vector3,
+    motion: CompanionMotion = restMotion,
+  ) {
+    const legendary = applyAppearance(appearance);
     const delta = Math.max(0, Math.min(dt, 0.1));
     if (!reduced.matches) {
       time += delta;
@@ -178,6 +187,22 @@ export function createCyberCompanion(
   }
   return {
     group,
+    asset,
+    surfaceMeshes,
+    stickerMeshes: () => accessories.meshes(),
+    updatePreview(dt: number, appearance: Companion) {
+      mixer.stopAllAction();
+      body.position.set(0, 0.29, 0);
+      body.rotation.set(0, 0, 0);
+      if (head && restHead) head.quaternion.copy(restHead);
+      if (head) headAccessories.quaternion.copy(head.quaternion);
+      const delta = Math.max(0, Math.min(dt, 0.1));
+      if (!reduced.matches) time += delta;
+      const legendary = applyAppearance(appearance);
+      effects.update(legendary, delta, reduced.matches);
+      for (const [material, base] of glowLevels)
+        material.emissiveIntensity = base;
+    },
     update,
     missingTextures: (gltf.parser?.json?.extras?.missingTextures ??
       []) as string[],

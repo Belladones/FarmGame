@@ -51,7 +51,7 @@ const { missionsFor } = require("../src/modules/missions/domain/missions.ts");
       ["Démon", "legend-demon"],
     ]) {
       await p
-        .getByRole("button", { name: "Session et sauvegarde", exact: true })
+        .getByRole("button", { name: "Profil de Luma", exact: true })
         .click();
       const panel = p.getByRole("region", { name: "Votre compagne Luma" });
       assert.equal(await panel.locator(".legendary-badge").count(), 2);
@@ -98,7 +98,7 @@ const { missionsFor } = require("../src/modules/missions/domain/missions.ts");
     );
     await p.setViewportSize({ width: 390, height: 844 });
     await p
-      .getByRole("button", { name: "Session et sauvegarde", exact: true })
+      .getByRole("button", { name: "Profil de Luma", exact: true })
       .click();
     const panel = p.getByRole("region", { name: "Votre compagne Luma" });
     await panel

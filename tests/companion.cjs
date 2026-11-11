@@ -106,7 +106,7 @@ const { fresh } = require("../src/modules/farm/application/engine.ts");
     );
     await p.screenshot({ path: "/tmp/farm-luma.png" });
     await p
-      .getByRole("button", { name: "Session et sauvegarde", exact: true })
+      .getByRole("button", { name: "Profil de Luma", exact: true })
       .click();
     assert.equal(await mascot.isVisible(), false);
     const panel = p.getByRole("region", { name: "Votre compagne Luma" });
@@ -134,7 +134,7 @@ const { fresh } = require("../src/modules/farm/application/engine.ts");
     }, f);
     await p.reload();
     await p
-      .getByRole("button", { name: "Session et sauvegarde", exact: true })
+      .getByRole("button", { name: "Profil de Luma", exact: true })
       .click();
     await panel
       .getByRole("button", { name: "Débloquer et équiper Rose", exact: true })
@@ -183,13 +183,13 @@ const { fresh } = require("../src/modules/farm/application/engine.ts");
       .click();
     await p.waitForFunction(
       () =>
-        document.querySelector(".gui-companion").dataset.skin === "rose" &&
+        document.querySelector(".gui-companion")?.dataset.skin === "rose" &&
         JSON.parse(document.querySelector(".gui-companion").dataset.stickers)
           .length === 3,
     );
     await p.reload();
     await p.waitForFunction(
-      () => document.querySelector(".gui-companion").dataset.skin === "rose",
+      () => document.querySelector(".gui-companion")?.dataset.skin === "rose",
     );
     assert.equal(
       await p.locator(".gui-companion").getAttribute("data-accessory"),
@@ -235,7 +235,7 @@ const { fresh } = require("../src/modules/farm/application/engine.ts");
     });
     await p.screenshot({ path: "/tmp/luma-gui-mobile.png" });
     await p
-      .getByRole("button", { name: "Session et sauvegarde", exact: true })
+      .getByRole("button", { name: "Profil de Luma", exact: true })
       .click();
     await panel.getByRole("button", { name: "Coques", exact: true }).click();
     await panel.scrollIntoViewIfNeeded();

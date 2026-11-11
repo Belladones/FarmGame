@@ -1,3 +1,5 @@
+import { ProfilePanel } from "../modules/companion/adapters/react/ProfilePanel";
+import { editCompanionSticker } from "../modules/companion/domain/companion";
 import {
   getCatalog,
   catalogVersion,
@@ -13,10 +15,7 @@ import {
   assetUpgradeBlocker,
 } from "../modules/farm/application/engine";
 import { GuiCompanion } from "../modules/companion/adapters/react/GuiCompanion";
-import {
-  CompanionPanel,
-  CompanionAvatar,
-} from "../modules/companion/adapters/react/CompanionPanel";
+import { CompanionAvatar } from "../modules/companion/adapters/react/CompanionPanel";
 import { customizeCompanion } from "../modules/companion/domain/companion";
 import React, { useEffect, useRef, useState } from "react";
 import Editor from "@monaco-editor/react";
@@ -898,6 +897,13 @@ export function App() {
                         : "Mode local"}
             </small>
           </button>
+          <button
+            className="profile-shortcut"
+            aria-label="Profil de Luma"
+            onClick={() => setPanel("Profil")}
+          >
+            ✦ Profil de Luma <span>Personnaliser ↗</span>
+          </button>
         </div>
       </header>
       <aside
@@ -1509,6 +1515,7 @@ export function App() {
             panel === "Missions" ||
             panel === "API & aide" ||
             panel === "Session et sauvegarde" ||
+            panel === "Profil" ||
             panel === "Atelier"
               ? "skills-backdrop"
               : "")
@@ -1521,12 +1528,16 @@ export function App() {
             aria-label={panel}
             className={
               "detail-panel floating-window " +
-              (panel === "Atelier" ? "workshop-window " : "") +
+              (panel === "Atelier"
+                ? "workshop-window "
+                : panel === "Profil"
+                  ? "profile-window "
+                  : "") +
               (panel === "API & aide"
                 ? "menu-guide "
                 : panel === "Magasin"
                   ? "menu-market "
-                  : panel === "Session et sauvegarde"
+                  : panel === "Session et sauvegarde" || panel === "Profil"
                     ? "menu-account "
                     : panel === "Inventaire"
                       ? "menu-inventory "
@@ -1538,6 +1549,7 @@ export function App() {
               panel === "Missions" ||
               panel === "API & aide" ||
               panel === "Session et sauvegarde" ||
+              panel === "Profil" ||
               panel === "Atelier"
                 ? "skill-screen"
                 : "")
@@ -1620,16 +1632,30 @@ export function App() {
                     status={syncStatus}
                     actions={slotActions}
                   />
-                  <CompanionPanel
-                    farm={s}
-                    onCustomize={(id) => {
-                      if (customizeCompanion(farm.current, id)) {
-                        refresh();
-                        notify("La nouvelle tenue de Luma est équipée.");
-                      }
-                    }}
-                  />
+                  <button
+                    className="account-profile-link"
+                    onClick={() => setPanel("Profil")}
+                  >
+                    Personnaliser Luma ↗
+                  </button>
                 </SessionPanel>
+              )}
+              {panel === "Profil" && (
+                <ProfilePanel
+                  farm={s}
+                  username={syncStatus.player?.username}
+                  onAccount={() => setPanel("Session et sauvegarde")}
+                  onCustomize={(id) => {
+                    if (customizeCompanion(farm.current, id)) {
+                      refresh();
+                      notify("La personnalisation de Luma est enregistrée.");
+                    }
+                  }}
+                  onStickerChange={(placement) => {
+                    if (editCompanionSticker(farm.current, placement))
+                      refresh();
+                  }}
+                />
               )}
               {panel === "Missions" && (
                 <MissionPanel
