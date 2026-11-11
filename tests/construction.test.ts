@@ -1,4 +1,4 @@
-import { legacyFarm as fresh } from "../tests/fixtures";
+import { legacyFarm as fresh } from "./fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -16,7 +16,7 @@ import {
   recallRobot,
   robotPlacementBlocker,
   type Farm,
-} from "./modules/farm/application/engine";
+} from "../src/modules/farm/application/engine";
 import { validFarm } from "../server/validation";
 const saved = (s: Farm) => JSON.parse(JSON.stringify(s));
 function equipped() {

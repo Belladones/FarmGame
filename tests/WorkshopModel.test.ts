@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createWorkshopModel } from "./modules/equipment/adapters/three/WorkshopModel";
-import { fresh, assetUpgradeBlocker, upgradeAsset } from "./modules/farm/application/engine";
-import { research } from "./modules/research/domain/catalog";
+import { createWorkshopModel } from "../src/modules/equipment/adapters/three/WorkshopModel";
+import { fresh, assetUpgradeBlocker, upgradeAsset } from "../src/modules/farm/application/engine";
+import { research } from "../src/modules/research/domain/catalog";
 test("workshop has an open service bay and fits its square concrete building slot", () => {
   const model = createWorkshopModel();
   const bounds = new THREE.Box3().setFromObject(model.group),

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { guiSpots, guiPathClear, intersects } from "./modules/companion/domain/companionLayout";
+import { guiSpots, guiPathClear, intersects } from "../src/modules/companion/domain/companionLayout";
 test("GUI destinations stay on screen and avoid panels at desktop and mobile sizes", () => {
   for (const [width, height] of [
     [1440, 1000],

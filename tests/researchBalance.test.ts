@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { research } from "./modules/research/domain/catalog";
-import { cropData } from "./modules/farm/domain/crops";
-import { salePrices } from "./modules/commerce/domain/catalog";
-import { models } from "./modules/robots/domain/catalog";
-import { buildings } from "./modules/construction/domain/catalog";
-import { sum } from "./shared/domain/resources";
+import { research } from "../src/modules/research/domain/catalog";
+import { cropData } from "../src/modules/farm/domain/crops";
+import { salePrices } from "../src/modules/commerce/domain/catalog";
+import { models } from "../src/modules/robots/domain/catalog";
+import { buildings } from "../src/modules/construction/domain/catalog";
+import { sum } from "../src/shared/domain/resources";
 import {
   fresh,
   buy,
@@ -17,8 +17,8 @@ import {
   researchBlocker,
   upgradeAsset,
   assetUpgradeBlocker,
-} from "./modules/farm/application/engine";
-import { researchDepth } from "./modules/research/adapters/react/researchTrees";
+} from "../src/modules/farm/application/engine";
+import { researchDepth } from "../src/modules/research/adapters/react/researchTrees";
 import { validFarm } from "../server/validation";
 const entry = (id: string) => research.find((r) => r.id === id)!;
 function fund(s: ReturnType<typeof fresh>, id: string) {

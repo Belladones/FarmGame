@@ -1,4 +1,4 @@
-import { legacyFarm as fresh } from "../tests/fixtures";
+import { legacyFarm as fresh } from "./fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -21,11 +21,11 @@ import {
   relocateBuilding,
   at,
   releaseReservation,
-} from "./modules/farm/application/engine";
-import { research } from "./modules/research/domain/catalog";
-import { buildings, constructionSlots } from "./modules/construction/domain/catalog";
-import { models } from "./modules/robots/domain/catalog";
-import { sum } from "./shared/domain/resources";
+} from "../src/modules/farm/application/engine";
+import { research } from "../src/modules/research/domain/catalog";
+import { buildings, constructionSlots } from "../src/modules/construction/domain/catalog";
+import { models } from "../src/modules/robots/domain/catalog";
+import { sum } from "../src/shared/domain/resources";
 function prepared() {
   const s = fresh();
   s.stock = 100;

@@ -1,7 +1,7 @@
-import { legacyFarm as fresh } from "../tests/fixtures";
+import { legacyFarm as fresh } from "./fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { command, buy, claim, sell, advance } from "./modules/farm/application/engine";
+import { command, buy, claim, sell, advance } from "../src/modules/farm/application/engine";
 test("growth, harvesting and adjacent deposit follow game time", () => {
   const s = fresh();
   assert.equal(command(s, "plant", ["Wheat"]), true);

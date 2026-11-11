@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createLegendaryEffects } from "./modules/companion/adapters/three/legendaryEffects";
-import { createCyberCompanion } from "./modules/companion/adapters/three/CyberCompanion";
-import { fresh, hydrateFarm } from "./modules/farm/application/engine";
-import { customizeCompanion, freshCompanion } from "./modules/companion/domain/companion";
-import { missionsFor } from "./modules/missions/domain/missions";
+import { createLegendaryEffects } from "../src/modules/companion/adapters/three/legendaryEffects";
+import { createCyberCompanion } from "../src/modules/companion/adapters/three/CyberCompanion";
+import { fresh, hydrateFarm } from "../src/modules/farm/application/engine";
+import { customizeCompanion, freshCompanion } from "../src/modules/companion/domain/companion";
+import { missionsFor } from "../src/modules/missions/domain/missions";
 test("legendary styles share an attainable milestone and preserve lens and stickers", () => {
   const farm = fresh();
   assert.equal(customizeCompanion(farm, "legend-angel"), false);

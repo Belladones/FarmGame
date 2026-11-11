@@ -5,8 +5,8 @@ import {
   bundlePrograms,
   programDependencies,
   resolveProgramFile,
-} from "./modules/programming/adapters/typescript/programModules";
-import { research } from "./modules/research/domain/catalog";
+} from "../src/modules/programming/adapters/typescript/programModules";
+import { research } from "../src/modules/research/domain/catalog";
 
 test("Programming research has an attainable ordered progression", () => {
   const get = (id: string) => research.find((r) => r.id === id)!;

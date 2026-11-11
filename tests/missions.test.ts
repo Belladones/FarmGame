@@ -1,16 +1,16 @@
-import { legacyFarm as fresh } from "../tests/fixtures";
+import { legacyFarm as fresh } from "./fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import ts from "typescript";
-import { claim, hydrateFarm, missionBlocker, advance } from "./modules/farm/application/engine";
+import { claim, hydrateFarm, missionBlocker, advance } from "../src/modules/farm/application/engine";
 import {
   missions,
   chapters,
   currentMission,
   career,
   completedMissions,
-} from "./modules/missions/domain/missions";
-import { declarations } from "./modules/programming/domain/api";
+} from "../src/modules/missions/domain/missions";
+import { declarations } from "../src/modules/programming/domain/api";
 import { validFarm } from "../server/validation";
 
 test("campaign rewards are ordered, atomic, and XP cannot count unknown or duplicate IDs", () => {

@@ -1,15 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { research } from "./modules/research/domain/catalog";
+import { research } from "../src/modules/research/domain/catalog";
 import {
   researchGroups,
   researchGroupFor,
   groupProgress,
   hasResearchLevel,
-} from "./modules/research/domain/researchGroups";
-import { researchTrees } from "./modules/research/adapters/react/researchTrees";
-import { robotTrees } from "./modules/research/adapters/react/robotTrees";
-import { fresh, buy } from "./modules/farm/application/engine";
+} from "../src/modules/research/domain/researchGroups";
+import { researchTrees } from "../src/modules/research/adapters/react/researchTrees";
+import { robotTrees } from "../src/modules/research/adapters/react/robotTrees";
+import { fresh, buy } from "../src/modules/farm/application/engine";
 test("one card represents each research family and every tier remains reachable", () => {
   const ids = researchTrees.flatMap((t) => t.nodes.map((n) => n.id));
   for (const group of researchGroups) {

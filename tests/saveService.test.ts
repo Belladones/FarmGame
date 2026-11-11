@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SaveService } from "./modules/saves/application/SaveService";
-import { SaveFailure, type SaveGateway } from "./modules/saves/ports/SavePorts";
-import { fresh } from "./modules/farm/domain/factories";
+import { SaveService } from "../src/modules/saves/application/SaveService";
+import { SaveFailure, type SaveGateway } from "../src/modules/saves/ports/SavePorts";
+import { fresh } from "../src/modules/farm/domain/factories";
 
 const unavailable = async (): Promise<never> => {
   throw new SaveFailure("Guest", "expired");

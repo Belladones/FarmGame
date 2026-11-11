@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { createCyberCompanion } from "./modules/companion/adapters/three/CyberCompanion";
-import { freshCompanion } from "./modules/companion/domain/companion";
+import { createCyberCompanion } from "../src/modules/companion/adapters/three/CyberCompanion";
+import { freshCompanion } from "../src/modules/companion/domain/companion";
 const media = (query: string): MediaQueryList => ({
   matches: true,
   media: query,

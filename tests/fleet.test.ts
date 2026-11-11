@@ -12,8 +12,8 @@ import {
   capacity,
   robotSpeed,
   actionDuration,
-} from "./modules/farm/application/engine";
-import { robotStatus, robotCapabilities } from "./modules/robots/application/fleet";
+} from "../src/modules/farm/application/engine";
+import { robotStatus, robotCapabilities } from "../src/modules/robots/application/fleet";
 import { validFarm } from "../server/validation";
 
 test("garage preserves cargo, code and equipment through save hydration", () => {
