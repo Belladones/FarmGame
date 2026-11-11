@@ -54,6 +54,30 @@ const { missions } = require("../src/modules/missions/domain/missions.ts");
       await p.locator(".campaign-mission").first().getAttribute("data-mission"),
       "deposit",
     );
+    await p.locator('[data-mission-detail="deposit"]').waitFor();
+    const left = await p.locator(".mission-sidebar").boundingBox(),
+      right = await p.locator(".mission-detail-panel").boundingBox();
+    assert.ok(
+      left.x + left.width <= right.x,
+      "mission list and description form two columns",
+    );
+    await p.locator('[data-mission="first"]').click();
+    await p.locator('[data-mission-detail="first"]').waitFor();
+    assert.equal(
+      await p.locator(".mission-detail-panel .campaign-claim").count(),
+      0,
+    );
+    await p.locator('[data-mission="first"]').focus();
+    await p.keyboard.press("Home");
+    await p.locator('[data-mission-detail="deposit"]').waitFor();
+    await p.keyboard.press("ArrowDown");
+    await p.locator('[data-mission-detail="routine"]').waitFor();
+    assert.equal(
+      await p.locator(".mission-detail-panel .campaign-claim").count(),
+      0,
+    );
+    await p.keyboard.press("Home");
+    await p.locator('[data-mission-detail="deposit"]').waitFor();
     await p
       .locator(".campaign-chapters")
       .getByRole("button", { name: /Changer d’échelle/ })
@@ -115,7 +139,30 @@ const { missions } = require("../src/modules/missions/domain/missions.ts");
       .getByRole("button", { name: "Ouvrir les missions", exact: true })
       .click();
     await p.setViewportSize({ width: 390, height: 844 });
+    const mobileList = await p.locator(".mission-sidebar").boundingBox(),
+      mobileDetail = await p.locator(".mission-detail-panel").boundingBox();
+    assert.ok(mobileList.x + mobileList.width <= mobileDetail.x);
+    await p.locator('[data-mission="coordinates"]').click();
+    await p.locator('[data-mission-detail="coordinates"]').waitFor();
+    await p.locator('[data-mission="observe"]').click();
+    await p
+      .locator(".mission-detail-actions button")
+      .last()
+      .scrollIntoViewIfNeeded();
     await p.screenshot({ path: "/tmp/farm-missions-mobile.png" });
+    assert.equal(
+      await p.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      true,
+    );
+    await p.setViewportSize({ width: 844, height: 390 });
+    const lastAction = p.locator(".mission-detail-actions button").last();
+    await lastAction.scrollIntoViewIfNeeded();
+    const actionBounds = await lastAction.boundingBox();
+    assert.ok(
+      actionBounds.y >= 0 && actionBounds.y + actionBounds.height <= 390,
+    );
     assert.equal(
       await p.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -124,7 +171,7 @@ const { missions } = require("../src/modules/missions/domain/missions.ts");
     );
     assert.deepEqual(errors, []);
     console.log(
-      "Missions: claim, XP, locked chapters, migration, chapter transition, navigation and mobile passed",
+      "Missions: two-column detail selection, keyboard navigation, claim, XP, locked previews, chapter transition, actions and mobile passed",
     );
   } finally {
     await browser.close();

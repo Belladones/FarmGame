@@ -1,0 +1,684 @@
+.game .mission-campaign {
+  --mission-cyan: #82dce5;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+  padding: 24px clamp(16px, 3vw, 44px) 12px;
+  overflow: hidden;
+  color: #e7eff6;
+  background: radial-gradient(ellipse at 85% 0%, #14536d20, transparent 55%);
+}
+.game .mission-campaign .campaign-heading {
+  gap: 24px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.game .mission-campaign .overline {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #8daebe;
+}
+.game .mission-campaign .campaign-heading .overline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--mission-cyan);
+}
+.game .mission-campaign .overline i {
+  width: 6px;
+  height: 6px;
+  background: var(--mission-cyan);
+  box-shadow: 0 0 10px #82dce580;
+  border-radius: 50%;
+}
+.game .mission-campaign .campaign-heading h2 {
+  font-size: clamp(20px, 2.4vw, 30px);
+  margin: 10px 0 6px;
+  letter-spacing: -0.6px;
+  font-weight: 500;
+}
+.game .mission-campaign .campaign-heading p {
+  margin: 0;
+  font-size: 12px;
+  color: #8ba5b7;
+}
+.game .mission-campaign .career-rank {
+  flex: 0 0 230px;
+  margin: 0;
+  padding: 12px 16px;
+  gap: 6px;
+  border: 1px solid #6d9aaf38;
+  border-left: 2px solid var(--mission-cyan);
+  border-radius: 0;
+  background: linear-gradient(100deg, #1d4d612b, #10202a88);
+}
+.game .mission-campaign .career-rank span {
+  color: var(--mission-cyan);
+  font-size: 9px;
+  letter-spacing: 1.6px;
+}
+.game .mission-campaign .career-rank strong {
+  color: #e7f0f6;
+  font-size: 15px;
+}
+.game .mission-campaign .career-rank small {
+  color: #91aebf;
+}
+.game .mission-campaign progress {
+  height: 4px;
+  border-radius: 0;
+  accent-color: var(--mission-cyan);
+  background: #25404e80;
+}
+.game .mission-campaign progress::-webkit-progress-bar {
+  background: #25404e80;
+}
+.game .mission-campaign progress::-webkit-progress-value {
+  background: var(--mission-cyan);
+  border-radius: 0;
+}
+.game .mission-campaign .campaign-overview {
+  margin: 0;
+  gap: 16px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.game .mission-campaign .campaign-overview progress {
+  max-width: 440px;
+}
+.game .mission-campaign .campaign-overview > span:last-child {
+  font-family: monospace;
+  color: var(--mission-cyan);
+}
+.game .mission-campaign .campaign-chapters {
+  flex-shrink: 0;
+  gap: 6px;
+}
+.game .mission-campaign .campaign-chapters button {
+  padding: 10px 12px;
+  grid-template-columns: 24px 1fr;
+  gap: 3px 9px;
+  background: #10263466;
+  border-color: #62839938;
+  border-radius: 0;
+  min-width: 0;
+}
+.game .mission-campaign .campaign-chapters button > span {
+  font-family: monospace;
+  font-size: 16px;
+}
+.game .mission-campaign .campaign-chapters button.selected {
+  background: #ff8b3d12;
+  border-color: #ff9b5d99;
+  box-shadow: inset 0 -2px #ff8b3d;
+}
+.game .mission-campaign .campaign-chapters strong {
+  font-size: 11px;
+}
+.game .mission-campaign .campaign-chapters small {
+  font-size: 9px;
+  letter-spacing: 0.4px;
+}
+.game .mission-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 32%) minmax(0, 1fr);
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+}
+.game .mission-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid #6d9aaf38;
+  background: #0a1822a8;
+}
+.game .mission-list-heading {
+  padding: 17px 18px;
+  border-bottom: 1px solid #6d9aaf38;
+  background: #16334333;
+}
+.game .mission-list-heading h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 8px 0 6px;
+  color: #e4eef5;
+}
+.game .mission-list-heading p {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8faabb;
+  margin: 0;
+}
+.game .mission-campaign .campaign-missions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #3d697e transparent;
+}
+.game .mission-campaign .campaign-mission {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 14px 10px;
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  opacity: 1;
+  box-shadow: none;
+  color: #a4bbcb;
+  cursor: pointer;
+  position: relative;
+}
+.game .mission-campaign .campaign-mission:hover {
+  background: #264a5b44;
+  border-color: #729cad33;
+}
+.game .mission-campaign .campaign-mission[aria-pressed="true"] {
+  background: linear-gradient(100deg, #2f677c3d, #20465919);
+  border-color: #8bdce570;
+  box-shadow: inset 2px 0 var(--mission-cyan);
+}
+.game .mission-campaign .campaign-mission.current .campaign-step {
+  color: #ffad75;
+  border-color: #ffad7555;
+  background: #ff8b3d13;
+}
+.game .mission-campaign .campaign-mission.complete .campaign-step {
+  color: #94ccb8;
+  border-color: #7ab99f44;
+}
+.game .mission-campaign .campaign-step {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #6d9aaf38;
+  font: 12px monospace;
+  color: #7793a6;
+}
+.game .mission-list-copy {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.game .mission-list-copy strong {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: #d5e4ee;
+}
+.game .mission-list-copy small {
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: #718f9f;
+}
+.game .campaign-mission.current .mission-list-copy small {
+  color: #ffb17d;
+}
+.game .campaign-mission.complete .mission-list-copy small {
+  color: #83b9a5;
+}
+.game .mission-list-arrow {
+  font-size: 22px;
+  color: #6cb9c6;
+  opacity: 0;
+}
+.game .campaign-mission[aria-pressed="true"] .mission-list-arrow {
+  opacity: 1;
+}
+.game .mission-return {
+  border: 0;
+  border-top: 1px solid #6d9aaf38;
+  border-radius: 0;
+  background: #1b3b4b33;
+  color: var(--mission-cyan);
+  font-size: 10px;
+  padding: 13px;
+  text-align: left;
+  flex-shrink: 0;
+}
+.game .mission-detail-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #6d9aaf4d;
+  background: linear-gradient(135deg, #18334255, #0a1620dd);
+  position: relative;
+}
+.game .mission-detail-panel:before {
+  content: "";
+  position: absolute;
+  width: 46px;
+  top: -1px;
+  left: -1px;
+  height: 2px;
+  background: var(--mission-cyan);
+  box-shadow: 0 0 14px #82dce528;
+}
+.game .mission-detail-scroll {
+  padding: 22px clamp(16px, 2.5vw, 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #3d697e transparent;
+}
+.game .mission-detail-topline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #7598ac;
+  font: 10px monospace;
+  letter-spacing: 1px;
+  padding-bottom: 19px;
+  border-bottom: 1px solid #6d9aaf30;
+}
+.game .mission-detail-topline .mission-state {
+  font: 9px inherit;
+  letter-spacing: 1px;
+  color: var(--mission-cyan);
+  padding: 5px 8px;
+  background: #67bac012;
+  border: 1px solid #67bac030;
+}
+.game .mission-detail-topline .mission-state.ready {
+  color: #ffb17d;
+  border-color: #ff9c554d;
+  background: #ff8b3d12;
+}
+.game .mission-detail-heading {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin: 26px 0 14px;
+}
+.game .mission-target-mark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 32px;
+  color: var(--mission-cyan);
+  border: 1px solid #82dce54d;
+  background: #1e657624;
+  clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 15% 100%, 0 85%);
+}
+.game .mission-detail-heading h2 {
+  font-size: clamp(20px, 2.2vw, 29px);
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  font-weight: 500;
+  margin: 7px 0 0;
+  color: #eef5fa;
+  overflow-wrap: anywhere;
+}
+.game .mission-description {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #bed0dc;
+  margin: 16px 0 24px;
+}
+.game .mission-objective-card {
+  border: 1px solid #6d9aaf38;
+  background: #122b373d;
+  padding: 16px;
+}
+.game .mission-objective-card > div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 13px;
+  font-size: 11px;
+  color: #a0bdce;
+}
+.game .mission-objective-card strong {
+  color: var(--mission-cyan);
+  font: 13px monospace;
+  white-space: nowrap;
+}
+.game .mission-objective-card small {
+  display: block;
+  line-height: 1.6;
+  color: #7897aa;
+  font-size: 10px;
+  margin-top: 10px;
+}
+.game .mission-reward-card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid #6d9aaf30;
+}
+.game .mission-reward-card strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffb17d;
+}
+.game .mission-reward-card small {
+  font-size: 10px;
+  color: #88b8a3;
+  margin-left: auto;
+}
+.game .mission-detail-scroll .mission-help {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.game .mission-detail-scroll .mission-help p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #9fb8c9;
+}
+.game .mission-detail-scroll .mission-help summary {
+  font-size: 11px;
+  color: #c4dce7;
+  line-height: 1.6;
+}
+.game .mission-detail-scroll .mission-help pre {
+  padding: 14px;
+  font-size: 11px;
+  white-space: pre;
+  max-width: 100%;
+  border-radius: 0;
+}
+.game .mission-detail-scroll .mission-help small {
+  color: #728fa0;
+  font-size: 10px;
+}
+.game .mission-locked-note {
+  display: flex;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #829bad;
+}
+.game .mission-locked-note span {
+  color: #d0ac7e;
+}
+.game .mission-detail-actions {
+  padding: 14px 20px;
+  flex-shrink: 0;
+  border-top: 1px solid #6d9aaf38;
+  background: #10222f;
+}
+.game .mission-detail-actions .campaign-actions {
+  margin: 0;
+  gap: 8px;
+}
+.game .mission-detail-actions .campaign-actions button {
+  border-radius: 0;
+  padding: 11px 14px;
+  font-size: 11px;
+  line-height: 1.4;
+  flex: 1;
+}
+.game .mission-detail-actions .campaign-claim:not(:disabled) {
+  background: #ff8b3d;
+  color: #101820;
+  border-color: #ff9d5c;
+}
+.game .mission-detail-actions .mission-blocker {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #ffb17d;
+}
+.game .mission-campaign .campaign-footer {
+  padding: 0;
+  border: 0;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #7691a3;
+  line-height: 1.6;
+}
+.game .mission-campaign .campaign-finale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin: 0;
+  border-color: #82dce544;
+  background: #143c4c44;
+  font-size: 12px;
+  gap: 10px;
+}
+.game .mission-campaign .campaign-finale button {
+  padding: 7px;
+  font-size: 11px;
+}
+.game .mission-campaign button:focus-visible,
+.game .mission-help summary:focus-visible {
+  outline: 2px solid var(--mission-cyan);
+  outline-offset: -3px;
+}
+.game .mission-empty {
+  padding: 24px;
+  font-size: 13px;
+  color: #9fb8c9;
+}
+@media (max-width: 700px) {
+  .game .mission-campaign {
+    gap: 12px;
+    padding: 16px 12px 10px;
+  }
+  .game .mission-campaign .campaign-heading {
+    display: flex;
+    gap: 12px;
+  }
+  .game .mission-campaign .campaign-heading h2 {
+    font-size: 20px;
+    line-height: 1.3;
+  }
+  .game .mission-campaign .campaign-heading p {
+    display: none;
+  }
+  .game .mission-campaign .campaign-heading .overline {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .game .mission-campaign .career-rank {
+    flex-basis: 135px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .game .mission-campaign .career-rank strong {
+    text-align: left;
+    grid-row: auto;
+    font-size: 11px;
+  }
+  .game .mission-campaign .career-rank small {
+    font-size: 9px;
+  }
+  .game .mission-campaign .career-rank progress {
+    grid-column: auto;
+  }
+  .game .mission-campaign .campaign-overview {
+    font-size: 9px;
+    gap: 8px;
+  }
+  .game .mission-campaign .campaign-chapters {
+    display: flex;
+    overflow-x: auto;
+    gap: 5px;
+    scrollbar-width: thin;
+    padding-bottom: 5px;
+  }
+  .game .mission-campaign .campaign-chapters button {
+    flex: 0 0 150px;
+    padding: 8px;
+    grid-template-columns: 20px 1fr;
+  }
+  .game .mission-layout {
+    grid-template-columns: minmax(112px, 36%) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .game .mission-list-heading {
+    padding: 12px 9px;
+  }
+  .game .mission-list-heading h3 {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .game .mission-list-heading p {
+    display: none;
+  }
+  .game .mission-list-heading .overline {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .game .mission-campaign .campaign-missions {
+    padding: 4px;
+    gap: 3px;
+  }
+  .game .mission-campaign .campaign-mission {
+    padding: 10px 7px;
+    gap: 7px;
+    align-items: flex-start;
+  }
+  .game .mission-campaign .campaign-step {
+    flex-basis: 18px;
+    width: 18px;
+    height: 20px;
+    font-size: 9px;
+    border: 0;
+    background: transparent;
+  }
+  .game .mission-list-copy strong {
+    font-size: 10px;
+  }
+  .game .mission-list-copy small {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .game .mission-list-arrow {
+    display: none;
+  }
+  .game .mission-detail-scroll {
+    padding: 13px 11px;
+  }
+  .game .mission-detail-topline {
+    font-size: 8px;
+    gap: 7px;
+    padding-bottom: 12px;
+  }
+  .game .mission-detail-topline .mission-state {
+    font-size: 8px;
+    padding: 4px;
+  }
+  .game .mission-detail-heading {
+    gap: 8px;
+    margin: 17px 0 10px;
+  }
+  .game .mission-target-mark {
+    display: none;
+  }
+  .game .mission-detail-heading .overline {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .game .mission-detail-heading h2 {
+    font-size: 18px;
+  }
+  .game .mission-description {
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 12px 0 18px;
+  }
+  .game .mission-objective-card {
+    padding: 10px;
+  }
+  .game .mission-objective-card > div {
+    flex-wrap: wrap;
+    font-size: 10px;
+  }
+  .game .mission-objective-card small {
+    font-size: 9px;
+  }
+  .game .mission-reward-card {
+    gap: 8px;
+    margin: 14px 0;
+    font-size: 10px;
+  }
+  .game .mission-reward-card .overline {
+    font-size: 8px;
+  }
+  .game .mission-reward-card strong {
+    font-size: 11px;
+  }
+  .game .mission-detail-actions {
+    padding: 9px;
+  }
+  .game .mission-detail-actions .campaign-actions {
+    flex-direction: column;
+  }
+  .game .mission-detail-actions .campaign-actions button {
+    font-size: 10px;
+    padding: 9px 7px;
+  }
+  .game .mission-detail-scroll .mission-help p {
+    font-size: 11px;
+  }
+  .game .mission-detail-scroll .mission-help pre {
+    font-size: 10px;
+    padding: 9px;
+  }
+  .game .mission-return {
+    padding: 10px 8px;
+    font-size: 9px;
+  }
+  .game .mission-campaign .campaign-footer {
+    font-size: 9px;
+  }
+}
+@media (max-height: 650px) {
+  .game .mission-campaign {
+    overflow: auto;
+    gap: 12px;
+  }
+  .game .mission-layout {
+    flex: none;
+    min-height: 320px;
+    height: 55vh;
+  }
+  .game .mission-campaign .campaign-heading p {
+    display: none;
+  }
+  .game .mission-campaign .career-rank {
+    padding: 8px 12px;
+  }
+  .game .mission-campaign .campaign-heading h2 {
+    font-size: 21px;
+    margin: 5px 0;
+  }
+  .game .mission-campaign .campaign-chapters button {
+    padding: 8px;
+  }
+}
