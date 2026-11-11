@@ -79,4 +79,8 @@ Ne pas créer un repository générique, un bus d’événements ou une interfac
 
 Les gros points d’orchestration `app/App.tsx` et `farm/application/engine.ts` restent identifiés : ils coordonnent encore plusieurs cas d’usage. Les prochaines extractions se font par scénario (placement, transactions commerciales, planification des robots), en conservant cette direction de dépendance. La longueur seule n’est pas une raison de découper une transaction cohérente.
 
-Le serveur Express/PostgreSQL dans `server/` reste inchangé dans cette migration du client. C’est la frontière distante du port de sauvegarde. Ses routes contiennent encore les transactions SQL ; leur éventuelle migration vers des cas d’usage et repositories serveur est un chantier distinct. Le document décrit donc un client hexagonal modulaire, sans prétendre que l’API serveur a déjà été convertie.
+Le serveur expose désormais un module `catalog` avec port, cas d’usage et adaptateurs HTTP/PostgreSQL. Les lectures de progression sont isolées dans l’adaptateur PostgreSQL du module `saves`. Les routes de comptes et les transactions historiques restent dans `server/app.ts` ; elles peuvent être extraites progressivement.
+
+Le catalogue chargé depuis PostgreSQL est installé avant l’import des écrans, puis transmis à chaque Worker. Les données initiales et les contrats sérialisables sont partagés sans dépendance au navigateur dans `src/shared/domain/`. Le serveur les compile avec son propre build ; son point d’entrée de production est `dist-server/server/index.js`.
+
+Les détails de migration, de conservation des anciennes parties, de mode hors ligne et les requêtes SQL sont décrits dans [DATABASE.md](DATABASE.md).

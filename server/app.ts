@@ -14,6 +14,9 @@ import {
 import type pg from "pg";
 import { validFarm } from "./validation.js";
 import path from "node:path";
+import { catalogRoutes } from "./modules/catalog/adapters/http/catalogRoutes.js";
+import { readCatalog } from "./modules/catalog/adapters/postgres/catalogRepository.js";
+import { readProgress } from "./modules/saves/adapters/postgres/progressRepository.js";
 const COOKIE = "farmscript_session",
   AGE = 30 * 24 * 60 * 60 * 1000;
 const hashToken = (token: string) =>
@@ -179,7 +182,7 @@ export function createApp(
   };
   const getSave = async (id: string) => {
     const result = await pool.query(
-      "SELECT state,revision,updated_at,last_write_id FROM farm_saves WHERE player_id=$1",
+      "SELECT COALESCE(game_restore_save(player_id,'active'),state) AS state,revision,updated_at,last_write_id FROM farm_saves WHERE player_id=$1",
       [id],
     );
     const row = result.rows[0];
@@ -192,6 +195,12 @@ export function createApp(
         }
       : null;
   };
+  catalogRoutes(app, { read: () => readCatalog(pool) });
+  app.get("/api/progress", authenticate, async (_req, res) =>
+    res.json(
+      await readProgress(pool, (res.locals.session as Session).playerId),
+    ),
+  );
   app.get("/api/health", async (_req, res) => {
     await pool.query("SELECT 1");
     res.json({ status: "ok", database: "postgresql" });
@@ -384,7 +393,7 @@ export function createApp(
   });
   app.get("/api/slots/:id", authenticate, async (req, res) => {
     const result = await pool.query(
-      "SELECT state FROM farm_slots WHERE player_id=$1 AND id::text=$2",
+      "SELECT COALESCE(game_restore_save(player_id,id::text),state) AS state FROM farm_slots WHERE player_id=$1 AND id::text=$2",
       [(res.locals.session as Session).playerId, req.params.id],
     );
     if (!result.rowCount) {

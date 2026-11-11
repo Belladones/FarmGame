@@ -229,6 +229,32 @@ test("PostgreSQL accounts, sessions and save isolation", async (t) => {
       },
     );
     await t.test(
+      "account progression API reads normalized mission, research and inventory data",
+      async () => {
+        const saved = await (
+          await req("/api/save", "GET", undefined, cookieA)
+        ).json();
+        const response = await req(
+          "/api/progress?playerId=" + randomUUID(),
+          "GET",
+          undefined,
+          cookieA,
+        );
+        assert.equal(response.status, 200);
+        const progress = await response.json();
+        assert.equal(progress.revision, saved.save.revision);
+        assert.deepEqual(progress.research, saved.save.farm.unlocks);
+        assert.ok(
+          progress.missions.some((m: { id: string }) => m.id === "first"),
+        );
+        assert.ok(
+          progress.inventory.every((r: { amount: number }) =>
+            Number.isFinite(r.amount),
+          ),
+        );
+      },
+    );
+    await t.test(
       "another device with the same account recovers the same farm",
       async () => {
         const response = await req("/api/auth/login", "POST", {

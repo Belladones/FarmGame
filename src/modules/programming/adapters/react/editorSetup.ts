@@ -2,7 +2,7 @@ import { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import TsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
-import { declarations } from "../../domain/api";
+import { createDeclarations } from "../../domain/api";
 (self as any).MonacoEnvironment = {
   getWorker: (_: unknown, label: string) =>
     label === "typescript" || label === "javascript"
@@ -42,6 +42,6 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   noEmit: true,
 });
 monaco.languages.typescript.typescriptDefaults.addExtraLib(
-  declarations,
+  createDeclarations(),
   "file:///farm-api.d.ts",
 );

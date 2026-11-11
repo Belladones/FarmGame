@@ -1,3 +1,4 @@
+import bootstrap from "../../../shared/domain/bootstrap.json";
 import { stickerLibrary } from "./stickerLibrary";
 import {
   MAX_STICKERS,
@@ -7,135 +8,25 @@ import {
 } from "./stickerPlacements";
 import { missionsFor } from "../../missions/domain/missions";
 import type { Farm } from "../../farm/domain/model";
-export const cosmetics = [
-  {
-    id: "pearl",
-    kind: "skin",
-    name: "Jaune",
-    missions: 0,
-    color: "#d9ad38",
-    accent: "#bc86ed",
-    description: "La peinture jaune du modèle original.",
-  },
-  {
-    id: "rose",
-    kind: "skin",
-    name: "Rose",
-    missions: 1,
-    color: "#ed87b1",
-    accent: "#ed79b0",
-    description: "Peinture rose, détails mécaniques et inscriptions préservés.",
-  },
-  {
-    id: "mint",
-    kind: "skin",
-    name: "Rouge",
-    missions: 3,
-    color: "#c82d37",
-    accent: "#49dfd1",
-    description: "Peinture rouge sur les panneaux de la coque.",
-  },
-  {
-    id: "cosmic",
-    kind: "skin",
-    name: "Noir",
-    missions: 6,
-    color: "#252932",
-    accent: "#b69bff",
-    description: "Coque noire avec ses reliefs et marquages conservés.",
-  },
-  {
-    id: "legend-angel",
-    kind: "skin",
-    name: "Ange",
-    missions: 10,
-    color: "#f5f1e5",
-    accent: "#ffd464",
-    rarity: "legendary",
-    legendary: "angel",
-    description:
-      "Coque blanc nacré et or, halo et plumes lumineuses, néons dorés et poussière de lumière.",
-  },
-  {
-    id: "legend-demon",
-    kind: "skin",
-    name: "Démon",
-    missions: 10,
-    color: "#211421",
-    accent: "#ff354f",
-    rarity: "legendary",
-    legendary: "demon",
-    description:
-      "Coque obsidienne et carmin, cornes, néons rouges et braises lumineuses.",
-  },
-  {
-    id: "none",
-    kind: "accessory",
-    name: "Sans sticker",
-    missions: 0,
-    description: "La silhouette originale.",
-  },
-  {
-    id: "ribbon",
-    kind: "accessory",
-    name: "Étoile",
-    missions: 0,
-    description: "Un autocollant étoilé sur la coque.",
-  },
-  {
-    id: "flower",
-    kind: "accessory",
-    name: "Fleur",
-    missions: 2,
-    description: "Un sticker floral collé sur la tête.",
-  },
-  {
-    id: "halo",
-    kind: "accessory",
-    name: "Circuit",
-    missions: 5,
-    description: "Un motif de circuit électronique sur la coque.",
-  },
-  {
-    id: "lens-red",
-    kind: "lens",
-    name: "Rouge d’origine",
-    missions: 0,
-    color: "#ff3157",
-    description: "La lentille rouge du robot original.",
-  },
-  {
-    id: "lens-cyan",
-    kind: "lens",
-    name: "Cyan",
-    missions: 1,
-    color: "#36e3f5",
-    description: "Un œil lumineux bleu cyan.",
-  },
-  {
-    id: "lens-violet",
-    kind: "lens",
-    name: "Violet",
-    missions: 3,
-    color: "#a46bff",
-    description: "Une lentille violette et ses reflets.",
-  },
-  {
-    id: "lens-green",
-    kind: "lens",
-    name: "Vert",
-    missions: 5,
-    color: "#58ee92",
-    description: "Un œil lumineux vert.",
-  },
-  ...stickerLibrary.map((sticker) => ({
-    id: sticker.id,
-    kind: "accessory" as const,
-    name: sticker.name,
-    missions: 0,
-    description: "Autocollant à poser sur la coque de Luma.",
-  })),
-] as const;
+export type Cosmetic = {
+  id: string;
+  name: string;
+  description: string;
+  missions: number;
+} & (
+  | {
+      kind: "skin";
+      color: string;
+      accent: string;
+      rarity?: "legendary";
+      legendary?: "angel" | "demon";
+    }
+  | { kind: "lens"; color: string }
+  | { kind: "accessory" }
+);
+export const cosmetics = structuredClone(
+  bootstrap.definitions.cosmetics,
+) as Cosmetic[];
 export interface Companion {
   skin: string;
   accessory: string;

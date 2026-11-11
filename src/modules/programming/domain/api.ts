@@ -1,3 +1,5 @@
+import { items } from "../../../shared/domain/resources";
+import { cropData } from "../../farm/domain/crops";
 export const apiNames = [
   "plant",
   "harvest",
@@ -30,9 +32,11 @@ export const apiNames = [
   "sell",
   "get_gold",
 ];
-export const declarations = `
-declare enum Entities { Grass="Grass", Wheat="Wheat", Bush="Bush", Carrot="Carrot", Tree="Tree", Pumpkin="Pumpkin" }
-declare enum Resources { Hay="Hay", Wheat="Wheat", Wood="Wood", Carrot="Carrot", Pumpkin="Pumpkin", Flour="Flour", Bread="Bread", Plank="Plank" }
+const enumMembers = (ids: readonly string[]) =>
+  ids.map((id) => `${JSON.stringify(id)}=${JSON.stringify(id)}`).join(", ");
+export const createDeclarations = () => `
+declare enum Entities { ${enumMembers(Object.keys(cropData))} }
+declare enum Resources { ${enumMembers(items)} }
 declare enum Items { Water="Water", Hay="Hay", Fertilizer="Fertilizer" }
 declare enum Grounds { Grassland="Grassland", Soil="Soil" }
 declare enum Direction { North="North", East="East", South="South", West="West" }
@@ -67,3 +71,5 @@ declare function sell(item:Resources|Items,quantity:number):number;
 declare function get_gold():number;
 declare function print(...values:unknown[]):void;
 `;
+
+export const declarations = createDeclarations();

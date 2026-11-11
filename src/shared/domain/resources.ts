@@ -1,14 +1,18 @@
-export const itemNames = {
-  Hay: "Foin",
-  Wheat: "Blé",
-  Wood: "Bois",
-  Carrot: "Carotte",
-  Pumpkin: "Citrouille",
-  Flour: "Farine",
-  Bread: "Pain",
-  Plank: "Planche",
-  Fertilizer: "Engrais",
-} as const;
+import bootstrap from "./bootstrap.json";
+export const itemNames = Object.fromEntries(
+  bootstrap.resources.map((r) => [r.id, r.name]),
+) as Record<
+  | "Hay"
+  | "Wheat"
+  | "Wood"
+  | "Carrot"
+  | "Pumpkin"
+  | "Flour"
+  | "Bread"
+  | "Plank"
+  | "Fertilizer",
+  string
+>;
 export type Item = keyof typeof itemNames;
 export type Inventory = Partial<Record<Item, number>>;
 export const formatCost = (cost: Inventory) =>

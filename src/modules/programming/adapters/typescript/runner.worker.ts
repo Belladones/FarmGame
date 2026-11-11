@@ -1,3 +1,4 @@
+import { installCatalog } from "../../../catalog/application/catalogRegistry";
 import { bundlePrograms } from "./programModules";
 import { validateProgramProgression } from "./programProgression";
 import ts from "typescript";
@@ -23,6 +24,7 @@ self.onmessage = async ({ data }) => {
       self.postMessage({ type: "call", id, name, args });
     });
   try {
+    if (data.catalog) installCatalog(data.catalog);
     const bundled = bundlePrograms(
       data.entry ?? "player",
       data.files ?? { player: data.code },

@@ -17,6 +17,7 @@ export interface Tile {
   grouped?: boolean;
 }
 export interface Farm {
+  catalogVersion?: number;
   assetProgression?: 1;
   researchRevision?: 1 | 2;
   legacyDepotCapacity?: number;

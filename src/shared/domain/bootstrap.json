@@ -1,0 +1,5330 @@
+{
+  "version": 1,
+  "resources": [
+    {
+      "id": "Hay",
+      "name": "Foin",
+      "salePrice": 1
+    },
+    {
+      "id": "Wheat",
+      "name": "Blé",
+      "salePrice": 1
+    },
+    {
+      "id": "Wood",
+      "name": "Bois",
+      "salePrice": 3
+    },
+    {
+      "id": "Carrot",
+      "name": "Carotte",
+      "salePrice": 5
+    },
+    {
+      "id": "Pumpkin",
+      "name": "Citrouille",
+      "salePrice": 12
+    },
+    {
+      "id": "Flour",
+      "name": "Farine",
+      "salePrice": 8
+    },
+    {
+      "id": "Bread",
+      "name": "Pain",
+      "salePrice": 25
+    },
+    {
+      "id": "Plank",
+      "name": "Planche",
+      "salePrice": 12
+    },
+    {
+      "id": "Fertilizer",
+      "name": "Engrais",
+      "salePrice": 18
+    }
+  ],
+  "research": [
+    {
+      "id": "loops",
+      "name": "Boucle while",
+      "materials": {
+        "Hay": 5
+      },
+      "prerequisites": [],
+      "category": "Programmation",
+      "detail": "Débloque les boucles while et les booléens true / false en TypeScript. Arrêter termine le programme sans figer le jeu.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "wheat-base",
+      "name": "Culture du blé",
+      "materials": {
+        "Hay": 200,
+        "Wood": 50
+      },
+      "prerequisites": [
+        "carrot",
+        "plant",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Branche complémentaire pour les moulins : blé gratuit à semer, pousse en 5 s, récolte de base : 1 blé.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "wheat",
+      "name": "Blé · niveau 2",
+      "cost": 20,
+      "materials": {
+        "Wheat": 20
+      },
+      "prerequisites": [
+        "wheat-base"
+      ],
+      "category": "Agriculture",
+      "detail": "Les nouvelles plantations produisent 5 blés.",
+      "localOnly": false
+    },
+    {
+      "id": "wheat3",
+      "name": "Blé · niveau 3",
+      "cost": 250,
+      "materials": {
+        "Wheat": 250,
+        "Wood": 100
+      },
+      "prerequisites": [
+        "wheat",
+        "wheat-base",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Rendement final : 12 blés.",
+      "localOnly": false
+    },
+    {
+      "id": "wheat4",
+      "name": "Blé · niveau 4",
+      "cost": 2000,
+      "materials": {
+        "Wheat": 2000,
+        "Wood": 600,
+        "Carrot": 200
+      },
+      "prerequisites": [
+        "wheat3",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Rendement final : 30 blés.",
+      "localOnly": false
+    },
+    {
+      "id": "wheat5",
+      "name": "Blé · niveau 5",
+      "cost": 15000,
+      "materials": {
+        "Wheat": 15000,
+        "Wood": 5000,
+        "Carrot": 2000
+      },
+      "prerequisites": [
+        "wheat4",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Rendement final : 75 blés.",
+      "localOnly": false
+    },
+    {
+      "id": "bush",
+      "name": "Buisson",
+      "materials": {
+        "Hay": 50
+      },
+      "prerequisites": [
+        "plant"
+      ],
+      "category": "Agriculture",
+      "detail": "Plantation gratuite sur prairie ou terre labourée. Pousse de 3,2 à 4,8 s et produit 1 bois.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush2",
+      "name": "Buisson · niveau 2",
+      "materials": {
+        "Hay": 250
+      },
+      "prerequisites": [
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 100 % → 200 %. Rendement ×2 par rapport au niveau 1 : 2 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush3",
+      "name": "Buisson · niveau 3",
+      "materials": {
+        "Hay": 1000
+      },
+      "prerequisites": [
+        "bush2",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 200 % → 400 %. Rendement ×4 par rapport au niveau 1 : 4 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot",
+      "name": "Carottes",
+      "materials": {
+        "Wood": 50
+      },
+      "prerequisites": [
+        "bush",
+        "till"
+      ],
+      "category": "Agriculture",
+      "detail": "Terre labourée. Plantation : 1 bois + 1 foin dans la soute. Pousse de 4,8 à 7,2 s ; récolte de base : 1 carotte.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot2",
+      "name": "Carottes · niveau 2",
+      "materials": {
+        "Wood": 250
+      },
+      "prerequisites": [
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 100 % → 200 %. Rendement ×2 par rapport au niveau 1 : 2 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot3",
+      "name": "Carottes · niveau 3",
+      "materials": {
+        "Wood": 1000
+      },
+      "prerequisites": [
+        "carrot2",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 200 % → 400 %. Rendement ×4 par rapport au niveau 1 : 4 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot4",
+      "name": "Carottes · niveau 4",
+      "materials": {
+        "Wood": 4000
+      },
+      "prerequisites": [
+        "carrot3",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 400 % → 800 %. Rendement ×8 par rapport au niveau 1 : 8 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree",
+      "name": "Arbre",
+      "materials": {
+        "Wood": 50,
+        "Carrot": 70
+      },
+      "prerequisites": [
+        "carrot",
+        "bush"
+      ],
+      "category": "Agriculture",
+      "detail": "Plantation gratuite sur prairie ou terre labourée. Pousse de 5,6 à 8,4 s ; 5 bois. Chaque arbre voisin orthogonal double la durée (jusqu’à ×16).",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree2",
+      "name": "Arbre · niveau 2",
+      "materials": {
+        "Hay": 300
+      },
+      "prerequisites": [
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 100 % → 200 %. Rendement ×2 par rapport au niveau 1 : 10 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree3",
+      "name": "Arbre · niveau 3",
+      "materials": {
+        "Hay": 1200
+      },
+      "prerequisites": [
+        "tree2",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 200 % → 400 %. Rendement ×4 par rapport au niveau 1 : 20 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree4",
+      "name": "Arbre · niveau 4",
+      "materials": {
+        "Hay": 4800
+      },
+      "prerequisites": [
+        "tree3",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 400 % → 800 %. Rendement ×8 par rapport au niveau 1 : 40 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin",
+      "name": "Citrouille",
+      "materials": {
+        "Wood": 150,
+        "Carrot": 250
+      },
+      "prerequisites": [
+        "carrot",
+        "tree",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Terre labourée. Plantation : 3 carottes + 2 bois. Pousse : 25 s. Récolte : 4 citrouilles.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin2",
+      "name": "Citrouille · niveau 2",
+      "materials": {
+        "Carrot": 1250
+      },
+      "prerequisites": [
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 100 % → 200 %. Rendement ×2 par rapport au niveau 1 : 8 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin3",
+      "name": "Citrouille · niveau 3",
+      "materials": {
+        "Carrot": 5000
+      },
+      "prerequisites": [
+        "pumpkin2",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 200 % → 400 %. Rendement ×4 par rapport au niveau 1 : 16 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension",
+      "name": "Expansion 1 · 3 × 1",
+      "materials": {
+        "Hay": 30
+      },
+      "prerequisites": [
+        "speed"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 3 × 1 (3 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension3",
+      "name": "Expansion 2 · 3 × 3",
+      "materials": {
+        "Wood": 20
+      },
+      "prerequisites": [
+        "extension",
+        "bush"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 3 × 3 (9 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension4",
+      "name": "Expansion 3 · 4 × 4",
+      "materials": {
+        "Wood": 100,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "extension3",
+        "carrot",
+        "bush"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 4 × 4 (16 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension5",
+      "name": "Expansion 4 · 5 × 5",
+      "materials": {
+        "Wood": 500,
+        "Carrot": 250
+      },
+      "prerequisites": [
+        "extension4",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 5 × 5 (25 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension6",
+      "name": "Expansion 5 · 6 × 6",
+      "materials": {
+        "Wood": 2500,
+        "Carrot": 1250
+      },
+      "prerequisites": [
+        "extension5",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 6 × 6 (36 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension7",
+      "name": "Expansion 6 · 7 × 7",
+      "materials": {
+        "Wood": 12500,
+        "Carrot": 6250
+      },
+      "prerequisites": [
+        "extension6",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 7 × 7 (49 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering",
+      "name": "Eau",
+      "materials": {
+        "Wood": 50
+      },
+      "prerequisites": [
+        "carrot",
+        "consumables",
+        "bush"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 0.1 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering2",
+      "name": "Eau · niveau 2",
+      "materials": {
+        "Wood": 200
+      },
+      "prerequisites": [
+        "watering",
+        "bush"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 0.2 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering3",
+      "name": "Eau · niveau 3",
+      "materials": {
+        "Wood": 800
+      },
+      "prerequisites": [
+        "watering2",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 0.4 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "fertilizer",
+      "name": "Engrais",
+      "cost": 0,
+      "materials": {
+        "Wood": 100,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "consumables",
+        "bush",
+        "carrot"
+      ],
+      "category": "Agriculture",
+      "detail": "Un engrais transporté ajoute 20 points de croissance.",
+      "localOnly": false
+    },
+    {
+      "id": "fertilizer2",
+      "name": "Engrais · niveau 2",
+      "cost": 0,
+      "materials": {
+        "Wood": 500,
+        "Carrot": 250
+      },
+      "prerequisites": [
+        "fertilizer",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Ajoute 35 points de croissance.",
+      "localOnly": false
+    },
+    {
+      "id": "fertilizer3",
+      "name": "Engrais · niveau 3",
+      "cost": 0,
+      "materials": {
+        "Wood": 2000,
+        "Carrot": 1000,
+        "Pumpkin": 200
+      },
+      "prerequisites": [
+        "fertilizer2",
+        "bush",
+        "carrot",
+        "pumpkin",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Ajoute 50 points de croissance.",
+      "localOnly": false
+    },
+    {
+      "id": "group",
+      "name": "Récolte groupée",
+      "cost": 0,
+      "materials": {
+        "Carrot": 500,
+        "Pumpkin": 100
+      },
+      "prerequisites": [
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "harvest_group() : +50 % sur un carré de 2 × 2 citrouilles mûres du même niveau.",
+      "localOnly": false
+    },
+    {
+      "id": "group2",
+      "name": "Récolte groupée · niveau 2",
+      "cost": 0,
+      "materials": {
+        "Carrot": 2000,
+        "Pumpkin": 500
+      },
+      "prerequisites": [
+        "group",
+        "carrot",
+        "pumpkin",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Bonus de récolte groupée : +100 %.",
+      "localOnly": false
+    },
+    {
+      "id": "conditions",
+      "name": "Conditions et opérateurs",
+      "materials": {
+        "Hay": 150,
+        "Wood": 10
+      },
+      "prerequisites": [
+        "loops",
+        "bush"
+      ],
+      "category": "Programmation",
+      "detail": "Débloque if / else if / else. Opérateurs TypeScript : + - * / % **, === !== < > <= >=, ! && ||. Division entière : Math.floor(a / b).",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "print",
+      "name": "Journal · console.log",
+      "materials": {
+        "Hay": 150,
+        "Wood": 50
+      },
+      "prerequisites": [
+        "loops",
+        "bush"
+      ],
+      "category": "Programmation",
+      "detail": "Débloque console.log(...) et print(...) pour afficher des informations dans le journal du robot.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "variables",
+      "name": "Variables et types",
+      "materials": {
+        "Wood": 100,
+        "Carrot": 150
+      },
+      "prerequisites": [
+        "conditions",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Programmation",
+      "detail": "Étape d’apprentissage : const, let, types number et boolean, affectations et calculs. Les déclarations restent libres afin de conserver les programmes existants.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "functions",
+      "name": "Fonctions",
+      "materials": {
+        "Wood": 500,
+        "Carrot": 750
+      },
+      "prerequisites": [
+        "variables",
+        "conditions",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Programmation",
+      "detail": "Organisez le programme avec function et des paramètres typés. Les fonctions nommées restent disponibles pour expérimenter.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "sensor",
+      "name": "Capteur de maturité",
+      "materials": {
+        "Hay": 50,
+        "Wood": 10
+      },
+      "prerequisites": [
+        "conditions",
+        "plant",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque can_harvest() : true si la plante est mûre, false sinon. Lecture : 1 tick.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "position",
+      "name": "Coordonnées",
+      "materials": {
+        "Wood": 50,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "carrot",
+        "sensor",
+        "move",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque get_pos_x(), get_pos_y() et get_world_size(). L’origine est (0, 0), x vers l’est et y vers le nord.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "analysis",
+      "name": "Analyse de la parcelle",
+      "materials": {
+        "Wood": 100,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "position",
+        "bush",
+        "carrot"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque get_entity_type() et get_ground_type().",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "humidity",
+      "name": "Capteur d’humidité",
+      "materials": {
+        "Carrot": 15
+      },
+      "prerequisites": [
+        "watering",
+        "consumables",
+        "carrot"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque get_water(), humidité de la case entre 0 et 1. Lecture : 1 tick.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "till",
+      "name": "Labourage · till()",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "Disponible au départ : alterne Grounds.Soil et Grounds.Grassland. L’herbe apparaît spontanément sur prairie et peut être semée sur les deux sols.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "construction",
+      "name": "Construction",
+      "materials": {
+        "Wood": 20
+      },
+      "prerequisites": [
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque les dépôts (500 or), les terrains constructibles et les transferts vers les bâtiments.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tank",
+      "name": "Réservoir embarqué",
+      "cost": 150,
+      "materials": {
+        "Hay": 150,
+        "Wood": 100
+      },
+      "prerequisites": [
+        "construction",
+        "workshop",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque cet équipement dans la fiche de chaque robot. L’installation et ses niveaux sont payés individuellement à l’atelier.",
+      "localOnly": false
+    },
+    {
+      "id": "reservoir",
+      "name": "Réservoir fixe",
+      "cost": 150,
+      "materials": {
+        "Hay": 150,
+        "Wood": 100
+      },
+      "prerequisites": [
+        "construction",
+        "bush",
+        "land"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque puits et citernes au magasin.",
+      "localOnly": false
+    },
+    {
+      "id": "reservoir2",
+      "name": "Réservoir fixe · niveau 2",
+      "cost": 0,
+      "materials": {
+        "Wood": 500,
+        "Carrot": 200
+      },
+      "prerequisites": [
+        "reservoir",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Triple les capacités des puits et citernes, sans augmenter leur débit.",
+      "localOnly": true
+    },
+    {
+      "id": "consumables",
+      "name": "Utilisation des objets",
+      "materials": {
+        "Wood": 50
+      },
+      "prerequisites": [
+        "carrot",
+        "plant",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque use_item(item, n = 1), pour l’eau et les engrais après leurs recherches respectives.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "traffic",
+      "name": "Circulation",
+      "cost": 60,
+      "materials": {
+        "Wheat": 60,
+        "Wood": 20
+      },
+      "prerequisites": [
+        "sensor",
+        "wheat-base",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "is_occupied(direction) détecte les robots incompatibles.",
+      "localOnly": false
+    },
+    {
+      "id": "traffic2",
+      "name": "Circulation · niveau 2",
+      "cost": 500,
+      "materials": {
+        "Wheat": 500,
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "traffic",
+        "functions",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "reserve(direction), release() : réservation atomique d’une case pendant 5 secondes au maximum.",
+      "localOnly": false
+    },
+    {
+      "id": "fleet",
+      "name": "Flotte",
+      "cost": 100,
+      "materials": {
+        "Hay": 100,
+        "Wood": 50
+      },
+      "prerequisites": [
+        "traffic",
+        "bush",
+        "extension"
+      ],
+      "category": "Technologie",
+      "detail": "Autorise les fermiers supplémentaires (500 or, soute de 20 unités).",
+      "localOnly": false
+    },
+    {
+      "id": "transporter",
+      "name": "Transporteur",
+      "cost": 400,
+      "materials": {
+        "Wheat": 400,
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "fleet",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque le transporteur (500 or, soute de 100 unités, sans culture).",
+      "localOnly": false
+    },
+    {
+      "id": "drone",
+      "name": "Drone",
+      "cost": 1500,
+      "materials": {
+        "Wheat": 1500,
+        "Wood": 800,
+        "Carrot": 400
+      },
+      "prerequisites": [
+        "fleet",
+        "tank",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque le drone au magasin, à 1 000 or. Pas de récolte ni de labourage.",
+      "localOnly": false
+    },
+    {
+      "id": "storage2",
+      "name": "Stockage · niveau 2",
+      "materials": {},
+      "prerequisites": [
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "800 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 500,
+      "localOnly": true
+    },
+    {
+      "id": "storage3",
+      "name": "Stockage · niveau 3",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "3 200 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 2000,
+      "localOnly": true
+    },
+    {
+      "id": "storage4",
+      "name": "Stockage · niveau 4",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "12 800 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 8000,
+      "localOnly": true
+    },
+    {
+      "id": "land",
+      "name": "Terrain constructible · niveau 1",
+      "cost": 50,
+      "materials": {
+        "Hay": 50,
+        "Wood": 30
+      },
+      "prerequisites": [
+        "construction",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Deux emplacements au total, dont le dépôt initial.",
+      "localOnly": false
+    },
+    {
+      "id": "land2",
+      "name": "Terrain constructible · niveau 2",
+      "cost": 250,
+      "materials": {
+        "Wheat": 250,
+        "Wood": 100
+      },
+      "prerequisites": [
+        "land",
+        "wheat-base",
+        "bush",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Quatre emplacements au total.",
+      "localOnly": false
+    },
+    {
+      "id": "land3",
+      "name": "Terrain constructible · niveau 3",
+      "cost": 1500,
+      "materials": {
+        "Wheat": 1500,
+        "Wood": 600,
+        "Carrot": 200
+      },
+      "prerequisites": [
+        "land2",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Huit emplacements au total.",
+      "localOnly": false
+    },
+    {
+      "id": "land4",
+      "name": "Terrain constructible · niveau 4",
+      "cost": 6000,
+      "materials": {
+        "Wheat": 6000,
+        "Wood": 2000,
+        "Carrot": 800
+      },
+      "prerequisites": [
+        "land3",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Seize emplacements au total.",
+      "localOnly": false
+    },
+    {
+      "id": "motor",
+      "name": "Motorisation",
+      "cost": 100,
+      "materials": {
+        "Hay": 100,
+        "Wood": 40
+      },
+      "prerequisites": [
+        "extension",
+        "workshop",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque cet équipement dans la fiche de chaque robot. L’installation et ses niveaux sont payés individuellement à l’atelier.",
+      "localOnly": false
+    },
+    {
+      "id": "motor2",
+      "name": "Motorisation · niveau 2",
+      "cost": 500,
+      "materials": {
+        "Wheat": 500,
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "motor",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Vitesse de déplacement ×1,5.",
+      "localOnly": true
+    },
+    {
+      "id": "motor3",
+      "name": "Motorisation · niveau 3",
+      "cost": 2500,
+      "materials": {
+        "Wheat": 2500,
+        "Wood": 1000,
+        "Carrot": 500
+      },
+      "prerequisites": [
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Vitesse de déplacement ×2.",
+      "localOnly": true
+    },
+    {
+      "id": "hold",
+      "name": "Soute",
+      "cost": 80,
+      "materials": {
+        "Hay": 80,
+        "Wood": 50
+      },
+      "prerequisites": [
+        "bush",
+        "workshop"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque cet équipement dans la fiche de chaque robot. L’installation et ses niveaux sont payés individuellement à l’atelier.",
+      "localOnly": false
+    },
+    {
+      "id": "hold2",
+      "name": "Soute · niveau 2",
+      "cost": 400,
+      "materials": {
+        "Wheat": 400,
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "hold",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Capacité des soutes ×4 par rapport à la base.",
+      "localOnly": true
+    },
+    {
+      "id": "hold3",
+      "name": "Soute · niveau 3",
+      "cost": 2000,
+      "materials": {
+        "Wheat": 2000,
+        "Wood": 800,
+        "Carrot": 400
+      },
+      "prerequisites": [
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Capacité des soutes ×8 par rapport à la base.",
+      "localOnly": true
+    },
+    {
+      "id": "tools",
+      "name": "Outils agricoles",
+      "cost": 150,
+      "materials": {
+        "Hay": 150,
+        "Wood": 80
+      },
+      "prerequisites": [
+        "bush",
+        "workshop",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque cet équipement dans la fiche de chaque robot. L’installation et ses niveaux sont payés individuellement à l’atelier.",
+      "localOnly": false
+    },
+    {
+      "id": "tools2",
+      "name": "Outils agricoles · niveau 2",
+      "cost": 800,
+      "materials": {
+        "Wheat": 800,
+        "Wood": 300,
+        "Carrot": 200
+      },
+      "prerequisites": [
+        "tools",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des actions agricoles ×0,6.",
+      "localOnly": true
+    },
+    {
+      "id": "tools3",
+      "name": "Outils agricoles · niveau 3",
+      "cost": 4000,
+      "materials": {
+        "Wheat": 4000,
+        "Wood": 1500,
+        "Carrot": 800
+      },
+      "prerequisites": [
+        "wheat-base",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des actions agricoles ×0,4.",
+      "localOnly": true
+    },
+    {
+      "id": "milling",
+      "name": "Meunerie",
+      "cost": 150,
+      "materials": {
+        "Wheat": 150,
+        "Wood": 100
+      },
+      "prerequisites": [
+        "construction",
+        "wheat-base",
+        "bush",
+        "land"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque le moulin au magasin (500 or). Les améliorations de débit sont propres à chaque bâtiment.",
+      "localOnly": false
+    },
+    {
+      "id": "bakery",
+      "name": "Boulangerie",
+      "cost": 300,
+      "materials": {
+        "Wheat": 300,
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "milling",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "land2",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque le four au magasin (1000 or). Les améliorations de débit sont propres à chaque bâtiment.",
+      "localOnly": false
+    },
+    {
+      "id": "sawmill",
+      "name": "Scierie",
+      "cost": 200,
+      "materials": {
+        "Wheat": 200,
+        "Wood": 150
+      },
+      "prerequisites": [
+        "construction",
+        "tree",
+        "wheat-base",
+        "bush",
+        "land"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque le scierie au magasin (750 or). Les améliorations de débit sont propres à chaque bâtiment.",
+      "localOnly": false
+    },
+    {
+      "id": "composting",
+      "name": "Compostage",
+      "cost": 200,
+      "materials": {
+        "Wheat": 200,
+        "Wood": 100,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "construction",
+        "consumables",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "land"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque le composteur au magasin (750 or). Les améliorations de débit sont propres à chaque bâtiment.",
+      "localOnly": false
+    },
+    {
+      "id": "commerce",
+      "name": "Commerce automatisé",
+      "cost": 200,
+      "materials": {
+        "Wheat": 200,
+        "Wood": 100,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "construction",
+        "functions",
+        "wheat-base",
+        "bush",
+        "carrot"
+      ],
+      "category": "Programmation",
+      "detail": "sell(item, quantity) : vente par programme depuis les dépôts au tarif normal.",
+      "localOnly": false
+    },
+    {
+      "id": "maintenance",
+      "name": "Maintenance",
+      "cost": 400,
+      "materials": {
+        "Wheat": 400,
+        "Wood": 250,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "construction",
+        "fleet",
+        "wheat-base",
+        "bush",
+        "carrot",
+        "land"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque l’atelier de réparation au magasin (800 or).",
+      "localOnly": true
+    },
+    {
+      "id": "mechanization",
+      "name": "Mécanisation · niveau 1",
+      "cost": 0,
+      "materials": {
+        "Wood": 300,
+        "Carrot": 150
+      },
+      "prerequisites": [
+        "milling",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des machines ×0,75.",
+      "localOnly": true
+    },
+    {
+      "id": "mechanization2",
+      "name": "Mécanisation · niveau 2",
+      "cost": 0,
+      "materials": {
+        "Wood": 1500,
+        "Carrot": 600,
+        "Pumpkin": 100
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "pumpkin",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des machines ×0,5.",
+      "localOnly": true
+    },
+    {
+      "id": "speed",
+      "name": "Vitesse d’exécution",
+      "materials": {
+        "Hay": 20
+      },
+      "prerequisites": [
+        "loops"
+      ],
+      "category": "Technologie",
+      "detail": "Double la vitesse des actions et des déplacements (durée ×0,5). Une récolte immature est détruite : étudiez ensuite les conditions et can_harvest().",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "plant",
+      "name": "Semis · plant()",
+      "materials": {
+        "Hay": 50
+      },
+      "prerequisites": [
+        "speed"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque plant(entity). Les buissons sont la première culture à rechercher. Succès : 200 ticks de base ; échec : 1 tick.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "move",
+      "name": "Déplacement · move()",
+      "materials": {
+        "Hay": 30
+      },
+      "prerequisites": [
+        "extension",
+        "speed"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque move(Direction.North/East/South/West). Sur le terrain agricole, dépasser un bord ramène au bord opposé. Les collisions restent actives.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "for",
+      "name": "Boucle for",
+      "materials": {
+        "Hay": 100,
+        "Wood": 25
+      },
+      "prerequisites": [
+        "loops",
+        "conditions",
+        "bush"
+      ],
+      "category": "Programmation",
+      "detail": "Répétez un nombre précis de fois : for (let i = 0; i < 3; i++) { harvest(); deposit(); }. Étape d’apprentissage ; la syntaxe reste disponible pour conserver les programmes existants.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "lists",
+      "name": "Les listes",
+      "materials": {
+        "Wood": 150,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "variables",
+        "for",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Programmation",
+      "detail": "Tableaux TypeScript : const cultures = [Entities.Bush, Entities.Carrot]; accès cultures[0], longueur cultures.length et parcours for...of. Étape d’apprentissage ; la syntaxe reste disponible.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "dictionaries",
+      "name": "Les dictionnaires",
+      "materials": {
+        "Wood": 300,
+        "Carrot": 200
+      },
+      "prerequisites": [
+        "lists",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Programmation",
+      "detail": "Associez des clés à des valeurs : const stock: Record<string, number> = { Hay: 10, Wood: 5 }; stock[\"Hay\"]. Étape d’apprentissage ; les objets restent disponibles.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "imports",
+      "name": "Imports de fonctions",
+      "materials": {
+        "Wood": 1000,
+        "Carrot": 1500
+      },
+      "prerequisites": [
+        "functions",
+        "dictionaries",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Programmation",
+      "detail": "Partagez des fonctions entre fichiers de robots : export function recolter() { harvest(); } dans f2.ts, puis import { recolter } from \"./f2\"; dans f1.ts. Les instructions au niveau principal du fichier importé s’exécutent une fois au premier import, avec le robot appelant.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass2",
+      "name": "Herbe · niveau 2",
+      "materials": {
+        "Hay": 300
+      },
+      "prerequisites": [
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 100 % → 200 %. Rendement ×2 par rapport au niveau 1 : 2 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass3",
+      "name": "Herbe · niveau 3",
+      "materials": {
+        "Hay": 1200
+      },
+      "prerequisites": [
+        "grass2",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 200 % → 400 %. Rendement ×4 par rapport au niveau 1 : 4 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass4",
+      "name": "Herbe · niveau 4",
+      "materials": {
+        "Hay": 4800
+      },
+      "prerequisites": [
+        "grass3",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 400 % → 800 %. Rendement ×8 par rapport au niveau 1 : 8 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass5",
+      "name": "Herbe · niveau 5",
+      "materials": {
+        "Hay": 19200
+      },
+      "prerequisites": [
+        "grass4",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 800 % → 1600 %. Rendement ×16 par rapport au niveau 1 : 16 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass6",
+      "name": "Herbe · niveau 6",
+      "materials": {
+        "Hay": 76800
+      },
+      "prerequisites": [
+        "grass5",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 1600 % → 3200 %. Rendement ×32 par rapport au niveau 1 : 32 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass7",
+      "name": "Herbe · niveau 7",
+      "materials": {
+        "Hay": 307200
+      },
+      "prerequisites": [
+        "grass6",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 3200 % → 6400 %. Rendement ×64 par rapport au niveau 1 : 64 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass8",
+      "name": "Herbe · niveau 8",
+      "materials": {
+        "Hay": 1228800
+      },
+      "prerequisites": [
+        "grass7",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 6400 % → 12800 %. Rendement ×128 par rapport au niveau 1 : 128 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass9",
+      "name": "Herbe · niveau 9",
+      "materials": {
+        "Hay": 4915200
+      },
+      "prerequisites": [
+        "grass8",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 12800 % → 25600 %. Rendement ×256 par rapport au niveau 1 : 256 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "grass10",
+      "name": "Herbe · niveau 10",
+      "materials": {
+        "Hay": 19660800
+      },
+      "prerequisites": [
+        "grass9",
+        "loops",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 25600 % → 51200 %. Rendement ×512 par rapport au niveau 1 : 512 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush4",
+      "name": "Buisson · niveau 4",
+      "materials": {
+        "Hay": 4000
+      },
+      "prerequisites": [
+        "bush3",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 400 % → 800 %. Rendement ×8 par rapport au niveau 1 : 8 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush5",
+      "name": "Buisson · niveau 5",
+      "materials": {
+        "Hay": 16000
+      },
+      "prerequisites": [
+        "bush4",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 800 % → 1600 %. Rendement ×16 par rapport au niveau 1 : 16 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush6",
+      "name": "Buisson · niveau 6",
+      "materials": {
+        "Hay": 64000
+      },
+      "prerequisites": [
+        "bush5",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 1600 % → 3200 %. Rendement ×32 par rapport au niveau 1 : 32 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush7",
+      "name": "Buisson · niveau 7",
+      "materials": {
+        "Hay": 256000
+      },
+      "prerequisites": [
+        "bush6",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 3200 % → 6400 %. Rendement ×64 par rapport au niveau 1 : 64 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush8",
+      "name": "Buisson · niveau 8",
+      "materials": {
+        "Hay": 1024000
+      },
+      "prerequisites": [
+        "bush7",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 6400 % → 12800 %. Rendement ×128 par rapport au niveau 1 : 128 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush9",
+      "name": "Buisson · niveau 9",
+      "materials": {
+        "Hay": 4096000
+      },
+      "prerequisites": [
+        "bush8",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 12800 % → 25600 %. Rendement ×256 par rapport au niveau 1 : 256 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "bush10",
+      "name": "Buisson · niveau 10",
+      "materials": {
+        "Hay": 16384000
+      },
+      "prerequisites": [
+        "bush9",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 25600 % → 51200 %. Rendement ×512 par rapport au niveau 1 : 512 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot5",
+      "name": "Carottes · niveau 5",
+      "materials": {
+        "Wood": 16000
+      },
+      "prerequisites": [
+        "carrot4",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 800 % → 1600 %. Rendement ×16 par rapport au niveau 1 : 16 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot6",
+      "name": "Carottes · niveau 6",
+      "materials": {
+        "Wood": 64000
+      },
+      "prerequisites": [
+        "carrot5",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 1600 % → 3200 %. Rendement ×32 par rapport au niveau 1 : 32 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot7",
+      "name": "Carottes · niveau 7",
+      "materials": {
+        "Wood": 256000
+      },
+      "prerequisites": [
+        "carrot6",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 3200 % → 6400 %. Rendement ×64 par rapport au niveau 1 : 64 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot8",
+      "name": "Carottes · niveau 8",
+      "materials": {
+        "Wood": 1024000
+      },
+      "prerequisites": [
+        "carrot7",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 6400 % → 12800 %. Rendement ×128 par rapport au niveau 1 : 128 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot9",
+      "name": "Carottes · niveau 9",
+      "materials": {
+        "Wood": 4096000
+      },
+      "prerequisites": [
+        "carrot8",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 12800 % → 25600 %. Rendement ×256 par rapport au niveau 1 : 256 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "carrot10",
+      "name": "Carottes · niveau 10",
+      "materials": {
+        "Wood": 16384000
+      },
+      "prerequisites": [
+        "carrot9",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 25600 % → 51200 %. Rendement ×512 par rapport au niveau 1 : 512 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree5",
+      "name": "Arbre · niveau 5",
+      "materials": {
+        "Hay": 19200
+      },
+      "prerequisites": [
+        "tree4",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 800 % → 1600 %. Rendement ×16 par rapport au niveau 1 : 80 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree6",
+      "name": "Arbre · niveau 6",
+      "materials": {
+        "Hay": 76800
+      },
+      "prerequisites": [
+        "tree5",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 1600 % → 3200 %. Rendement ×32 par rapport au niveau 1 : 160 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree7",
+      "name": "Arbre · niveau 7",
+      "materials": {
+        "Hay": 307200
+      },
+      "prerequisites": [
+        "tree6",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 3200 % → 6400 %. Rendement ×64 par rapport au niveau 1 : 320 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree8",
+      "name": "Arbre · niveau 8",
+      "materials": {
+        "Hay": 1228800
+      },
+      "prerequisites": [
+        "tree7",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 6400 % → 12800 %. Rendement ×128 par rapport au niveau 1 : 640 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree9",
+      "name": "Arbre · niveau 9",
+      "materials": {
+        "Hay": 4915200
+      },
+      "prerequisites": [
+        "tree8",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 12800 % → 25600 %. Rendement ×256 par rapport au niveau 1 : 1280 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "tree10",
+      "name": "Arbre · niveau 10",
+      "materials": {
+        "Hay": 19660800
+      },
+      "prerequisites": [
+        "tree9",
+        "tree",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 25600 % → 51200 %. Rendement ×512 par rapport au niveau 1 : 2560 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin4",
+      "name": "Citrouille · niveau 4",
+      "materials": {
+        "Carrot": 20000
+      },
+      "prerequisites": [
+        "pumpkin3",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 400 % → 800 %. Rendement ×8 par rapport au niveau 1 : 32 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin5",
+      "name": "Citrouille · niveau 5",
+      "materials": {
+        "Carrot": 80000
+      },
+      "prerequisites": [
+        "pumpkin4",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 800 % → 1600 %. Rendement ×16 par rapport au niveau 1 : 64 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin6",
+      "name": "Citrouille · niveau 6",
+      "materials": {
+        "Carrot": 320000
+      },
+      "prerequisites": [
+        "pumpkin5",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 1600 % → 3200 %. Rendement ×32 par rapport au niveau 1 : 128 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin7",
+      "name": "Citrouille · niveau 7",
+      "materials": {
+        "Carrot": 1280000
+      },
+      "prerequisites": [
+        "pumpkin6",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 3200 % → 6400 %. Rendement ×64 par rapport au niveau 1 : 256 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin8",
+      "name": "Citrouille · niveau 8",
+      "materials": {
+        "Carrot": 5120000
+      },
+      "prerequisites": [
+        "pumpkin7",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 6400 % → 12800 %. Rendement ×128 par rapport au niveau 1 : 512 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin9",
+      "name": "Citrouille · niveau 9",
+      "materials": {
+        "Carrot": 20480000
+      },
+      "prerequisites": [
+        "pumpkin8",
+        "pumpkin",
+        "carrot",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 12800 % → 25600 %. Rendement ×256 par rapport au niveau 1 : 1024 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "pumpkin10",
+      "name": "Citrouille · niveau 10",
+      "materials": {
+        "Carrot": 81920000
+      },
+      "prerequisites": [
+        "pumpkin9",
+        "pumpkin",
+        "carrot",
+        "land",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Production 25600 % → 51200 %. Rendement ×512 par rapport au niveau 1 : 2048 unités par récolte. Appliqué aux nouvelles pousses / plantations.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension8",
+      "name": "Expansion 7 · 8 × 8",
+      "materials": {
+        "Wood": 62500,
+        "Carrot": 31250
+      },
+      "prerequisites": [
+        "extension7",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 8 × 8 (64 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension9",
+      "name": "Expansion 8 · 9 × 9",
+      "materials": {
+        "Wood": 312500,
+        "Carrot": 156250
+      },
+      "prerequisites": [
+        "extension8",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 9 × 9 (81 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "extension10",
+      "name": "Expansion 9 · 10 × 10",
+      "materials": {
+        "Wood": 1562500,
+        "Carrot": 781250
+      },
+      "prerequisites": [
+        "extension9",
+        "carrot",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Étend le champ à 10 × 10 (100 parcelles), sans déplacer les cultures existantes.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering4",
+      "name": "Eau · niveau 4",
+      "materials": {
+        "Wood": 3200
+      },
+      "prerequisites": [
+        "watering3",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 0.8 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering5",
+      "name": "Eau · niveau 5",
+      "materials": {
+        "Wood": 12800
+      },
+      "prerequisites": [
+        "watering4",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 1.6 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering6",
+      "name": "Eau · niveau 6",
+      "materials": {
+        "Wood": 51200
+      },
+      "prerequisites": [
+        "watering5",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 3.2 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering7",
+      "name": "Eau · niveau 7",
+      "materials": {
+        "Wood": 204800
+      },
+      "prerequisites": [
+        "watering6",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 6.4 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering8",
+      "name": "Eau · niveau 8",
+      "materials": {
+        "Wood": 819200
+      },
+      "prerequisites": [
+        "watering7",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 12.8 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "watering9",
+      "name": "Eau · niveau 9",
+      "materials": {
+        "Wood": 3276800
+      },
+      "prerequisites": [
+        "watering8",
+        "bush",
+        "construction"
+      ],
+      "category": "Agriculture",
+      "detail": "Produit passivement 25.6 réservoir(s)/s (1 toutes les 10 s au niveau 1), doublé à chaque niveau. Un réservoir ajoute 0,25 d’humidité avec use_item(Items.Water). Croissance de ×1 à ×5 selon l’humidité ; évaporation de 1 % de l’eau restante par seconde.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "storage5",
+      "name": "Stockage · niveau 5",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "51 200 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 32000,
+      "localOnly": true
+    },
+    {
+      "id": "storage6",
+      "name": "Stockage · niveau 6",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "204 800 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 128000,
+      "localOnly": true
+    },
+    {
+      "id": "storage7",
+      "name": "Stockage · niveau 7",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "819 200 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 512000,
+      "localOnly": true
+    },
+    {
+      "id": "storage8",
+      "name": "Stockage · niveau 8",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "3 276 800 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 2048000,
+      "localOnly": true
+    },
+    {
+      "id": "storage9",
+      "name": "Stockage · niveau 9",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "13 107 200 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 8192000,
+      "localOnly": true
+    },
+    {
+      "id": "storage10",
+      "name": "Stockage · niveau 10",
+      "materials": {},
+      "prerequisites": [],
+      "category": "Technologie",
+      "detail": "52 428 800 unités par dépôt. Coût en or, distinct des ressources stockées.",
+      "cost": 0,
+      "goldCost": 32768000,
+      "localOnly": true
+    },
+    {
+      "id": "milling2",
+      "name": "Moulin · niveau 2",
+      "materials": {
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "milling",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des moulins divisée par 2 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "milling3",
+      "name": "Moulin · niveau 3",
+      "materials": {
+        "Wood": 1000,
+        "Carrot": 500
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des moulins divisée par 4 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "milling4",
+      "name": "Moulin · niveau 4",
+      "materials": {
+        "Wood": 5000,
+        "Carrot": 2500
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des moulins divisée par 8 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "milling5",
+      "name": "Moulin · niveau 5",
+      "materials": {
+        "Wood": 25000,
+        "Carrot": 12500
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des moulins divisée par 16 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "bakery2",
+      "name": "Four · niveau 2",
+      "materials": {
+        "Wood": 200,
+        "Carrot": 100
+      },
+      "prerequisites": [
+        "bakery",
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des fours divisée par 2 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "bakery3",
+      "name": "Four · niveau 3",
+      "materials": {
+        "Wood": 1000,
+        "Carrot": 500
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des fours divisée par 4 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "bakery4",
+      "name": "Four · niveau 4",
+      "materials": {
+        "Wood": 5000,
+        "Carrot": 2500
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des fours divisée par 8 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "bakery5",
+      "name": "Four · niveau 5",
+      "materials": {
+        "Wood": 25000,
+        "Carrot": 12500
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Durée des cycles des fours divisée par 16 par rapport au niveau 1. Recettes et quantité d’ingrédients inchangées.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "reservoir3",
+      "name": "Puits et citernes · niveau 3",
+      "materials": {
+        "Wood": 2000,
+        "Carrot": 1000
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Capacité des puits et citernes ×6 ; débit des puits inchangé (1 eau/s). L’eau passive de l’arbre Agriculture est indépendante.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "reservoir4",
+      "name": "Puits et citernes · niveau 4",
+      "materials": {
+        "Wood": 8000,
+        "Carrot": 5000
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Capacité des puits et citernes ×12 ; débit des puits inchangé (1 eau/s). L’eau passive de l’arbre Agriculture est indépendante.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "reservoir5",
+      "name": "Puits et citernes · niveau 5",
+      "materials": {
+        "Wood": 32000,
+        "Carrot": 25000
+      },
+      "prerequisites": [
+        "bush",
+        "carrot",
+        "construction"
+      ],
+      "category": "Technologie",
+      "detail": "Capacité des puits et citernes ×24 ; débit des puits inchangé (1 eau/s). L’eau passive de l’arbre Agriculture est indépendante.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": true
+    },
+    {
+      "id": "workshop",
+      "name": "Robotique et atelier",
+      "materials": {
+        "Wood": 20
+      },
+      "prerequisites": [
+        "construction",
+        "bush"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque l’atelier (500 or), l’installation individuelle d’équipements et la réparation des robots.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    },
+    {
+      "id": "handling",
+      "name": "Manutention",
+      "materials": {
+        "Wood": 100,
+        "Carrot": 50
+      },
+      "prerequisites": [
+        "workshop",
+        "bush",
+        "carrot"
+      ],
+      "category": "Technologie",
+      "detail": "Débloque les équipements de transfert, à acheter séparément sur chaque robot.",
+      "cost": 0,
+      "goldCost": 0,
+      "localOnly": false
+    }
+  ],
+  "groups": [
+    {
+      "id": "grass-base",
+      "title": "Herbe",
+      "steps": [
+        "grass2",
+        "grass3",
+        "grass4",
+        "grass5",
+        "grass6",
+        "grass7",
+        "grass8",
+        "grass9",
+        "grass10"
+      ],
+      "initialLevel": 1
+    },
+    {
+      "id": "wheat-base",
+      "title": "Blé",
+      "steps": [
+        "wheat-base",
+        "wheat",
+        "wheat3",
+        "wheat4",
+        "wheat5"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "bush",
+      "title": "Buisson",
+      "steps": [
+        "bush",
+        "bush2",
+        "bush3",
+        "bush4",
+        "bush5",
+        "bush6",
+        "bush7",
+        "bush8",
+        "bush9",
+        "bush10"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "carrot",
+      "title": "Carottes",
+      "steps": [
+        "carrot",
+        "carrot2",
+        "carrot3",
+        "carrot4",
+        "carrot5",
+        "carrot6",
+        "carrot7",
+        "carrot8",
+        "carrot9",
+        "carrot10"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "tree",
+      "title": "Arbre",
+      "steps": [
+        "tree",
+        "tree2",
+        "tree3",
+        "tree4",
+        "tree5",
+        "tree6",
+        "tree7",
+        "tree8",
+        "tree9",
+        "tree10"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "pumpkin",
+      "title": "Citrouille",
+      "steps": [
+        "pumpkin",
+        "pumpkin2",
+        "pumpkin3",
+        "pumpkin4",
+        "pumpkin5",
+        "pumpkin6",
+        "pumpkin7",
+        "pumpkin8",
+        "pumpkin9",
+        "pumpkin10"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "extension",
+      "title": "Expansion",
+      "steps": [
+        "extension",
+        "extension3",
+        "extension4",
+        "extension5",
+        "extension6",
+        "extension7",
+        "extension8",
+        "extension9",
+        "extension10"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "watering",
+      "title": "Eau",
+      "steps": [
+        "watering",
+        "watering2",
+        "watering3",
+        "watering4",
+        "watering5",
+        "watering6",
+        "watering7",
+        "watering8",
+        "watering9"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "fertilizer",
+      "title": "Engrais",
+      "steps": [
+        "fertilizer",
+        "fertilizer2",
+        "fertilizer3"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "group",
+      "title": "Récolte groupée",
+      "steps": [
+        "group",
+        "group2"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "motor",
+      "title": "Motorisation",
+      "steps": [
+        "motor"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "hold",
+      "title": "Soute",
+      "steps": [
+        "hold"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "tools",
+      "title": "Outils agricoles",
+      "steps": [
+        "tools"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "land",
+      "title": "Terrain constructible",
+      "steps": [
+        "land",
+        "land2",
+        "land3",
+        "land4"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "reservoir",
+      "title": "Puits et citernes",
+      "steps": [
+        "reservoir"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "milling",
+      "title": "Moulin",
+      "steps": [
+        "milling"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "bakery",
+      "title": "Four",
+      "steps": [
+        "bakery"
+      ],
+      "initialLevel": 0
+    },
+    {
+      "id": "traffic",
+      "title": "Circulation",
+      "steps": [
+        "traffic",
+        "traffic2"
+      ],
+      "initialLevel": 0
+    }
+  ],
+  "campaigns": {
+    "legacy": [
+      {
+        "id": "first",
+        "chapter": 0,
+        "title": "Première pousse",
+        "text": "Plantez et récoltez votre premier blé.",
+        "target": 1,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Sur la parcelle initiale, plantez du blé, attendez sa maturité puis récoltez. Les appels sont attendus automatiquement par le jeu.",
+        "destination": "code",
+        "action": "Ouvrir mon programme",
+        "code": "plant(Entities.Wheat);\nwhile (!harvest()) {\n  // Réessayer jusqu’à maturité.\n}",
+        "reward": 4,
+        "condition": {
+          "type": "counter",
+          "path": "harvested"
+        }
+      },
+      {
+        "id": "deposit",
+        "chapter": 0,
+        "title": "À l’abri dans le dépôt",
+        "text": "Déposez 5 blés au total dans un dépôt.",
+        "target": 5,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Le dépôt initial est voisin de (0, 0). deposit() libère la soute et rend les ressources disponibles pour les recherches.",
+        "destination": "code",
+        "action": "Programmer le dépôt",
+        "code": "deposit();",
+        "reward": 8,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      },
+      {
+        "id": "routine",
+        "chapter": 0,
+        "title": "Une ferme qui travaille",
+        "text": "Atteignez 20 blés déposés au total.",
+        "target": 20,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Une boucle répète votre séquence. Sur une seule case, réessayez la récolte jusqu’à maturité ; planter sur une culture existante ne la remplace pas. Revenez ici récupérer chaque récompense.",
+        "destination": "code",
+        "action": "Automatiser la récolte",
+        "code": "while (true) {\n  harvest();\n  plant(Entities.Wheat);\n  deposit();\n}",
+        "reward": 10,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      },
+      {
+        "id": "explore",
+        "chapter": 0,
+        "title": "Voyez plus grand",
+        "text": "Débloquez trois cases et visitez-les toutes.",
+        "target": 3,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Recherchez Trois parcelles (25 blés), puis déplacez le fermier vers l’est deux fois. Les bordures ne bouclent pas : revenez vers l’ouest pour atteindre le dépôt.",
+        "destination": "Recherches",
+        "action": "Agrandir le terrain",
+        "code": "move(Direction.East);\nmove(Direction.East);\nmove(Direction.West);\nmove(Direction.West);",
+        "reward": 20,
+        "condition": {
+          "type": "length",
+          "path": "visited"
+        }
+      },
+      {
+        "id": "observe",
+        "chapter": 1,
+        "title": "Observer avant d’agir",
+        "text": "Recherchez Conditions et Capteur de maturité.",
+        "target": 2,
+        "gold": 25,
+        "xp": 50,
+        "hint": "Conditions coûte 10 blés et le capteur 5 foins. Le capteur permet de tester la maturité avant de récolter.",
+        "destination": "Recherches",
+        "action": "Rechercher les capteurs",
+        "code": "if (can_harvest()) {\n  harvest();\n}",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "conditions",
+            "sensor"
+          ]
+        }
+      },
+      {
+        "id": "coordinates",
+        "chapter": 1,
+        "title": "Trouver ses repères",
+        "text": "Recherchez Variables et types et Positionnement.",
+        "target": 2,
+        "gold": 40,
+        "xp": 50,
+        "hint": "get_pos_x() et get_pos_y() indiquent la case du robot. Stockez leurs résultats dans des variables pour décider où aller.",
+        "destination": "Recherches",
+        "action": "Débloquer les coordonnées",
+        "code": "const x: number = get_pos_x();\nconst y: number = get_pos_y();",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "variables",
+            "position"
+          ]
+        }
+      },
+      {
+        "id": "hundred",
+        "chapter": 1,
+        "title": "Un rythme régulier",
+        "text": "Atteignez 100 blés déposés au total.",
+        "target": 100,
+        "gold": 75,
+        "xp": 75,
+        "hint": "Une récolte ne peut pas dépasser la place libre. Comparez get_inventory(Resources.Wheat) et get_capacity(), puis revenez près du dépôt avant deposit().",
+        "destination": "code",
+        "action": "Optimiser mon programme",
+        "code": "const plein: boolean =\n  get_inventory(Resources.Wheat) >= get_capacity();\n// Revenir près du dépôt avant deposit().",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      },
+      {
+        "id": "wood",
+        "chapter": 1,
+        "title": "Les premières haies",
+        "text": "Débloquez les buissons.",
+        "target": 1,
+        "gold": 100,
+        "xp": 75,
+        "hint": "La recherche Buissons ouvre la production de bois. Consultez ses prérequis et son coût dans Agriculture. Le bois servira aux équipements et aux bâtiments.",
+        "destination": "Recherches",
+        "action": "Diversifier la ferme",
+        "code": "plant(Entities.Bush);",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "bush"
+          ]
+        }
+      },
+      {
+        "id": "soil",
+        "chapter": 2,
+        "title": "Préparer la terre",
+        "text": "Débloquez Labour et Carottes.",
+        "target": 2,
+        "gold": 100,
+        "xp": 75,
+        "hint": "Les carottes demandent du sol labouré et des graines de blé dans la soute. Chargez-les près du dépôt avec load(\"Wheat\", quantité).",
+        "destination": "Recherches",
+        "action": "Débloquer les carottes",
+        "code": "load(Resources.Wheat, 5);\ntill();\nplant(Entities.Carrot);",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "till",
+            "carrot"
+          ]
+        }
+      },
+      {
+        "id": "hold-upgrade",
+        "chapter": 2,
+        "title": "Une soute à la hauteur",
+        "text": "Recherchez la première amélioration Soute.",
+        "target": 1,
+        "gold": 100,
+        "xp": 75,
+        "hint": "Recherchez Soute pour débloquer l’équipement, puis installez le niveau 2 sur un robot à l’atelier : 100 bois + 50 foins. Seul ce robot gagne de la capacité.",
+        "destination": "Robots",
+        "action": "Améliorer les soutes",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "hold"
+          ]
+        }
+      },
+      {
+        "id": "construction",
+        "chapter": 2,
+        "title": "Les fondations",
+        "text": "Débloquez Construction, Stockage niveau 2 et un deuxième emplacement constructible.",
+        "target": 3,
+        "gold": 250,
+        "xp": 100,
+        "hint": "Les sites en bois accueillent les bâtiments, pas les cultures. Recherchez aussi Stockage niveau 2 : les 500 unités du dépôt permettent de financer les outils agricoles et la Meunerie.",
+        "destination": "Recherches",
+        "action": "Préparer les bâtiments",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "construction",
+            "storage2",
+            "land"
+          ]
+        }
+      },
+      {
+        "id": "motor-upgrade",
+        "chapter": 2,
+        "title": "Gagner du temps",
+        "text": "Recherchez Motorisation et Outils agricoles.",
+        "target": 2,
+        "gold": 125,
+        "xp": 75,
+        "hint": "Le moteur accélère le déplacement ; les outils réduisent la durée des actions agricoles. Les gains profitent aussi aux futurs robots.",
+        "destination": "Robots",
+        "action": "Améliorer les robots",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "motor",
+            "tools"
+          ]
+        }
+      },
+      {
+        "id": "organize",
+        "chapter": 2,
+        "title": "Un programme réutilisable",
+        "text": "Débloquez la recherche Fonctions.",
+        "target": 1,
+        "gold": 125,
+        "xp": 100,
+        "hint": "Découpez votre programme en petites fonctions que vous pouvez appeler à chaque case. La mission valide la recherche ; votre manière d’écrire le code reste libre.",
+        "destination": "Recherches",
+        "action": "Rechercher les fonctions",
+        "code": "function recolterSiPret(): void {\n  if (can_harvest()) harvest();\n}\nrecolterSiPret();",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "functions"
+          ]
+        }
+      },
+      {
+        "id": "fleet-license",
+        "chapter": 3,
+        "title": "Former une équipe",
+        "text": "Débloquez la recherche Flotte.",
+        "target": 1,
+        "gold": 250,
+        "xp": 100,
+        "hint": "La recherche autorise des fermiers supplémentaires ; elle n’en offre pas. La récompense de cette étape finance un nouveau fermier au magasin.",
+        "destination": "Robots",
+        "action": "Débloquer la flotte",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "fleet"
+          ]
+        }
+      },
+      {
+        "id": "second-robot",
+        "chapter": 3,
+        "title": "Deux robots, une ferme",
+        "text": "Possédez deux robots permanents en état de marche.",
+        "target": 2,
+        "gold": 200,
+        "xp": 100,
+        "hint": "Achetez un robot dans le magasin. Chaque robot a son propre programme et sa soute. Évitez les collisions : gardez des itinéraires distincts, ou utilisez les réservations une fois débloquées.",
+        "destination": "Magasin",
+        "action": "Recruter un robot",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "robots",
+          "filters": [
+            {
+              "path": "destroyed",
+              "op": "eq",
+              "value": false
+            },
+            {
+              "path": "loan",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mill",
+        "chapter": 3,
+        "title": "Du champ au moulin",
+        "text": "Installez un moulin sur un emplacement constructible.",
+        "target": 1,
+        "gold": 300,
+        "xp": 100,
+        "hint": "Recherchez Meunerie puis achetez un moulin (500 or). Prévoyez une case voisine accessible pour livrer le blé et collecter la farine.",
+        "destination": "Magasin",
+        "action": "Construire un moulin",
+        "code": "deliver(Direction.East, Resources.Wheat, 5);\n// Attendre un cycle du moulin voisin.\ncollect(Direction.East, Resources.Flour, 1);",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "buildings",
+          "filters": [
+            {
+              "path": "kind",
+              "op": "eq",
+              "value": "Mill"
+            }
+          ]
+        }
+      },
+      {
+        "id": "flour",
+        "chapter": 3,
+        "title": "La première transformation",
+        "text": "Produisez 5 farines dans vos moulins.",
+        "target": 5,
+        "gold": 200,
+        "xp": 100,
+        "hint": "Le moulin transforme 5 blés en 1 farine par cycle. Livrez les ingrédients depuis un robot voisin avec deliver(direction, ressource, quantité), puis collectez la production pour éviter de saturer la sortie. Le compteur cumule les cycles depuis la mise à jour.",
+        "destination": "code",
+        "action": "Programmer la production",
+        "code": "deliver(Direction.East, Resources.Wheat, 25);\n// Après les cycles du moulin à l’est :\ncollect(Direction.East, Resources.Flour, 5);",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "produced.Flour"
+        }
+      },
+      {
+        "id": "logistics",
+        "chapter": 3,
+        "title": "Une logistique solide",
+        "text": "Recherchez Stockage niveau 3 puis Transporteur.",
+        "target": 2,
+        "gold": 350,
+        "xp": 125,
+        "hint": "Passez d’abord les dépôts à 2 500 unités pour réunir les 700 ressources nécessaires à la recherche Transporteur. Ce robot transporte sans cultiver ; son achat reste séparé de la recherche.",
+        "destination": "Robots",
+        "action": "Organiser la logistique",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "storage3",
+            "transporter"
+          ]
+        }
+      },
+      {
+        "id": "thousand",
+        "chapter": 3,
+        "title": "Une ferme qui dure",
+        "text": "Atteignez 1 000 blés déposés au total.",
+        "target": 1000,
+        "gold": 500,
+        "xp": 150,
+        "hint": "Combinez vos itinéraires, vos améliorations et vos dépôts. Ce total est cumulatif : vendre ou dépenser vos blés ne fait pas reculer la mission.",
+        "destination": "code",
+        "action": "Perfectionner mes programmes",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      }
+    ],
+    "assets": [
+      {
+        "id": "first",
+        "chapter": 0,
+        "title": "Première pousse",
+        "text": "Plantez et récoltez votre premier blé.",
+        "target": 1,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Sur la parcelle initiale, plantez du blé, attendez sa maturité puis récoltez. Les appels sont attendus automatiquement par le jeu.",
+        "destination": "code",
+        "action": "Ouvrir mon programme",
+        "code": "plant(Entities.Wheat);\nwhile (!harvest()) {\n  // Réessayer jusqu’à maturité.\n}",
+        "reward": 4,
+        "condition": {
+          "type": "counter",
+          "path": "harvested"
+        }
+      },
+      {
+        "id": "deposit",
+        "chapter": 0,
+        "title": "À l’abri dans le dépôt",
+        "text": "Déposez 5 blés au total dans un dépôt.",
+        "target": 5,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Le dépôt initial est voisin de (0, 0). deposit() libère la soute et rend les ressources disponibles pour les recherches.",
+        "destination": "code",
+        "action": "Programmer le dépôt",
+        "code": "deposit();",
+        "reward": 8,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      },
+      {
+        "id": "routine",
+        "chapter": 0,
+        "title": "Une ferme qui travaille",
+        "text": "Atteignez 20 blés déposés au total.",
+        "target": 20,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Une boucle répète votre séquence. Sur une seule case, réessayez la récolte jusqu’à maturité ; planter sur une culture existante ne la remplace pas. Revenez ici récupérer chaque récompense.",
+        "destination": "code",
+        "action": "Automatiser la récolte",
+        "code": "while (true) {\n  harvest();\n  plant(Entities.Wheat);\n  deposit();\n}",
+        "reward": 10,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      },
+      {
+        "id": "explore",
+        "chapter": 0,
+        "title": "Voyez plus grand",
+        "text": "Débloquez trois cases et visitez-les toutes.",
+        "target": 3,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Recherchez Trois parcelles (25 blés), puis déplacez le fermier vers l’est deux fois. Les bordures ne bouclent pas : revenez vers l’ouest pour atteindre le dépôt.",
+        "destination": "Recherches",
+        "action": "Agrandir le terrain",
+        "code": "move(Direction.East);\nmove(Direction.East);\nmove(Direction.West);\nmove(Direction.West);",
+        "reward": 20,
+        "condition": {
+          "type": "length",
+          "path": "visited"
+        }
+      },
+      {
+        "id": "observe",
+        "chapter": 1,
+        "title": "Observer avant d’agir",
+        "text": "Recherchez Conditions et Capteur de maturité.",
+        "target": 2,
+        "gold": 25,
+        "xp": 50,
+        "hint": "Conditions coûte 10 blés et le capteur 5 foins. Le capteur permet de tester la maturité avant de récolter.",
+        "destination": "Recherches",
+        "action": "Rechercher les capteurs",
+        "code": "if (can_harvest()) {\n  harvest();\n}",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "conditions",
+            "sensor"
+          ]
+        }
+      },
+      {
+        "id": "coordinates",
+        "chapter": 1,
+        "title": "Trouver ses repères",
+        "text": "Recherchez Variables et types et Positionnement.",
+        "target": 2,
+        "gold": 40,
+        "xp": 50,
+        "hint": "get_pos_x() et get_pos_y() indiquent la case du robot. Stockez leurs résultats dans des variables pour décider où aller.",
+        "destination": "Recherches",
+        "action": "Débloquer les coordonnées",
+        "code": "const x: number = get_pos_x();\nconst y: number = get_pos_y();",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "variables",
+            "position"
+          ]
+        }
+      },
+      {
+        "id": "hundred",
+        "chapter": 1,
+        "title": "Un rythme régulier",
+        "text": "Atteignez 100 blés déposés au total.",
+        "target": 100,
+        "gold": 75,
+        "xp": 75,
+        "hint": "Une récolte ne peut pas dépasser la place libre. Comparez get_inventory(Resources.Wheat) et get_capacity(), puis revenez près du dépôt avant deposit().",
+        "destination": "code",
+        "action": "Optimiser mon programme",
+        "code": "const plein: boolean =\n  get_inventory(Resources.Wheat) >= get_capacity();\n// Revenir près du dépôt avant deposit().",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      },
+      {
+        "id": "wood",
+        "chapter": 1,
+        "title": "Les premières haies",
+        "text": "Débloquez les buissons.",
+        "target": 1,
+        "gold": 100,
+        "xp": 75,
+        "hint": "La recherche Buissons ouvre la production de bois. Consultez ses prérequis et son coût dans Agriculture. Le bois servira aux équipements et aux bâtiments.",
+        "destination": "Recherches",
+        "action": "Diversifier la ferme",
+        "code": "plant(Entities.Bush);",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "bush"
+          ]
+        }
+      },
+      {
+        "id": "soil",
+        "chapter": 2,
+        "title": "Préparer la terre",
+        "text": "Débloquez Labour et Carottes.",
+        "target": 2,
+        "gold": 100,
+        "xp": 75,
+        "hint": "Les carottes demandent du sol labouré et des graines de blé dans la soute. Chargez-les près du dépôt avec load(\"Wheat\", quantité).",
+        "destination": "Recherches",
+        "action": "Débloquer les carottes",
+        "code": "load(Resources.Wheat, 5);\ntill();\nplant(Entities.Carrot);",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "till",
+            "carrot"
+          ]
+        }
+      },
+      {
+        "id": "hold-upgrade",
+        "chapter": 2,
+        "title": "Une soute à la hauteur",
+        "text": "Recherchez la première amélioration Soute.",
+        "target": 1,
+        "gold": 100,
+        "xp": 75,
+        "hint": "Recherchez Soute pour débloquer l’équipement, puis installez le niveau 2 sur un robot à l’atelier : 100 bois + 50 foins. Seul ce robot gagne de la capacité.",
+        "destination": "Robots",
+        "action": "Améliorer les soutes",
+        "reward": 0,
+        "condition": {
+          "type": "cap",
+          "max": 1,
+          "rule": {
+            "type": "count",
+            "collection": "robots",
+            "filters": [
+              {
+                "path": "equipment.hold",
+                "op": "gte",
+                "value": 2,
+                "fallback": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "construction",
+        "chapter": 2,
+        "title": "Les fondations",
+        "text": "Débloquez Construction, améliorez un dépôt et obtenez un deuxième terrain constructible.",
+        "target": 3,
+        "gold": 250,
+        "xp": 100,
+        "hint": "Construction coûte 20 bois. Le niveau 2 du dépôt coûte 500 or et porte ce dépôt à 800 unités. Les terrains constructibles accueillent les bâtiments.",
+        "destination": "Recherches",
+        "action": "Préparer les bâtiments",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "research",
+              "ids": [
+                "construction",
+                "land"
+              ]
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "buildings",
+                "filters": [
+                  {
+                    "path": "kind",
+                    "op": "eq",
+                    "value": "Depot"
+                  },
+                  {
+                    "path": "upgrades.storage",
+                    "op": "gte",
+                    "value": 2,
+                    "fallback": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "motor-upgrade",
+        "chapter": 2,
+        "title": "Gagner du temps",
+        "text": "Recherchez Motorisation et Outils agricoles.",
+        "target": 2,
+        "gold": 125,
+        "xp": 75,
+        "hint": "Débloquez les familles d’équipements, puis améliorez le moteur et les outils du fermier dans Atelier → Améliorer un robot. Les coûts et effets sont propres à chaque unité.",
+        "destination": "Robots",
+        "action": "Améliorer les robots",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "robots",
+                "filters": [
+                  {
+                    "path": "equipment.motor",
+                    "op": "gte",
+                    "value": 2,
+                    "fallback": 1
+                  }
+                ]
+              }
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "robots",
+                "filters": [
+                  {
+                    "path": "equipment.tools",
+                    "op": "gte",
+                    "value": 2,
+                    "fallback": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "organize",
+        "chapter": 2,
+        "title": "Un programme réutilisable",
+        "text": "Débloquez la recherche Fonctions.",
+        "target": 1,
+        "gold": 125,
+        "xp": 100,
+        "hint": "Découpez votre programme en petites fonctions que vous pouvez appeler à chaque case. La mission valide la recherche ; votre manière d’écrire le code reste libre.",
+        "destination": "Recherches",
+        "action": "Rechercher les fonctions",
+        "code": "function recolterSiPret(): void {\n  if (can_harvest()) harvest();\n}\nrecolterSiPret();",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "functions"
+          ]
+        }
+      },
+      {
+        "id": "fleet-license",
+        "chapter": 3,
+        "title": "Former une équipe",
+        "text": "Débloquez la recherche Flotte.",
+        "target": 1,
+        "gold": 250,
+        "xp": 100,
+        "hint": "La recherche autorise des fermiers supplémentaires ; elle n’en offre pas. La récompense de cette étape finance un nouveau fermier au magasin.",
+        "destination": "Robots",
+        "action": "Débloquer la flotte",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "fleet"
+          ]
+        }
+      },
+      {
+        "id": "second-robot",
+        "chapter": 3,
+        "title": "Deux robots, une ferme",
+        "text": "Possédez deux robots permanents en état de marche.",
+        "target": 2,
+        "gold": 200,
+        "xp": 100,
+        "hint": "Achetez un robot dans le magasin. Chaque robot a son propre programme et sa soute. Évitez les collisions : gardez des itinéraires distincts, ou utilisez les réservations une fois débloquées.",
+        "destination": "Magasin",
+        "action": "Recruter un robot",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "robots",
+          "filters": [
+            {
+              "path": "destroyed",
+              "op": "eq",
+              "value": false
+            },
+            {
+              "path": "loan",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "mill",
+        "chapter": 3,
+        "title": "Du champ au moulin",
+        "text": "Installez un moulin sur un emplacement constructible.",
+        "target": 1,
+        "gold": 300,
+        "xp": 100,
+        "hint": "Recherchez Meunerie puis achetez un moulin (500 or). Prévoyez une case voisine accessible pour livrer le blé et collecter la farine.",
+        "destination": "Magasin",
+        "action": "Construire un moulin",
+        "code": "deliver(Direction.East, Resources.Wheat, 5);\n// Attendre un cycle du moulin voisin.\ncollect(Direction.East, Resources.Flour, 1);",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "buildings",
+          "filters": [
+            {
+              "path": "kind",
+              "op": "eq",
+              "value": "Mill"
+            }
+          ]
+        }
+      },
+      {
+        "id": "flour",
+        "chapter": 3,
+        "title": "La première transformation",
+        "text": "Produisez 5 farines dans vos moulins.",
+        "target": 5,
+        "gold": 200,
+        "xp": 100,
+        "hint": "Le moulin transforme 5 blés en 1 farine par cycle. Livrez les ingrédients depuis un robot voisin avec deliver(direction, ressource, quantité), puis collectez la production pour éviter de saturer la sortie. Le compteur cumule les cycles depuis la mise à jour.",
+        "destination": "code",
+        "action": "Programmer la production",
+        "code": "deliver(Direction.East, Resources.Wheat, 25);\n// Après les cycles du moulin à l’est :\ncollect(Direction.East, Resources.Flour, 5);",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "produced.Flour"
+        }
+      },
+      {
+        "id": "logistics",
+        "chapter": 3,
+        "title": "Une logistique solide",
+        "text": "Améliorez un dépôt au niveau 3 puis recherchez Transporteur.",
+        "target": 2,
+        "gold": 350,
+        "xp": 125,
+        "hint": "Stockage du dépôt 3 (3 200 unités) s’achète avec de l’or après Stockage 2. La recherche Transporteur prépare un robot à 500 or, réservé à la logistique.",
+        "destination": "Robots",
+        "action": "Organiser la logistique",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "buildings",
+                "filters": [
+                  {
+                    "path": "kind",
+                    "op": "eq",
+                    "value": "Depot"
+                  },
+                  {
+                    "path": "upgrades.storage",
+                    "op": "gte",
+                    "value": 3,
+                    "fallback": 1
+                  }
+                ]
+              }
+            },
+            {
+              "type": "research",
+              "ids": [
+                "transporter"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "thousand",
+        "chapter": 3,
+        "title": "Une ferme qui dure",
+        "text": "Atteignez 1 000 blés déposés au total.",
+        "target": 1000,
+        "gold": 500,
+        "xp": 150,
+        "hint": "Combinez vos itinéraires, vos améliorations et vos dépôts. Ce total est cumulatif : vendre ou dépenser vos blés ne fait pas reculer la mission.",
+        "destination": "code",
+        "action": "Perfectionner mes programmes",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      }
+    ],
+    "modern": [
+      {
+        "id": "first",
+        "chapter": 0,
+        "title": "Premiers foins",
+        "text": "Récoltez votre premier foin sur la prairie.",
+        "target": 1,
+        "gold": 0,
+        "xp": 25,
+        "hint": "L’herbe est déjà présente : harvest() la récolte. Elle repousse seule en 0,5 seconde. Déposez le foin avec deposit().",
+        "destination": "code",
+        "action": "Ouvrir mon programme",
+        "code": "harvest();\ndeposit();",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "harvestedItems.Hay"
+        }
+      },
+      {
+        "id": "deposit",
+        "chapter": 0,
+        "title": "À l’abri dans le dépôt",
+        "text": "Déposez 5 foins dans le dépôt voisin.",
+        "target": 5,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Relancez harvest(); deposit(); jusqu’à posséder 5 foins au dépôt. La soute du robot et le stock du dépôt sont distincts.",
+        "destination": "code",
+        "action": "Programmer le dépôt",
+        "code": "deposit();",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "depositedItems.Hay"
+        }
+      },
+      {
+        "id": "first-loop",
+        "chapter": 0,
+        "title": "Votre première boucle",
+        "text": "Recherchez Boucle while pour 5 foins.",
+        "target": 1,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Ouvrez Recherches → Programmation. La boucle while répète une séquence. Utilisez true et false, en minuscules, et des accolades en TypeScript.",
+        "destination": "Recherches",
+        "action": "Débloquer la boucle",
+        "code": "while (true) {\n  harvest();\n  deposit();\n}",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "loops"
+          ]
+        }
+      },
+      {
+        "id": "routine",
+        "chapter": 0,
+        "title": "Une prairie autonome",
+        "text": "Atteignez 20 foins déposés au total.",
+        "target": 20,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Après Boucle while, répétez harvest() puis deposit(). L’herbe repousse pendant les actions du robot. Arrêter termine immédiatement le programme.",
+        "destination": "code",
+        "action": "Automatiser la récolte",
+        "code": "while (true) {\n  harvest();\n  deposit();\n}",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "depositedItems.Hay"
+        }
+      },
+      {
+        "id": "first-speed",
+        "chapter": 0,
+        "title": "Le bon rythme",
+        "text": "Recherchez Vitesse d’exécution.",
+        "target": 1,
+        "gold": 0,
+        "xp": 25,
+        "hint": "Après While (5 foins), Vitesse coûte 20 foins et divise par deux la durée des actions. Les cultures immatures sont détruites par harvest().",
+        "destination": "Recherches",
+        "action": "Améliorer la vitesse",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "speed"
+          ]
+        }
+      },
+      {
+        "id": "explore",
+        "chapter": 0,
+        "title": "Voyez plus grand",
+        "text": "Débloquez trois cases et visitez-les toutes.",
+        "target": 3,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Expansion 1 coûte 30 foins après Vitesse. Recherchez ensuite move() pour 30 foins, puis visitez les trois parcelles. Un déplacement au-delà du bord rejoint le bord opposé.",
+        "destination": "Recherches",
+        "action": "Agrandir le terrain",
+        "code": "move(Direction.East);\nmove(Direction.East);\nmove(Direction.East);\ndeposit();",
+        "reward": 0,
+        "condition": {
+          "type": "length",
+          "path": "visited"
+        }
+      },
+      {
+        "id": "wood",
+        "chapter": 0,
+        "title": "Les premières haies",
+        "text": "Recherchez plant() et Buisson, puis récoltez du bois.",
+        "target": 3,
+        "gold": 0,
+        "xp": 75,
+        "hint": "plant() coûte 50 foins après Vitesse ; Buisson coûte 50 foins. Les buissons sont gratuits à planter et poussent en 3,2 à 4,8 secondes. Sans capteur, laissez plusieurs appels deposit() occuper le robot avant de récolter.",
+        "destination": "Recherches",
+        "action": "Diversifier la ferme",
+        "code": "plant(Entities.Bush);\n// Laisser passer au moins 4,8 secondes.\ndeposit();\ndeposit();\ndeposit();\ndeposit();\ndeposit();\ndeposit();\ndeposit();\ndeposit();\ndeposit();\ndeposit();\nharvest();\ndeposit();",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "research",
+              "ids": [
+                "plant",
+                "bush"
+              ]
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "counter",
+                "path": "harvestedItems.Wood"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "workshop-first",
+        "chapter": 1,
+        "title": "Un atelier pour progresser",
+        "text": "Construisez votre premier atelier.",
+        "target": 1,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Recherchez Construction (20 bois), Robotique et atelier (20 bois), puis un terrain constructible. Vendez du foin pour acheter l’atelier à 500 or et posez-le depuis l’inventaire.",
+        "destination": "Magasin",
+        "action": "Construire l’atelier",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "buildings",
+          "filters": [
+            {
+              "path": "kind",
+              "op": "eq",
+              "value": "Workshop"
+            }
+          ]
+        }
+      },
+      {
+        "id": "observe",
+        "chapter": 1,
+        "title": "Observer avant d’agir",
+        "text": "Recherchez Conditions et Capteur de maturité.",
+        "target": 2,
+        "gold": 25,
+        "xp": 50,
+        "hint": "Conditions et opérateurs : 150 foins + 10 bois. can_harvest() : 50 foins + 10 bois, après les conditions et plant(). Puis installez le capteur sur votre fermier dans Atelier → Améliorer un robot (50 foins + 10 bois), avec un atelier construit. Le capteur évite les récoltes immatures.",
+        "destination": "Recherches",
+        "action": "Rechercher les capteurs",
+        "code": "if (can_harvest()) {\n  harvest();\n}",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "research",
+              "ids": [
+                "conditions"
+              ]
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "robots",
+                "filters": [
+                  {
+                    "path": "equipment.sensor",
+                    "op": "gte",
+                    "value": 1,
+                    "fallback": 0
+                  },
+                  {
+                    "path": "destroyed",
+                    "op": "eq",
+                    "value": false
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "soil",
+        "chapter": 1,
+        "title": "Préparer la terre",
+        "text": "Débloquez les carottes et récoltez-en une.",
+        "target": 2,
+        "gold": 100,
+        "xp": 75,
+        "hint": "Carottes coûte 50 bois. Chargez 1 foin et 1 bois dans la soute, labourez la prairie, puis semez. Ne labourez pas à nouveau une case déjà en terre.",
+        "destination": "Recherches",
+        "action": "Débloquer les carottes",
+        "code": "load(Items.Hay, 1);\nload(Resources.Wood, 1);\ntill();\nplant(Entities.Carrot);\nwhile (!can_harvest()) {}\nharvest();\ndeposit();",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "research",
+              "ids": [
+                "carrot"
+              ]
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "counter",
+                "path": "harvestedItems.Carrot"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "coordinates",
+        "chapter": 1,
+        "title": "Trouver ses repères",
+        "text": "Recherchez Variables et types et Positionnement.",
+        "target": 2,
+        "gold": 40,
+        "xp": 50,
+        "hint": "Coordonnées : 50 bois + 50 carottes, après Carottes, can_harvest() et move(). Variables : 100 bois + 150 carottes. Stockage du dépôt 2 (500 or, 800 unités) permet de réunir ce coût.",
+        "destination": "Recherches",
+        "action": "Débloquer les coordonnées",
+        "code": "const x: number = get_pos_x();\nconst y: number = get_pos_y();",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "variables",
+            "position"
+          ]
+        }
+      },
+      {
+        "id": "hundred",
+        "chapter": 1,
+        "title": "Une prairie productive",
+        "text": "Déposez 100 foins au total.",
+        "target": 100,
+        "gold": 75,
+        "xp": 75,
+        "hint": "Herbe 2 coûte 300 foins et double le rendement. Il faut d’abord Construction puis Stockage 2 (500 or). Vendez régulièrement les ressources au magasin pour réunir l’or sans saturer le dépôt.",
+        "destination": "code",
+        "action": "Optimiser mon programme",
+        "code": "if (can_harvest()) { harvest(); }\ndeposit();",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "depositedItems.Hay"
+        }
+      },
+      {
+        "id": "hold-upgrade",
+        "chapter": 2,
+        "title": "Une soute à la hauteur",
+        "text": "Recherchez la première amélioration Soute.",
+        "target": 1,
+        "gold": 100,
+        "xp": 75,
+        "hint": "Recherchez Soute pour débloquer l’équipement, puis installez le niveau 2 sur un robot à l’atelier : 100 bois + 50 foins. Seul ce robot gagne de la capacité.",
+        "destination": "Robots",
+        "action": "Améliorer les soutes",
+        "reward": 0,
+        "condition": {
+          "type": "cap",
+          "max": 1,
+          "rule": {
+            "type": "count",
+            "collection": "robots",
+            "filters": [
+              {
+                "path": "equipment.hold",
+                "op": "gte",
+                "value": 2,
+                "fallback": 1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "construction",
+        "chapter": 2,
+        "title": "Les fondations",
+        "text": "Débloquez Construction, améliorez un dépôt et obtenez un deuxième terrain constructible.",
+        "target": 3,
+        "gold": 250,
+        "xp": 100,
+        "hint": "Construction coûte 20 bois. Le niveau 2 du dépôt coûte 500 or et porte ce dépôt à 800 unités. Les terrains constructibles accueillent les bâtiments.",
+        "destination": "Recherches",
+        "action": "Préparer les bâtiments",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "research",
+              "ids": [
+                "construction",
+                "land"
+              ]
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "buildings",
+                "filters": [
+                  {
+                    "path": "kind",
+                    "op": "eq",
+                    "value": "Depot"
+                  },
+                  {
+                    "path": "upgrades.storage",
+                    "op": "gte",
+                    "value": 2,
+                    "fallback": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "motor-upgrade",
+        "chapter": 2,
+        "title": "Gagner du temps",
+        "text": "Recherchez Motorisation et Outils agricoles.",
+        "target": 2,
+        "gold": 125,
+        "xp": 75,
+        "hint": "Débloquez les familles d’équipements, puis améliorez le moteur et les outils du fermier dans Atelier → Améliorer un robot. Les coûts et effets sont propres à chaque unité.",
+        "destination": "Robots",
+        "action": "Améliorer les robots",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "robots",
+                "filters": [
+                  {
+                    "path": "equipment.motor",
+                    "op": "gte",
+                    "value": 2,
+                    "fallback": 1
+                  }
+                ]
+              }
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "robots",
+                "filters": [
+                  {
+                    "path": "equipment.tools",
+                    "op": "gte",
+                    "value": 2,
+                    "fallback": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "organize",
+        "chapter": 2,
+        "title": "Un programme réutilisable",
+        "text": "Débloquez la recherche Fonctions.",
+        "target": 1,
+        "gold": 125,
+        "xp": 100,
+        "hint": "Découpez votre programme en petites fonctions que vous pouvez appeler à chaque case. La mission valide la recherche ; votre manière d’écrire le code reste libre.",
+        "destination": "Recherches",
+        "action": "Rechercher les fonctions",
+        "code": "function recolterSiPret(): void {\n  if (can_harvest()) harvest();\n}\nrecolterSiPret();",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "functions"
+          ]
+        }
+      },
+      {
+        "id": "fleet-license",
+        "chapter": 3,
+        "title": "Former une équipe",
+        "text": "Débloquez la recherche Flotte.",
+        "target": 1,
+        "gold": 500,
+        "xp": 100,
+        "hint": "Flotte autorise un fermier de 20 unités, vendu séparément 500 or. Cette récompense finance son achat.",
+        "destination": "Robots",
+        "action": "Débloquer la flotte",
+        "reward": 0,
+        "condition": {
+          "type": "research",
+          "ids": [
+            "fleet"
+          ]
+        }
+      },
+      {
+        "id": "second-robot",
+        "chapter": 3,
+        "title": "Deux robots, une ferme",
+        "text": "Possédez deux robots permanents en état de marche.",
+        "target": 2,
+        "gold": 200,
+        "xp": 100,
+        "hint": "Achetez un robot dans le magasin. Chaque robot a son propre programme et sa soute. Évitez les collisions : gardez des itinéraires distincts, ou utilisez les réservations une fois débloquées.",
+        "destination": "Magasin",
+        "action": "Recruter un robot",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "robots",
+          "filters": [
+            {
+              "path": "destroyed",
+              "op": "eq",
+              "value": false
+            },
+            {
+              "path": "loan",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "first-wheat",
+        "chapter": 3,
+        "title": "Vos premières cultures",
+        "text": "Recherchez Culture du blé et Capteur de maturité, puis récoltez un blé.",
+        "target": 3,
+        "gold": 0,
+        "xp": 50,
+        "hint": "Le blé devient une branche de transformation après Carottes : Culture du blé coûte 200 foins + 50 bois. Il sert ensuite au moulin et au four. Stockage 2 est requis pour réunir les 250 ressources.",
+        "destination": "Recherches",
+        "action": "Débloquer le blé et le capteur",
+        "code": "plant(Entities.Wheat);\nwhile (!can_harvest()) {\n  // Le robot attend la maturité.\n}\nharvest();\ndeposit();",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "research",
+              "ids": [
+                "wheat-base",
+                "sensor"
+              ]
+            },
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "counter",
+                "path": "harvestedItems.Wheat"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "mill",
+        "chapter": 3,
+        "title": "Du champ au moulin",
+        "text": "Installez un moulin sur un emplacement constructible.",
+        "target": 1,
+        "gold": 300,
+        "xp": 100,
+        "hint": "Recherchez Meunerie puis achetez un moulin (500 or). Prévoyez une case voisine accessible pour livrer le blé et collecter la farine.",
+        "destination": "Magasin",
+        "action": "Construire un moulin",
+        "code": "deliver(Direction.East, Resources.Wheat, 5);\n// Attendre un cycle du moulin voisin.\ncollect(Direction.East, Resources.Flour, 1);",
+        "reward": 0,
+        "condition": {
+          "type": "count",
+          "collection": "buildings",
+          "filters": [
+            {
+              "path": "kind",
+              "op": "eq",
+              "value": "Mill"
+            }
+          ]
+        }
+      },
+      {
+        "id": "flour",
+        "chapter": 3,
+        "title": "La première transformation",
+        "text": "Produisez 5 farines dans vos moulins.",
+        "target": 5,
+        "gold": 200,
+        "xp": 100,
+        "hint": "Le moulin transforme 5 blés en 1 farine par cycle. Livrez les ingrédients depuis un robot voisin avec deliver(direction, ressource, quantité), puis collectez la production pour éviter de saturer la sortie. Le compteur cumule les cycles depuis la mise à jour.",
+        "destination": "code",
+        "action": "Programmer la production",
+        "code": "deliver(Direction.East, Resources.Wheat, 25);\n// Après les cycles du moulin à l’est :\ncollect(Direction.East, Resources.Flour, 5);",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "produced.Flour"
+        }
+      },
+      {
+        "id": "logistics",
+        "chapter": 3,
+        "title": "Une logistique solide",
+        "text": "Améliorez un dépôt au niveau 3 puis recherchez Transporteur.",
+        "target": 2,
+        "gold": 350,
+        "xp": 125,
+        "hint": "Stockage du dépôt 3 (3 200 unités) s’achète avec de l’or après Stockage 2. La recherche Transporteur prépare un robot à 500 or, réservé à la logistique.",
+        "destination": "Robots",
+        "action": "Organiser la logistique",
+        "reward": 0,
+        "condition": {
+          "type": "sum",
+          "rules": [
+            {
+              "type": "cap",
+              "max": 1,
+              "rule": {
+                "type": "count",
+                "collection": "buildings",
+                "filters": [
+                  {
+                    "path": "kind",
+                    "op": "eq",
+                    "value": "Depot"
+                  },
+                  {
+                    "path": "upgrades.storage",
+                    "op": "gte",
+                    "value": 3,
+                    "fallback": 1
+                  }
+                ]
+              }
+            },
+            {
+              "type": "research",
+              "ids": [
+                "transporter"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "thousand",
+        "chapter": 3,
+        "title": "Une ferme qui dure",
+        "text": "Déposez 1 000 ressources au total.",
+        "target": 1000,
+        "gold": 500,
+        "xp": 150,
+        "hint": "Combinez prairies, buissons, carottes et transformations. Les dépôts cumulés restent comptés même après vente ou recherche.",
+        "destination": "code",
+        "action": "Perfectionner mes programmes",
+        "reward": 0,
+        "condition": {
+          "type": "counter",
+          "path": "deposited"
+        }
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "title": "Premiers pas",
+      "subtitle": "Du premier semis à un terrain à explorer.",
+      "skill": "Séquences et boucles"
+    },
+    {
+      "title": "Une ferme autonome",
+      "subtitle": "Observer, décider et organiser son programme.",
+      "skill": "Conditions, variables et coordonnées"
+    },
+    {
+      "title": "Cultiver autrement",
+      "subtitle": "Diversifier les cultures et équiper son fermier.",
+      "skill": "Fonctions et gestion des ressources"
+    },
+    {
+      "title": "Changer d’échelle",
+      "subtitle": "Construire une équipe et une chaîne de production.",
+      "skill": "Coordination et logistique"
+    }
+  ],
+  "definitions": {
+    "models": {
+      "Farmer": {
+        "name": "Fermier",
+        "price": 500,
+        "speed": 1,
+        "capacity": 20,
+        "research": "fleet",
+        "medium": "ground",
+        "description": "Robot terrestre sur roues. Plante, récolte, laboure, transporte, arrose et utilise des consommables selon vos recherches."
+      },
+      "Transporter": {
+        "name": "Transporteur",
+        "price": 500,
+        "speed": 0.75,
+        "capacity": 100,
+        "research": "transporter",
+        "medium": "ground",
+        "description": "Robot terrestre à grande soute. Charge, transporte et dépose. Ne plante pas, ne récolte pas et ne laboure pas."
+      },
+      "Drone": {
+        "name": "Drone",
+        "price": 1000,
+        "speed": 2,
+        "capacity": 10,
+        "research": "drone",
+        "medium": "air",
+        "description": "Unité aérienne. Transport léger, arrosage et engrais. Ne plante pas, ne laboure pas et ne récolte pas. Peut survoler les robots terrestres."
+      }
+    },
+    "buildings": {
+      "Depot": {
+        "name": "Dépôt",
+        "price": 500,
+        "research": "construction",
+        "description": "Stocke 200 unités ; améliorations individuelles jusqu’au niveau 10, capacité et prix ×4."
+      },
+      "Well": {
+        "name": "Puits",
+        "price": 300,
+        "research": "reservoir",
+        "description": "Produit 1 eau/s. Chaque amélioration locale double le débit ; réserve de 100 unités."
+      },
+      "Cistern": {
+        "name": "Citerne",
+        "price": 200,
+        "research": "reservoir",
+        "description": "Ajoute 400 unités au réseau d’eau connecté ; chaque amélioration locale multiplie cette réserve par 4. Ne produit pas d’eau."
+      },
+      "Mill": {
+        "name": "Moulin",
+        "price": 500,
+        "research": "milling",
+        "description": "5 blés → 1 farine en 6 secondes. Livrez les ingrédients puis récupérez la production."
+      },
+      "Oven": {
+        "name": "Four",
+        "price": 1000,
+        "research": "bakery",
+        "description": "2 farines + 1 bois → 1 pain en 10 secondes."
+      },
+      "Sawmill": {
+        "name": "Scierie",
+        "price": 750,
+        "research": "sawmill",
+        "description": "5 bois → 2 planches en 10 secondes."
+      },
+      "Composter": {
+        "name": "Composteur",
+        "price": 750,
+        "research": "composting",
+        "description": "5 blés + 2 carottes → 1 engrais en 12 secondes."
+      },
+      "Workshop": {
+        "name": "Atelier",
+        "price": 500,
+        "research": "workshop",
+        "description": "Reconstruit une carcasse pour 40 % du prix neuf : fermier 200 or, transporteur 200 or, drone 400 or."
+      }
+    },
+    "recipes": {
+      "Mill": {
+        "input": {
+          "Wheat": 5
+        },
+        "output": {
+          "Flour": 1
+        },
+        "duration": 6
+      },
+      "Oven": {
+        "input": {
+          "Flour": 2,
+          "Wood": 1
+        },
+        "output": {
+          "Bread": 1
+        },
+        "duration": 10
+      },
+      "Sawmill": {
+        "input": {
+          "Wood": 5
+        },
+        "output": {
+          "Plank": 2
+        },
+        "duration": 10
+      },
+      "Composter": {
+        "input": {
+          "Wheat": 5,
+          "Carrot": 2
+        },
+        "output": {
+          "Fertilizer": 1
+        },
+        "duration": 12
+      }
+    },
+    "crops": {
+      "Grass": {
+        "resource": "Hay",
+        "seconds": 0.5,
+        "soil": "Any",
+        "cost": {},
+        "unlock": null,
+        "yields": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512
+        ]
+      },
+      "Wheat": {
+        "resource": "Wheat",
+        "seconds": 5,
+        "soil": "Any",
+        "cost": {},
+        "unlock": "wheat-base",
+        "yields": [
+          1,
+          5,
+          12,
+          30,
+          75
+        ]
+      },
+      "Bush": {
+        "resource": "Wood",
+        "seconds": 4,
+        "soil": "Any",
+        "cost": {},
+        "unlock": "bush",
+        "yields": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512
+        ]
+      },
+      "Carrot": {
+        "resource": "Carrot",
+        "seconds": 6,
+        "soil": "Soil",
+        "cost": {
+          "Hay": 1,
+          "Wood": 1
+        },
+        "unlock": "carrot",
+        "yields": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512
+        ]
+      },
+      "Tree": {
+        "resource": "Wood",
+        "seconds": 7,
+        "soil": "Any",
+        "cost": {},
+        "unlock": "tree",
+        "yields": [
+          5,
+          10,
+          20,
+          40,
+          80,
+          160,
+          320,
+          640,
+          1280,
+          2560
+        ]
+      },
+      "Pumpkin": {
+        "resource": "Pumpkin",
+        "seconds": 25,
+        "soil": "Soil",
+        "cost": {
+          "Carrot": 3,
+          "Wood": 2
+        },
+        "unlock": "pumpkin",
+        "yields": [
+          4,
+          8,
+          16,
+          32,
+          64,
+          128,
+          256,
+          512,
+          1024,
+          2048
+        ]
+      }
+    },
+    "robotEquipment": [
+      {
+        "id": "hold",
+        "name": "Soute",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 100,
+          "Hay": 50
+        },
+        "research": "hold",
+        "models": [
+          "Farmer",
+          "Transporter",
+          "Drone"
+        ],
+        "detail": "Capacité ×2 par niveau. Chaque robot possède sa propre soute."
+      },
+      {
+        "id": "motor",
+        "name": "Motorisation",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 150,
+          "Carrot": 50
+        },
+        "research": "motor",
+        "models": [
+          "Farmer",
+          "Transporter",
+          "Drone"
+        ],
+        "detail": "Vitesse de déplacement ×1,25 par niveau."
+      },
+      {
+        "id": "tools",
+        "name": "Outils agricoles",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 100,
+          "Carrot": 100
+        },
+        "research": "tools",
+        "models": [
+          "Farmer"
+        ],
+        "detail": "Vitesse du semis, de la récolte et du labour ×1,25 par niveau."
+      },
+      {
+        "id": "handling",
+        "name": "Manutention",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 200,
+          "Carrot": 50
+        },
+        "research": "handling",
+        "models": [
+          "Farmer",
+          "Transporter",
+          "Drone"
+        ],
+        "detail": "Vitesse des chargements, dépôts, livraisons et collectes ×2 par niveau."
+      },
+      {
+        "id": "tank",
+        "name": "Réservoir",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 100,
+          "Carrot": 50
+        },
+        "research": "tank",
+        "models": [
+          "Farmer",
+          "Drone"
+        ],
+        "detail": "Capacité du réservoir embarqué ×2 par niveau."
+      },
+      {
+        "id": "application",
+        "name": "Application d’eau",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 100,
+          "Carrot": 100
+        },
+        "research": "watering",
+        "models": [
+          "Farmer",
+          "Drone"
+        ],
+        "detail": "Consommation d’eau ×0,8 par niveau pour la même humidité."
+      },
+      {
+        "id": "sensor",
+        "name": "Capteur de maturité",
+        "initial": 0,
+        "max": 1,
+        "materials": {
+          "Hay": 50,
+          "Wood": 10
+        },
+        "research": "sensor",
+        "models": [
+          "Farmer",
+          "Drone"
+        ],
+        "detail": "Autorise can_harvest() sur ce robot."
+      },
+      {
+        "id": "analysis",
+        "name": "Analyse du terrain",
+        "initial": 0,
+        "max": 1,
+        "materials": {
+          "Wood": 100,
+          "Carrot": 50
+        },
+        "research": "analysis",
+        "models": [
+          "Farmer",
+          "Drone"
+        ],
+        "detail": "Autorise get_entity_type() et get_ground_type() sur ce robot."
+      },
+      {
+        "id": "humidity",
+        "name": "Capteur d’humidité",
+        "initial": 0,
+        "max": 1,
+        "materials": {
+          "Carrot": 15
+        },
+        "research": "humidity",
+        "models": [
+          "Farmer",
+          "Drone"
+        ],
+        "detail": "Autorise get_water() sur ce robot."
+      },
+      {
+        "id": "traffic",
+        "name": "Détection d’obstacles",
+        "initial": 0,
+        "max": 1,
+        "materials": {
+          "Wood": 60,
+          "Carrot": 20
+        },
+        "research": "traffic",
+        "models": [
+          "Farmer",
+          "Transporter",
+          "Drone"
+        ],
+        "detail": "Autorise is_occupied() et les réservations après Circulation 2."
+      }
+    ],
+    "buildingUpgrades": [
+      {
+        "id": "storage",
+        "research": "construction",
+        "name": "Stockage",
+        "initial": 1,
+        "max": 10,
+        "materials": {},
+        "gold": 500,
+        "kinds": [
+          "Depot"
+        ],
+        "detail": "Capacité initiale 200 unités ; capacité ×4 par niveau, coût en or ×4."
+      },
+      {
+        "id": "workshop",
+        "name": "Niveau de l’atelier",
+        "initial": 1,
+        "max": 3,
+        "materials": {
+          "Wood": 200,
+          "Carrot": 100
+        },
+        "kinds": [
+          "Workshop"
+        ],
+        "detail": "Autorise les équipements de niveaux 1–2, puis 3–4, puis 5."
+      },
+      {
+        "id": "waterRate",
+        "name": "Débit du puits",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 100,
+          "Carrot": 50
+        },
+        "kinds": [
+          "Well"
+        ],
+        "detail": "Production initiale 1 eau/s ; débit ×2 par niveau."
+      },
+      {
+        "id": "waterStorage",
+        "name": "Réserve d’eau",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 150
+        },
+        "kinds": [
+          "Cistern"
+        ],
+        "detail": "Réserve initiale 400 unités ; capacité ×4 par niveau. Ne produit pas d’eau."
+      },
+      {
+        "id": "production",
+        "name": "Débit de production",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 200,
+          "Carrot": 100
+        },
+        "kinds": [
+          "Mill"
+        ],
+        "detail": "Débit ×2 par niveau ; recettes et quantités d’ingrédients inchangées."
+      },
+      {
+        "id": "production",
+        "name": "Débit de production",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 300,
+          "Plank": 100
+        },
+        "kinds": [
+          "Oven"
+        ],
+        "detail": "Débit ×2 par niveau ; recettes et quantités d’ingrédients inchangées."
+      },
+      {
+        "id": "production",
+        "name": "Débit de production",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 250,
+          "Carrot": 100
+        },
+        "kinds": [
+          "Sawmill"
+        ],
+        "detail": "Débit ×2 par niveau ; recettes et quantités d’ingrédients inchangées."
+      },
+      {
+        "id": "production",
+        "name": "Débit de production",
+        "initial": 1,
+        "max": 5,
+        "materials": {
+          "Wood": 200,
+          "Carrot": 150
+        },
+        "kinds": [
+          "Composter"
+        ],
+        "detail": "Débit ×2 par niveau ; recettes et quantités d’ingrédients inchangées."
+      }
+    ],
+    "tradeOrders": [
+      {
+        "id": "village",
+        "name": "Le marché du village",
+        "item": "Wheat",
+        "quantity": 100,
+        "payment": 110,
+        "unlock": null
+      },
+      {
+        "id": "carpenter",
+        "name": "Le charpentier",
+        "item": "Wood",
+        "quantity": 30,
+        "payment": 100,
+        "unlock": "bush"
+      },
+      {
+        "id": "soup",
+        "name": "La soupe du jour",
+        "item": "Carrot",
+        "quantity": 20,
+        "payment": 135,
+        "unlock": "carrot"
+      },
+      {
+        "id": "bakery",
+        "name": "La boulangerie du village",
+        "item": "Bread",
+        "quantity": 10,
+        "payment": 275,
+        "unlock": "bakery"
+      },
+      {
+        "id": "renovation",
+        "name": "La rénovation de la grange",
+        "item": "Plank",
+        "quantity": 20,
+        "payment": 265,
+        "unlock": "sawmill"
+      }
+    ],
+    "cosmetics": [
+      {
+        "id": "pearl",
+        "kind": "skin",
+        "name": "Jaune",
+        "missions": 0,
+        "color": "#d9ad38",
+        "accent": "#bc86ed",
+        "description": "La peinture jaune du modèle original."
+      },
+      {
+        "id": "rose",
+        "kind": "skin",
+        "name": "Rose",
+        "missions": 1,
+        "color": "#ed87b1",
+        "accent": "#ed79b0",
+        "description": "Peinture rose, détails mécaniques et inscriptions préservés."
+      },
+      {
+        "id": "mint",
+        "kind": "skin",
+        "name": "Rouge",
+        "missions": 3,
+        "color": "#c82d37",
+        "accent": "#49dfd1",
+        "description": "Peinture rouge sur les panneaux de la coque."
+      },
+      {
+        "id": "cosmic",
+        "kind": "skin",
+        "name": "Noir",
+        "missions": 6,
+        "color": "#252932",
+        "accent": "#b69bff",
+        "description": "Coque noire avec ses reliefs et marquages conservés."
+      },
+      {
+        "id": "legend-angel",
+        "kind": "skin",
+        "name": "Ange",
+        "missions": 10,
+        "color": "#f5f1e5",
+        "accent": "#ffd464",
+        "rarity": "legendary",
+        "legendary": "angel",
+        "description": "Coque blanc nacré et or, halo et plumes lumineuses, néons dorés et poussière de lumière."
+      },
+      {
+        "id": "legend-demon",
+        "kind": "skin",
+        "name": "Démon",
+        "missions": 10,
+        "color": "#211421",
+        "accent": "#ff354f",
+        "rarity": "legendary",
+        "legendary": "demon",
+        "description": "Coque obsidienne et carmin, cornes, néons rouges et braises lumineuses."
+      },
+      {
+        "id": "none",
+        "kind": "accessory",
+        "name": "Sans sticker",
+        "missions": 0,
+        "description": "La silhouette originale."
+      },
+      {
+        "id": "ribbon",
+        "kind": "accessory",
+        "name": "Étoile",
+        "missions": 0,
+        "description": "Un autocollant étoilé sur la coque."
+      },
+      {
+        "id": "flower",
+        "kind": "accessory",
+        "name": "Fleur",
+        "missions": 2,
+        "description": "Un sticker floral collé sur la tête."
+      },
+      {
+        "id": "halo",
+        "kind": "accessory",
+        "name": "Circuit",
+        "missions": 5,
+        "description": "Un motif de circuit électronique sur la coque."
+      },
+      {
+        "id": "lens-red",
+        "kind": "lens",
+        "name": "Rouge d’origine",
+        "missions": 0,
+        "color": "#ff3157",
+        "description": "La lentille rouge du robot original."
+      },
+      {
+        "id": "lens-cyan",
+        "kind": "lens",
+        "name": "Cyan",
+        "missions": 1,
+        "color": "#36e3f5",
+        "description": "Un œil lumineux bleu cyan."
+      },
+      {
+        "id": "lens-violet",
+        "kind": "lens",
+        "name": "Violet",
+        "missions": 3,
+        "color": "#a46bff",
+        "description": "Une lentille violette et ses reflets."
+      },
+      {
+        "id": "lens-green",
+        "kind": "lens",
+        "name": "Vert",
+        "missions": 5,
+        "color": "#58ee92",
+        "description": "Un œil lumineux vert."
+      },
+      {
+        "id": "sticker-lycanroc",
+        "kind": "accessory",
+        "name": "Lougaroc",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-sun",
+        "kind": "accessory",
+        "name": "Soleil",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-family",
+        "kind": "accessory",
+        "name": "Famille",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-blue-cat",
+        "kind": "accessory",
+        "name": "Chat bleu",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-apple",
+        "kind": "accessory",
+        "name": "Pomme",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-meowth",
+        "kind": "accessory",
+        "name": "Miaouss",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-exchange",
+        "kind": "accessory",
+        "name": "Échange",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-orange-rabbit",
+        "kind": "accessory",
+        "name": "Lapin orange",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-neon",
+        "kind": "accessory",
+        "name": "Éclair néon",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-kako",
+        "kind": "accessory",
+        "name": "Kako",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-bandage",
+        "kind": "accessory",
+        "name": "Pansement",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-spheal",
+        "kind": "accessory",
+        "name": "Obalie",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-mirai",
+        "kind": "accessory",
+        "name": "Mirai",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-kimori",
+        "kind": "accessory",
+        "name": "Kimori",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-emblem",
+        "kind": "accessory",
+        "name": "Emblème violet",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-cetoddle",
+        "kind": "accessory",
+        "name": "Piétacé",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-aye-stall",
+        "kind": "accessory",
+        "name": "Aye Stall",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-melon",
+        "kind": "accessory",
+        "name": "Melon",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-zangoose",
+        "kind": "accessory",
+        "name": "Mangriff",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-green-cat",
+        "kind": "accessory",
+        "name": "Chat vert",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-yellow-cat",
+        "kind": "accessory",
+        "name": "Chat jaune",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-palafin",
+        "kind": "accessory",
+        "name": "Superdofin",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-sushi",
+        "kind": "accessory",
+        "name": "Sushi",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-clodsire",
+        "kind": "accessory",
+        "name": "Terraiste",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-purple-cat",
+        "kind": "accessory",
+        "name": "Chat violet",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-natul",
+        "kind": "accessory",
+        "name": "Natul",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-porygon",
+        "kind": "accessory",
+        "name": "Porygon",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-pink-bear",
+        "kind": "accessory",
+        "name": "Ourson rose",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-popplio",
+        "kind": "accessory",
+        "name": "Otaquin",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-raichu",
+        "kind": "accessory",
+        "name": "Raichu",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-jar",
+        "kind": "accessory",
+        "name": "Bocal",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-zeraora",
+        "kind": "accessory",
+        "name": "Zeraora",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-sandygast",
+        "kind": "accessory",
+        "name": "Bacabouh",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-comet",
+        "kind": "accessory",
+        "name": "Comète rose",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      },
+      {
+        "id": "sticker-rockruff",
+        "kind": "accessory",
+        "name": "Rocabot",
+        "missions": 0,
+        "description": "Autocollant à poser sur la coque de Luma."
+      }
+    ],
+    "storageCapacities": [
+      200,
+      800,
+      3200,
+      12800,
+      51200,
+      204800,
+      819200,
+      3276800,
+      13107200,
+      52428800
+    ],
+    "constructionSlots": [
+      {
+        "x": -1,
+        "y": 0
+      },
+      {
+        "x": 0,
+        "y": -1
+      },
+      {
+        "x": 1,
+        "y": -1
+      },
+      {
+        "x": 2,
+        "y": -1
+      },
+      {
+        "x": -1,
+        "y": 1
+      },
+      {
+        "x": -1,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": -1
+      },
+      {
+        "x": 4,
+        "y": -1
+      },
+      {
+        "x": -1,
+        "y": 3
+      },
+      {
+        "x": -1,
+        "y": 4
+      },
+      {
+        "x": 5,
+        "y": -1
+      },
+      {
+        "x": 6,
+        "y": -1
+      },
+      {
+        "x": -1,
+        "y": 5
+      },
+      {
+        "x": -1,
+        "y": 6
+      },
+      {
+        "x": 7,
+        "y": -1
+      },
+      {
+        "x": -1,
+        "y": 7
+      }
+    ],
+    "ranks": [
+      "Apprenti fermier",
+      "Cultivateur",
+      "Programmeur agricole",
+      "Chef d’exploitation",
+      "Architecte de ferme"
+    ],
+    "thresholds": [
+      0,
+      150,
+      400,
+      850,
+      1500
+    ]
+  }
+}

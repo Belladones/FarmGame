@@ -1,3 +1,4 @@
+import { storageCapacities } from "../../research/domain/researchBalance";
 import type { Farm } from "../../farm/domain/model";
 import type { Building } from "./Building";
 import { level } from "../../research/domain/levels";
@@ -8,7 +9,12 @@ export const depotCapacity = (
   s.assetProgression === 1
     ? Math.max(
         b?.capacityFloor ?? 0,
-        200 * 4 ** Math.max(0, (b?.upgrades?.storage ?? 1) - 1),
+        storageCapacities[
+          Math.min(
+            storageCapacities.length - 1,
+            Math.max(0, (b?.upgrades?.storage ?? 1) - 1),
+          )
+        ] ?? 200,
       )
     : Math.max(
         [200, 200, 500, 2500, 10000][Math.min(4, level(s, "storage", 10))] ??

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import pg from "pg";
+import { seedCatalog } from "./modules/catalog/adapters/postgres/catalogRepository.js";
 import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 export function createPool(connectionString = process.env.DATABASE_URL) {
@@ -55,6 +56,7 @@ export async function migrate(pool: pg.Pool) {
         name,
       ]);
     }
+    await seedCatalog(client);
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");

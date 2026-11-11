@@ -1,4 +1,8 @@
 import {
+  getCatalog,
+  catalogVersion,
+} from "../modules/catalog/application/catalogRegistry";
+import {
   starter,
   examples,
   docs,
@@ -90,8 +94,6 @@ import { itemNames, sum } from "../shared/domain/resources";
 import { research } from "../modules/research/domain/catalog";
 import { SkillTree } from "../modules/research/adapters/react/SkillTree";
 import { Icon, ResourceIcon } from "../shared/adapters/react/Icons";
-import "../style.css";
-import "../command-theme.css";
 const resourceNumber = (n: number) =>
   n >= 10000
     ? new Intl.NumberFormat("fr-FR", {
@@ -102,7 +104,10 @@ const resourceNumber = (n: number) =>
 function load(): Farm {
   try {
     const saved = JSON.parse(localStorage.getItem("farmscript-v1") || "null");
-    return hydrateFarm(saved?.farm, localStorage.getItem("farmscript-code"));
+    return {
+      ...hydrateFarm(saved?.farm, localStorage.getItem("farmscript-code")),
+      catalogVersion: catalogVersion(),
+    };
   } catch {
     return fresh();
   }
@@ -227,6 +232,7 @@ export function App() {
   }, [logs, minimized]);
   const log = (text: string) => setLogs((a) => [...a.slice(-49), text]);
   const refresh = () => {
+    farm.current.catalogVersion = catalogVersion();
     setS(structuredClone(farm.current));
     localStorage.setItem(
       "farmscript-v1",
@@ -253,7 +259,10 @@ export function App() {
       getFarm: () => farm.current,
       applyFarm: (saved) => {
         stopAll();
-        farm.current = hydrateFarm(saved);
+        farm.current = {
+          ...hydrateFarm(saved),
+          catalogVersion: catalogVersion(),
+        };
         const r = activeRobot(farm.current);
         setCode(r.code || starter);
         setS(structuredClone(farm.current));
@@ -475,6 +484,7 @@ export function App() {
     };
     w.postMessage({
       type: "run",
+      catalog: getCatalog(),
       code: source,
       entry: id,
       files,
